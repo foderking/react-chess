@@ -44,6 +44,7 @@ const App = () =>
 		[black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn ],
 		[black_rook, black_knight, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook],
 	])
+	const [location, SetLocation] = useState('nil')
 
 	function GetArr()
 	{
@@ -58,7 +59,7 @@ const App = () =>
 	useEffect(() => {
 		console.log(board_array)
 		console.log(player_array)
-	})
+	}, [])
 	// 		<>
 	// 		<button className='board-cell postive'> { items[0] } </button>
 	// 		<button className='board-cell negative'>{ items[1] } </button>
@@ -98,31 +99,45 @@ const App = () =>
 	function HandeClick(e)
 	{
 		e.preventDefault()
-		console.log(e.target)
+		// console.log(e.target)
 
-		const piece = e.target.textContent 
-		console.log(piece)
+		const class_ = e.target.classList
+		const loc =class_[3].slice(4) + class_[4].slice(4)
 		
-		if ( CheckIfinState(piece) ){
-			console.log('valid')
-		}
-		console.log('not valid')
+		// if ( CheckIfinState(piece) ){
+		// 	console.log('valid')
+		// }
+		// console.log('not valid')
+		SetLocation(`#${loc}`)
 		
 	}
 
-	function CheckIfinState(text)
+	function GetRow(no)
 	{
-		for (let arr of player_array) {
-			for (let i of arr) {
-				console.log(i)
-				if (String(i) == String(text)) {
-					true
-				}
-			}
-		}
-
-		return false
+		no = parseInt(no / 8) + 1
+		return ' row-' + no
 	}
+
+	function GetCol(no)
+	{
+		no = no % 8
+		const charset = 'hgfedcba'
+		return ' col-' + charset[no]
+	}
+
+	// function CheckIfinState(text)
+	// {
+	// 	for (let arr of player_array) {
+	// 		for (let i of arr) {
+	// 			console.log(i)
+	// 			if (String(i) == String(text)) {
+	// 				true
+	// 			}
+	// 		}
+	// 	}
+
+	// 	return false
+	// }
 
   return (
     <div className='container'>
@@ -130,15 +145,18 @@ const App = () =>
 			<div className='board' >
 				{
 					board_array.map(each =>
-						<button
+						<div
 							key={each}
 							onClick={HandeClick}
-							className={'text-center board-cell ' + GetSquareColor(each)}>
+							className={
+								'text-center board-cell ' + GetSquareColor(each) + GetCol(each)  + GetRow(each)
+							}>
 								{ player_array[ parseInt(each/8) ][each % 8] }
-						</button>
+						</div>
 					)
 				}
 			</div>
+			<span id='loc-state'>{ location }</span>
     </div>
   )
 }
