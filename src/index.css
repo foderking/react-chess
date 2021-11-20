@@ -1,0 +1,36 @@
+.board {
+	display: grid;
+	grid-template-columns: repeat(8, 60px [col-start]);
+	grid-template-rows: repeat(8, 60px [row-start]);
+	align-items: center;
+}
+
+.board-cell {
+	border: none;
+	font-size: 70px;
+	font-family: 'Courier New', Courier, monospace;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/* width: 100px; */
+	/* height: 100px; */
+}
+.negative {
+	background-color: #d18b47;
+	/* color: white; */
+	height: 60px;
+	width: 60px;
+	/* grid-row: row-start; */
+	/* justify-self: center; */
+	/* font-size: 50px; */
+	/* font-size: 10em; */
+	/* grid-row: inherit; */
+}
+.postive {
+	background-color: #ffce9e;
+	/* color: black; */
+	/* font-size: 50px; */
+	height: 60px;
+	width: 60px;
+	/* grid-column: inherit; */
+}
