@@ -32,11 +32,11 @@ const App = () =>
 	// ]
 
 	const [player_array, SetPlayer] = useState([
-		[white_rook, '', white_bishop, white_queen, white_king, white_bishop, white_knight, white_rook],
+		['', '', white_bishop, white_queen, white_king, white_bishop, white_knight, white_rook],
 		[white_pawn, white_pawn, white_pawn, '', white_pawn, white_pawn, white_pawn, white_pawn ] ,
 		['', '', '', white_pawn, '', black_pawn, '', '' ],
 		['', '', '', '', '', '', '', '' ],
-		['', '', white_knight, '', '', '', '', '' ],
+		[white_rook, '', white_knight, '', '', '', '', '' ],
 		['', '', '', '', '', '', '', '' ],
 		[black_pawn, black_pawn, '', black_pawn, black_pawn, black_pawn, black_pawn, black_pawn ],
 		[black_rook, black_knight, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook],
@@ -163,6 +163,77 @@ const App = () =>
 		}
 	}
 
+	function parseRook({row, col, init_arr, fam, spec})
+	{
+		/**
+		 * Valid cols: [row -> 8], [0 -> row], [col -> 8], [0 -> col], 
+		 */
+		const arr = JSON.parse(JSON.stringify(init_arr))
+
+		if (spec === 'first')
+		{
+
+			for (let i = col + 1; i < 8 ; i++) {
+				if ( arr[row][i] !== '') {
+					break
+				}
+				arr[row][i] = move_dot
+			}
+			for (let i = row + 1; i < 8 ; i++) {
+				if ( arr[i][col] !== '') {
+					break
+				}
+				arr[i][col] = move_dot
+			}	
+			for (let i = col - 1; i > 0 ; i--) {
+				if ( arr[row][i] !== '') {
+					break
+				}
+				arr[row][i] = move_dot
+			}
+			for (let i = row - 1; i > 0 ; i--) {
+				if ( arr[i][col] !== '') {
+					break
+				}
+				arr[i][col] = move_dot
+			}	
+
+			return arr
+		}
+		if (spec === 'kill')
+		{
+			let kills = []
+
+			for (let i = col + 1; i < 8 ; i++) {
+				if ( arr[row][i] !== '') {
+					kills.push([row, i])
+					break
+				}
+			}
+			for (let i = col - 1; i >= 0 ; i--) {
+				if ( arr[row][i] !== '') {
+					kills.push([row, i])
+					break
+				}
+			}
+			for (let i = row + 1; i < 8 ; i++) {
+				if ( arr[i][col] !== '') {
+					kills.push([i, col])
+					break
+				}
+			}	
+			for (let i = row - 1; i >= 0 ; i--) {
+				if ( arr[i][col] !== '') {
+					kills.push([i, col])
+					break
+				}
+			}	
+
+
+			return kills
+		}
+	}
+
 	function parseKnight({row, col, init_arr, fam, spec})
 	{
 		const west       = col - 1
@@ -203,7 +274,7 @@ const App = () =>
 		const elem_n_ww = validate_n_ww ? init_arr[north][westwest]  : null
 		const elem_s_ww = validate_s_ww ? init_arr[south][westwest]  : null
 
-		if (spec === 'kill') {
+		if       (spec === 'kill'){
 			const kills = []
 
 			/* The if statements always short circuits with the location fails
@@ -434,11 +505,11 @@ const App = () =>
 					normal : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
 					kill   : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
 				},
-				// rook: {
-				// 	first  : parseRook(),
-				// 	normal : parseRook(),
-				// 	kill   : parseRook(),
-				// },
+				rook: {
+					first  : () => parseRook({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					normal : () => parseRook({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					kill   : () => parseRook({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
+				},
 				// king: {
 				// 	first  : parseKing(),
 				// 	normal : parseKing(),
