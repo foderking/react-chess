@@ -11,7 +11,7 @@
 
 ## About <a name = "about"></a>
 
-A simple lightwieght chess app written in react
+A lightwieght chess app written from scratch in react
 
 ## Getting Started <a name = "getting_started"></a>
 
@@ -19,8 +19,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Features
 
-+ Parcel for bundling the application
-+ Yarn for managing packages
++ Lightwieght
++ No dependencies. All functionality is written from scratch
 
 ### Prerequisites
 

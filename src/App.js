@@ -16,14 +16,7 @@ const App = () =>
 	const black_pawn 	  = '♟'
 	const move_dot      = '○'
 	const move_dot_2    = '●'
-	/** Interesting
-	 * ---
-	 * f = i % 2 == 0
-	 * s = (i % 8) % 2 == 0
-	 * // Rook?
-	 * ---
-	 * 
-	 */
+
 
 	const board_array = GetArr()
 	// Constant value representining all position in board
@@ -39,11 +32,11 @@ const App = () =>
 	// ]
 
 	const [player_array, SetPlayer] = useState([
-		[white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, white_knight, white_rook],
-		[white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn ] ,
-		['', '', '', '', '', black_pawn, '', '' ],
+		[white_rook, '', white_bishop, white_queen, white_king, white_bishop, white_knight, white_rook],
+		[white_pawn, white_pawn, white_pawn, '', white_pawn, white_pawn, white_pawn, white_pawn ] ,
+		['', '', '', white_pawn, '', black_pawn, '', '' ],
 		['', '', '', '', '', '', '', '' ],
-		['', '', '', '', '', '', '', '' ],
+		['', '', white_knight, '', '', '', '', '' ],
 		['', '', '', '', '', '', '', '' ],
 		[black_pawn, black_pawn, '', black_pawn, black_pawn, black_pawn, black_pawn, black_pawn ],
 		[black_rook, black_knight, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook],
@@ -61,9 +54,58 @@ const App = () =>
 		return arr
 	}
 
+	function GetType(piece)
+	{
+		console.log(piece)
+		const pawns   = [black_pawn,   white_pawn]
+		const knights = [black_knight, white_knight]
+		const rooks   = [black_rook,   white_rook]
+		const bishops = [black_bishop, white_bishop] 
+		const queens  = [black_queen,  white_queen]
+		const kings   = [black_king,   white_king]
+		
+		if (pawns.includes(piece)) {
+			return 'pawn'
+		}
+		if (knights.includes(piece)) {
+			return 'knight'
+		}
+		if (rooks.includes(piece)) {
+			return 'rook'
+		}
+		if (bishops.includes(piece)) {
+			return 'bishop'
+		}
+		if (queens.includes(piece)) {
+			return 'queen'
+		}
+		if (kings.includes(piece)) {
+			return 'king'
+		}
+
+		return null
+	}
+
+	function GetFamily(piece)
+	{
+		const black = [black_bishop, black_king, black_knight, black_pawn, black_queen, black_rook]
+		const white = [white_bishop, white_king, white_knight, white_pawn, white_queen, white_rook]
+
+		if (black.includes(piece) ){
+			return 'negative'
+		}
+		else if (white.includes(piece))  {
+			return 'postive'
+		}
+		else if (piece == '') {
+			return null
+		}
+		throw 'family error'
+	}
+
 	useEffect(() => {
-		console.log(board_array)
-		console.log(player_array)
+		// console.log(board_array)
+		// console.log(player_array)
 	}, [])
 	// 		<>
 	// 		<button className='board-cell postive'> { items[0] } </button>
@@ -103,11 +145,11 @@ const App = () =>
 
 	function checkKill(each)
 	{
-		console.log(each)
+		// console.log(each)
 		if (new_move != true) {
 			const arr = JSON.stringify([parseInt(each / 8), (each % 8)])
 			const kill = JSON.stringify(new_move.kill)
-			console.log(arr)
+			// console.log(arr)
 
 			if (kill.indexOf(arr) === -1) {
 				return false
@@ -121,21 +163,158 @@ const App = () =>
 		}
 	}
 
-	function parsePawn({row, col, init_arr, spec})
+	function parseKnight({row, col, init_arr, fam, spec})
 	{
-		// console.log(spec)
+		const west       = col - 1
+		const westwest   = col - 2
+		const east       = col + 1
+		const easteast   = col + 2
+		const north      = row - 1
+		const northnorth = row - 2
+		const south      = row + 1
+		const southsouth = row + 2
+
+		const validate_ss  = ( southsouth < 8)
+		const validate_nn  = ( northnorth >=0)
+		const validate_ee  = ( easteast   < 8)
+		const validate_ww  = ( westwest   >=0)
+		const validate_s   = ( south < 8)
+		const validate_n   = ( north >=0)
+		const validate_e   = ( east  < 8)
+		const validate_w   = ( west  >=0)
+
+		const validate_ss_e = (validate_ss && validate_e)
+		const validate_ss_w = (validate_ss && validate_w)
+		const validate_nn_e = (validate_nn && validate_e)
+		const validate_nn_w = (validate_nn && validate_w)
+
+		const validate_n_ee = (validate_ee && validate_n)
+		const validate_s_ee = (validate_ee && validate_s)
+		const validate_n_ww = (validate_ww && validate_n)
+		const validate_s_ww = (validate_ww && validate_s)
+
+		const elem_ss_e = validate_ss_e ? init_arr[southsouth][east] : null
+		const elem_ss_w = validate_ss_w ? init_arr[southsouth][west] : null
+		const elem_nn_e = validate_nn_e ? init_arr[northnorth][east] : null
+		const elem_nn_w = validate_nn_w ? init_arr[northnorth][west] : null
+
+		const elem_n_ee = validate_n_ee ? init_arr[north][easteast]  : null
+		const elem_s_ee = validate_s_ee ? init_arr[south][easteast]  : null
+		const elem_n_ww = validate_n_ww ? init_arr[north][westwest]  : null
+		const elem_s_ww = validate_s_ww ? init_arr[south][westwest]  : null
+
+		if (spec === 'kill') {
+			const kills = []
+
+			/* The if statements always short circuits with the location fails
+			 * the `validate_xx_x` validation. this prevents overflows */
+			/* SS */
+			if (validate_ss_e &&  elem_ss_e !== '') {
+				kills.push([southsouth, east])
+			}
+			if (validate_ss_w &&  elem_ss_w !== '') {
+				kills.push([southsouth, west])
+			}
+			/* NN */
+			if (validate_nn_e &&  elem_nn_e !== '') {
+				kills.push([northnorth, east])
+			}
+			if (validate_nn_w &&  elem_nn_w !== '') {
+				kills.push([northnorth, west])
+			}
+			/* EE */
+			if (validate_n_ee &&  elem_n_ee !== '') {
+				kills.push([north, easteast])
+			}
+			if (validate_s_ee &&  elem_s_ee !== '') {
+				kills.push([south, easteast])
+			}
+			/* WW */
+			if (validate_n_ww &&  elem_n_ww !== '') {
+				kills.push([north, westwest])
+			}
+			if (validate_s_ww &&  elem_s_ww !== '') {
+				kills.push([south, westwest])
+			}
+
+			return kills
+		}
+		else if (spec === 'first'){
+			console.log('kkk')
+			const arr = JSON.parse(JSON.stringify(init_arr))
+			/* SS */
+			if (validate_ss_e && elem_ss_e === '') {
+				arr[southsouth][east] = move_dot
+				console.log('sse ->', [southsouth, east])
+			}
+			if (validate_ss_w && elem_ss_w === '') {
+				arr[southsouth][west] = move_dot
+				console.log('ssw ->', [southsouth, west])
+			}
+			/* NN */
+			if (validate_nn_e && elem_nn_e === '') {
+				arr[northnorth][east] = move_dot
+				console.log('nne ->', [northnorth, east])
+			}
+			if (validate_nn_w && elem_nn_w === '') {
+				arr[northnorth][west] = move_dot
+				console.log('nnw ->', [northnorth, west])
+			}
+
+			/* EE */
+			if (validate_n_ee && elem_n_ee === '') {
+				// console.log(westwest)
+				arr[north][easteast] = move_dot
+				console.log('een ->', [north, easteast])
+			}
+			if (validate_s_ee && elem_s_ee === '') {
+				arr[south][easteast] = move_dot
+				console.log('ees ->', [south, easteast])
+			}
+			// /* WW */
+			if (validate_n_ww && elem_n_ww === '') {
+				// console.log(westwest, north)
+				arr[north][westwest] = move_dot
+				console.log('wwn ->', [north, westwest])
+			}
+			if (validate_s_ww && elem_s_ww === '') {
+				arr[south][westwest] = move_dot
+				console.log('wws ->' [south, westwest])
+			}
+			return arr
+		}
+
+	}
+
+	function parsePawn({row, col, init_arr, spec, fam})
+	{
+		console.log(fam)
 		// const arr = [ ...init_arr ]
 		const arr = JSON.parse(JSON.stringify(init_arr))
 
+		if (fam === 'negative') {
+			console.log('object')
+			row *= -1
+		}
+
 		if ( spec === 'first')
 		{
-			for (let i = row + 1; i < row + 3 ; i++) {
+
+			const start = row + 1
+			const end   = row + 3
+			console.log(start, end, row)
+
+			for (let i = start; i < end ; i++) {
+				const _i = Math.abs(i)
 				// console.log(i, col)
-				const next = arr[i][col]
+				if (_i >= 8 ) {
+					break
+				}
 				// console.log(next)
+				const next = arr[_i][col]
 				
 				if ( next == '' ) {
-					arr[i][col] = move_dot
+					arr[_i][col] = move_dot
 					// console.log('next')
 				}
 				else {
@@ -143,17 +322,21 @@ const App = () =>
 					break
 				}
 			}
-
+			console.log(arr)
 			return arr
 		}
 		else if (spec === 'kill') {
 			const arr = JSON.parse(JSON.stringify(init_arr))
 			let kills = []
 
-			const i = row + 1
+			const i = Math.abs(row + 1)
 			const right = col + 1
 			const left = col - 1
-			
+
+			if (i > 7 || i < 0) {
+				return kills
+			}
+
 			const elem_right = arr[i][right]
 			const elem_left = arr[i][left]
 
@@ -174,9 +357,9 @@ const App = () =>
 	class Rules {
 	/**
 	 * 
-	 * @param { } location 
-	 * @param {*} type 
-	 * @param {*} famility 
+	 * @param { int } location location of the piece on board
+	 * @param {*} type type of pice - pawn, king etc..
+	 * @param {*} famility  family of piece, whether black(negative) or white(postive) 
 	 */
 	
 		constructor(location, type, family) {
@@ -232,27 +415,25 @@ const App = () =>
 
 			// SetPlayer(ans)
 		}
-		a({row, col, init_arr}){
-			console.log(row, col, init_arr)
-		}
+
 		addRules()
 		{
 			this.RULES = {
 				pawn : {
-					first  : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, spec: 'first'}),
-					normal : () => parsePawn(this.row, this.col, this.init_arr ),
-					kill   : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, spec: 'kill'}),
+					first  : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					// normal : () => parsePawn(this.row, this.col, this.init_arr ),
+					kill   : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
 				},
 				// bishop: {
 				// 	first  : parseBishop(this.row, this.col, this.init_arr ),
 				// 	normal : parseBishop(this.row, this.col, this.init_arr ),
 				// 	kill   : parseBishop(this.row, this.col, this.init_arr ),
 				// },
-				// knight: {
-				// 	first  : parseKnight(),
-				// 	normal : parseKnight(),
-				// 	kill   : parseKnight(),
-				// },
+				knight: {
+					first  : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					normal : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					kill   : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
+				},
 				// rook: {
 				// 	first  : parseRook(),
 				// 	normal : parseRook(),
@@ -281,20 +462,31 @@ const App = () =>
 		return loc
 	}
 
-	function HandeClick(e)
+	function HandleClick(e)
 	{
 		e.preventDefault()
 		// console.log(e.target)
 
 		const class_ = e.target.classList
+		const elem = e.target.innerText
+		const type = GetType(elem)
+		const fam = GetFamily(elem)
+		console.log(fam)
 		const loc = GetLocation(class_)
+		console.log('type -> ', type)
 		
 		// PawnRule(loc)
 		if (new_move === true) {
-			const move =  new Rules(loc, 'pawn', 'positive')
-			move.move('first')
+			try {
+				const move =  new Rules(loc, type, fam)
+				move.move('first')
+				SetMove(move)//.move('first')
+			}
+			catch (e) {
+				console.log(e)
+				SetMove(true)
+			}
 			// console.log(move.move)
-			SetMove(move)//.move('first')
 			// SetMove(!new_move)
 		}
 		else {
@@ -327,7 +519,7 @@ const App = () =>
 					board_array.map(each =>
 						<div
 							key={each}
-							onClick={HandeClick}
+							onClick={HandleClick}
 							className={
 								'text-center board-cell ' + GetSquareColor(each) + GetCol(each)  + GetRow(each) + ( checkKill(each) === true ? ' kill ': '')
 							}>
