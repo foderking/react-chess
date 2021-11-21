@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { parseBishop, parseKnight, parseRook, parsePawn } from './lib'
+import { 
+	parseBishop, parseKnight, parseRook, parsePawn, GetArr, GetSquareColor, GetCol, GetFamily, GetLocation, GetRow, GetType, checkKill
+} from './lib'
 
 const App = () =>
 {
@@ -43,15 +45,6 @@ const App = () =>
 	const [location, SetLocation] = useState('nil')
 	const [new_move, SetMove] = useState(true)
 
-	function GetArr()
-	{
-		let arr = []
-
-		for (let i = 0; i < 64; i++) {
-			arr[i] = i
-		}
-		return arr
-	}
 
 	function GetType(piece)
 	{
@@ -102,10 +95,6 @@ const App = () =>
 		throw 'family error'
 	}
 
-	useEffect(() => {
-		// console.log(board_array)
-		// console.log(player_array)
-	}, [])
 	// 		<>
 	// 		<button className='board-cell postive'> { items[0] } </button>
 	// 		<button className='board-cell negative'>{ items[1] } </button>
@@ -125,42 +114,6 @@ const App = () =>
 	// 		<button className='board-cell negative'>{ items[14]} </button>
 	// 		<button className='board-cell postive'> { items[15]} </button>
 	// 		</>
-
-	function GetSquareColor(index)
-	{/**
-		 * board_arr -> 2d array representing the board
-		 */
-		const i = index % 16
-		const first = i % 2
-		const second =  (i % 8) % 2 == 0
-
-		if ((first && i < 8) || (second && i >= 8)) {
-			return 'negative'
-		}
-		else {
-			return 'postive'
-		}
-	}
-
-	function checkKill(each)
-	{
-		// console.log(each)
-		if (new_move != true) {
-			const arr = JSON.stringify([parseInt(each / 8), (each % 8)])
-			const kill = JSON.stringify(new_move.kill)
-			// console.log(arr)
-
-			if (kill.indexOf(arr) === -1) {
-				return false
-			}
-			else {
-				return true
-			}
-		}
-		else {
-			return false
-		}
-	}
 
 	class Rules {
 	/**
@@ -229,7 +182,7 @@ const App = () =>
 			this.RULES = {
 				pawn : {
 					first  : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
-					// normal : () => parsePawn(this.row, this.col, this.init_arr ),
+					normal  : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'normal'}),
 					kill   : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
 				},
 				bishop: {
@@ -263,12 +216,6 @@ const App = () =>
 	
 	}
 
-	function GetLocation(class_)
-	{
-		const loc =class_[3].slice(4) + class_[4].slice(4)
-
-		return loc
-	}
 
 	function HandleClick(e)
 	{
@@ -305,20 +252,6 @@ const App = () =>
 		SetLocation(`#${loc}`)
 		
 	}
-
-	function GetRow(no)
-	{
-		no = parseInt(no / 8) + 1
-		return ' row-' + no
-	}
-
-	function GetCol(no)
-	{
-		no = no % 8
-		const charset = 'hgfedcba'
-		return ' col-' + charset[no]
-	}
-
   return (
     <div className='container'>
 			<h1>Chess App</h1>
@@ -329,7 +262,7 @@ const App = () =>
 							key={each}
 							onClick={HandleClick}
 							className={
-								'text-center board-cell ' + GetSquareColor(each) + GetCol(each)  + GetRow(each) + ( checkKill(each) === true ? ' kill ': '')
+								'text-center board-cell ' + GetSquareColor(each) + GetCol(each)  + GetRow(each) + ( checkKill(each, new_move) === true ? ' kill ': '')
 							}>
 								{ player_array[ parseInt(each/8) ][each % 8] }
 						</div>

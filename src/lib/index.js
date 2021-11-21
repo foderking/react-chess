@@ -327,3 +327,73 @@ export function parsePawn({row, col, init_arr, spec, fam})
 
 }
 
+
+export function GetArr()
+{
+	let arr = []
+
+	for (let i = 0; i < 64; i++) {
+		arr[i] = i
+	}
+	return arr
+}
+
+
+
+export function GetSquareColor(index)
+{/**
+		* board_arr -> 2d array representing the board
+		*/
+	const i = index % 16
+	const first = i % 2
+	const second =  (i % 8) % 2 == 0
+
+	if ((first && i < 8) || (second && i >= 8)) {
+		return 'negative'
+	}
+	else {
+		return 'postive'
+	}
+}
+
+export function checkKill(each, new_move)
+{
+	// console.log(each)
+	if (new_move != true) {
+		const arr = JSON.stringify([parseInt(each / 8), (each % 8)])
+		const kill = JSON.stringify(new_move.kill)
+		// console.log(arr)
+
+		if (kill.indexOf(arr) === -1) {
+			return false
+		}
+		else {
+			return true
+		}
+	}
+	else {
+		return false
+	}
+}
+
+
+export function GetRow(no)
+{
+	no = parseInt(no / 8) + 1
+	return ' row-' + no
+}
+
+export function GetLocation(class_)
+{
+	const loc =class_[3].slice(4) + class_[4].slice(4)
+
+	return loc
+}
+
+export function GetCol(no)
+{
+	no = no % 8
+	const charset = 'hgfedcba'
+	return ' col-' + charset[no]
+}
+
