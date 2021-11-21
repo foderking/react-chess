@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { 
-	parseBishop, parseKnight, parseRook, parsePawn, GetArr, GetSquareColor, GetCol, GetFamily, GetLocation, GetRow, GetType, checkKill, CalcIfFirst, parseKing, 
+	parseBishop, parseKnight, parseRook, parsePawn, GetArr, GetSquareColor, GetCol, GetFamily, GetLocation, GetRow, GetType, checkKill, CalcIfFirst, parseKing, parseQueen, 
 } from './lib'
 
 const App = () =>
@@ -38,10 +38,10 @@ const App = () =>
 	// ]
 
 	const [player_array, SetPlayer] = useState([
-		['', '', '', white_queen, '', white_bishop, white_knight, white_rook],
+		['', '', '', '', '', white_bishop, white_knight, white_rook],
 		[white_pawn, white_pawn, white_pawn, white_bishop, white_pawn, white_pawn, white_pawn, white_pawn ] ,
 		['', '', '', white_pawn, '', black_pawn, '', '' ],
-		['', '', '', '', '', '', white_king, '' ],
+		['', '', white_queen, '', '', '', white_king, '' ],
 		[white_rook, '', white_knight, '', '', '', '', '' ],
 		['', black_pawn, '', '', '', '', '', '' ],
 		[black_pawn, '', '', black_pawn, black_pawn, black_pawn, black_pawn, black_pawn ],
@@ -197,11 +197,13 @@ const App = () =>
 					normal : () => parseKing({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
 					kill   : () => parseKing({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
 				},
-				// queen: {
+				queen: {
+					normal : () => parseQueen({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					kill   : () => parseQueen({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
 				// 	first  : parseQueen(),
 				// 	normal : parseQueen(),
 				// 	kill   : parseQueen(),
-				// },
+				},
 			}
 
 		}

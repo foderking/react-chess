@@ -68,6 +68,76 @@ export function parseKing({row, col, init_arr, fam, spec})
 	}
 }
 
+export function parseQueen({row, col, init_arr, fam, spec})
+{
+	const arr = JSON.parse(JSON.stringify(init_arr))
+
+	if ( spec === 'first' ) {
+		const arr_2 = parseBishop({row, col, init_arr, fam, spec})
+
+		for (let i = row - 1; i <= row + 1; i++ ) {
+			for (let j = col - 1; j <= col + 1; j++ ) {
+				if (i === row || j === col) {
+					console.log(i, j)
+					// if ( i <= 0) {
+					// 	continue
+					// }
+					if (i === row && j === col) {
+						continue
+					}
+					if (i <= 0 || j <= 0) {
+						continue
+					}
+					if (i > 7 || j > 7) {
+						continue
+					}
+					if (arr_2[i][j] !== '') {
+						continue
+					}
+
+					arr_2[i][j] = move_dot
+				}
+			}
+		}
+		
+		const arr = arr_2
+		return arr
+	}
+	if ( spec === 'kill' ) {
+		const kk = []
+		// const kill_1 = parseKing({row, col, init_arr, fam, spec})
+		const kill_2 = parseBishop({row, col, init_arr, fam, spec})
+
+		for (let i = row - 1; i <= row + 1; i++ ) {
+			for (let j = col - 1; j <= col + 1; j++ ) {
+				if (i === row || j === col) {
+					console.log(i, j)
+					// if ( i <= 0) {
+					// 	continue
+					// }
+					if (i === row && j === col) {
+						continue
+					}
+					if (i <= 0 || j <= 0) {
+						continue
+					}
+					if (i > 7 || j > 7) {
+						continue
+					}
+					if (arr[i][j] === move_dot) {
+						continue
+					}
+					if (arr[i][j] !== '' && FamCheck(fam, arr[i][j])) {
+						kk.push([i, j])
+						continue
+					}
+				}
+			}
+	}
+		return kk.concat(kill_2)
+	}
+}
+
 
 export function parseBishop({row, col, init_arr, fam, spec})
 {
