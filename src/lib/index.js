@@ -1,3 +1,17 @@
+const white_king 	  = '♔'
+const white_queen 	= '♕'
+const white_rook 	  = '♖'
+const white_bishop 	= '♗'
+const white_knight 	= '♘'
+const white_pawn 	  = '♙'
+const black_king 	  = '♚'
+const black_queen 	= '♛'
+const black_rook 	  = '♜'
+const black_bishop 	= '♝'
+const black_knight 	= '♞'
+const black_pawn 	  = '♟'
+
+
 export function generateRandomString(N)
 {
 	// Returns an alphanumeric string of N characters
@@ -25,7 +39,9 @@ export function parseBishop({row, col, init_arr, fam, spec})
 	for (let j = col + 1, i = row + 1 ; i < 8  ; i++, j++) {
 		// console.log(i, j)
 		if ( arr[i][j] !== '') {
-			kill.push([i, j])
+			if ( FamCheck(fam, arr[i][j]) ) {
+				kill.push([i, j])
+			}
 			break
 		}
 		arr[i][j] = move_dot
@@ -33,7 +49,9 @@ export function parseBishop({row, col, init_arr, fam, spec})
 	for (let j = col - 1, i = row - 1 ; i >= 0  ; i--, j--) {
 		// console.log(i, j)
 		if ( arr[i][j] !== '') {
-			kill.push([i, j])
+			if ( FamCheck(fam, arr[i][j]) ) {
+				kill.push([i, j])
+			}
 			break
 		}
 		arr[i][j] = move_dot
@@ -41,7 +59,9 @@ export function parseBishop({row, col, init_arr, fam, spec})
 	for (let j = col + 1, i = row - 1 ; i >= 0  ; i--, j++) {
 		// console.log(i, j)
 		if ( arr[i][j] !== '') {
-			kill.push([i, j])
+			if ( FamCheck(fam, arr[i][j]) ) {
+				kill.push([i, j])
+			}
 			break
 		}
 		arr[i][j] = move_dot
@@ -49,7 +69,9 @@ export function parseBishop({row, col, init_arr, fam, spec})
 	for (let j = col - 1, i = row + 1 ; i < 8 ; i++, j--) {
 		// console.log(i, j)
 		if ( arr[i][j] !== '') {
-			kill.push([i, j])
+			if ( FamCheck(fam, arr[i][j]) ) {
+				kill.push([i, j])
+			}
 			break
 		}
 		arr[i][j] = move_dot
@@ -108,26 +130,34 @@ export function parseRook({row, col, init_arr, fam, spec})
 		let kills = []
 
 		for (let i = col + 1; i < 8 ; i++) {
-			if ( arr[row][i] !== '') {
-				kills.push([row, i])
+			if ( arr[row][i] !== '' ) {
+				if ( FamCheck(fam, arr[row][i]) ) {
+					kills.push([row, i])
+				}
 				break
 			}
 		}
 		for (let i = col - 1; i >= 0 ; i--) {
 			if ( arr[row][i] !== '') {
-				kills.push([row, i])
+				if ( FamCheck(fam, arr[row][i]) ) {
+					kills.push([row, i])
+				}
 				break
 			}
 		}
 		for (let i = row + 1; i < 8 ; i++) {
 			if ( arr[i][col] !== '') {
-				kills.push([i, col])
+				if (FamCheck(fam, arr[i][col]) ) {
+					kills.push([i, col])
+				}
 				break
 			}
 		}	
 		for (let i = row - 1; i >= 0 ; i--) {
 			if ( arr[i][col] !== '') {
-				kills.push([i, col])
+				if (FamCheck(fam, arr[i][col]) ) {
+					kills.push([i, col])
+				}
 				break
 			}
 		}	
@@ -184,31 +214,47 @@ export function parseKnight({row, col, init_arr, fam, spec})
 			* the `validate_xx_x` validation. this prevents overflows */
 		/* SS */
 		if (validate_ss_e &&  elem_ss_e !== '') {
-			kills.push([southsouth, east])
+			if (FamCheck(fam, elem_ss_e)) {
+				kills.push([southsouth, east])
+			}
 		}
 		if (validate_ss_w &&  elem_ss_w !== '') {
-			kills.push([southsouth, west])
+			if (FamCheck(fam, elem_ss_w)) {
+				kills.push([southsouth, west])
+			}
 		}
 		/* NN */
 		if (validate_nn_e &&  elem_nn_e !== '') {
-			kills.push([northnorth, east])
+			if (FamCheck(fam, elem_nn_e)) {
+				kills.push([northnorth, east])
+			}
 		}
 		if (validate_nn_w &&  elem_nn_w !== '') {
-			kills.push([northnorth, west])
+			if (FamCheck(fam, elem_nn_w)) {
+				kills.push([northnorth, west])
+			}
 		}
 		/* EE */
 		if (validate_n_ee &&  elem_n_ee !== '') {
-			kills.push([north, easteast])
+			if (FamCheck(fam, elem_n_ee)) {
+				kills.push([north, easteast])
+			}
 		}
 		if (validate_s_ee &&  elem_s_ee !== '') {
-			kills.push([south, easteast])
+			if (FamCheck(fam, elem_s_ee)) {
+				kills.push([south, easteast])
+			}
 		}
 		/* WW */
 		if (validate_n_ww &&  elem_n_ww !== '') {
-			kills.push([north, westwest])
+			if (FamCheck(fam, elem_n_ww)) {
+				kills.push([north, westwest])
+			}
 		}
 		if (validate_s_ww &&  elem_s_ww !== '') {
-			kills.push([south, westwest])
+			if (FamCheck(fam, elem_s_ww)) {
+				kills.push([south, westwest])
+			}
 		}
 
 		return kills
@@ -343,10 +389,10 @@ export function parsePawn({row, col, init_arr, spec, fam})
 		const elem_right = arr[i][right]
 		const elem_left = arr[i][left]
 
-		if (elem_left !== '') {
+		if (elem_left !== '' && FamCheck(fam, elem_left)) {
 			kills.push([i, left])
 		}
-		if (elem_right !== '') {
+		if (elem_right !== '' && FamCheck(fam, elem_right)) {
 			kills.push([i, right])
 		}
 		console.log(kills)
@@ -354,6 +400,14 @@ export function parsePawn({row, col, init_arr, spec, fam})
 	}
 
 
+}
+
+function FamCheck(fam, elem)
+{
+	if (!elem) {
+		return false
+	}
+	return fam !== GetFamily(elem)
 }
 
 
@@ -434,10 +488,11 @@ export function CalcIfFirst(piece_type, fam, row, col, arrangement)
 	* Knight:  If beside bishop
 	etc....
 	**/
+	const ying  = ['positive', 'negative']
 	
 	// For pawns 
 	if (piece_type === 'pawn') {
-		if (fam === 'positive') {
+		if (fam === ying[0]) {
 			if (row === arrangement['white'][1]) {
 				return true
 			}
@@ -445,7 +500,7 @@ export function CalcIfFirst(piece_type, fam, row, col, arrangement)
 				return false
 			}
 		}
-		if (fam === 'negative') {
+		if (fam === ying[1]) {
 			if (row === arrangement['black'][1]) {
 				return true
 			}
@@ -456,5 +511,60 @@ export function CalcIfFirst(piece_type, fam, row, col, arrangement)
 		throw 'calc first error: ' + fam
 	}
 
+	// if (piece_type === 'rook') {
+	// 	if (fam === ying[0]) {
+	// 		if (row === arrangement['white'][0]) {
+	// 			return
+	// 		}
+	// 		else {
+	// 			return
+	// 		}
+	// 	}
+	// 	if (fam === ying[1]) {
+	// 		if (row === arrangement['white'][0]) {
+	// 			return
+	// 		}
+	// 		else {
+	// 			return 
+	// 		}
+	// 	}
+	// }
+
+	// if (piece_type === 'rook') {
+	// 	if (fam === ying[0]) {
+	// 		if (row === arrangement['white'][0]) {
+	// 			return
+	// 		}
+	// 		else {
+	// 			return
+	// 		}
+	// 	}
+	// 	if (fam === ying[1]) {
+	// 		if (row === arrangement['white'][0]) {
+	// 			return
+	// 		}
+	// 		else {
+	// 			return 
+	// 		}
+	// 	}
+	// }
 	return ''
+}
+
+
+export function GetFamily(piece)
+{
+	const black = [black_bishop, black_king, black_knight, black_pawn, black_queen, black_rook]
+	const white = [white_bishop, white_king, white_knight, white_pawn, white_queen, white_rook]
+
+	if (black.includes(piece) ){
+		return 'negative'
+	}
+	else if (white.includes(piece))  {
+		return 'positive'
+	}
+	else if (piece == '') {
+		return null
+	}
+	throw 'family error: ' + piece
 }

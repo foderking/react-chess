@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { 
-	parseBishop, parseKnight, parseRook, parsePawn, GetArr, GetSquareColor, GetCol, GetFamily, GetLocation, GetRow, GetType, checkKill, CalcIfFirst
+	parseBishop, parseKnight, parseRook, parsePawn, GetArr, GetSquareColor, GetCol, GetFamily, GetLocation, GetRow, GetType, checkKill, CalcIfFirst, 
 } from './lib'
 
 const App = () =>
@@ -83,22 +83,6 @@ const App = () =>
 		return null
 	}
 
-	function GetFamily(piece)
-	{
-		const black = [black_bishop, black_king, black_knight, black_pawn, black_queen, black_rook]
-		const white = [white_bishop, white_king, white_knight, white_pawn, white_queen, white_rook]
-
-		if (black.includes(piece) ){
-			return 'negative'
-		}
-		else if (white.includes(piece))  {
-			return 'positive'
-		}
-		else if (piece == '') {
-			return null
-		}
-		throw 'family error'
-	}
 
 	// 		<>
 	// 		<button className='board-cell postive'> { items[0] } </button>
@@ -168,6 +152,7 @@ const App = () =>
 
 			if (type === 'first') {
 				const is_first = CalcIfFirst(this.type, this.family, this.current_row, this.current_col, arrangement)
+				// will result to 'first' only for pawn and the others implemented in calciffirst
 				const key = is_first ? 'first' : 'normal'
 				console.log('key -> ', key)
 
@@ -190,21 +175,21 @@ const App = () =>
 			this.RULES = {
 				pawn : {
 					first  : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
-					normal  : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'normal'}),
+					normal : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'normal'}),
 					kill   : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
 				},
 				bishop: {
-					first  : () => parseBishop({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					// first  : () => parseBishop({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
 					normal : () => parseBishop({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
 					kill   : () => parseBishop({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
 				},
 				knight: {
-					first  : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					// first  : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
 					normal : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
 					kill   : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
 				},
 				rook: {
-					first  : () => parseRook({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					// first  : () => parseRook({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
 					normal : () => parseRook({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
 					kill   : () => parseRook({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
 				},
