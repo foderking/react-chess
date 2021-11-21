@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { 
-	parseBishop, parseKnight, parseRook, parsePawn, GetArr, GetSquareColor, GetCol, GetFamily, GetLocation, GetRow, GetType, checkKill
+	parseBishop, parseKnight, parseRook, parsePawn, GetArr, GetSquareColor, GetCol, GetFamily, GetLocation, GetRow, GetType, checkKill, CalcIfFirst
 } from './lib'
 
 const App = () =>
@@ -17,6 +17,11 @@ const App = () =>
 	const black_bishop 	= '♝'
 	const black_knight 	= '♞'
 	const black_pawn 	  = '♟'
+
+	const [arrangement, SetArrange] = useState({
+		white : [0, 1],
+		black : [7, 6]
+	})
 
 
 	const board_array = GetArr()
@@ -87,7 +92,7 @@ const App = () =>
 			return 'negative'
 		}
 		else if (white.includes(piece))  {
-			return 'postive'
+			return 'positive'
 		}
 		else if (piece == '') {
 			return null
@@ -162,8 +167,11 @@ const App = () =>
 			}
 
 			if (type === 'first') {
-				console.log('first')
-				this.new_arr = rule[this.type]['first']()
+				const is_first = CalcIfFirst(this.type, this.family, this.current_row, this.current_col, arrangement)
+				const key = is_first ? 'first' : 'normal'
+				console.log('key -> ', key)
+
+				this.new_arr = rule[this.type][key]()
 				this.kill = rule[this.type]['kill']()
 				SetPlayer(this.new_arr)
 				// console.log()
@@ -252,26 +260,27 @@ const App = () =>
 		SetLocation(`#${loc}`)
 		
 	}
-  return (
-    <div className='container'>
-			<h1>Chess App</h1>
-			<div className='board' >
-				{
-					board_array.map(each =>
-						<div
-							key={each}
-							onClick={HandleClick}
-							className={
-								'text-center board-cell ' + GetSquareColor(each) + GetCol(each)  + GetRow(each) + ( checkKill(each, new_move) === true ? ' kill ': '')
-							}>
-								{ player_array[ parseInt(each/8) ][each % 8] }
-						</div>
-					)
-				}
-			</div>
-			<span id='loc-state'>{ location }</span>
-    </div>
-  )
+
+	return (
+		<div className='container'>
+				<h1>Chess App</h1>
+				<div className='board' >
+					{
+						board_array.map(each =>
+							<div
+								key={each}
+								onClick={HandleClick}
+								className={
+									'text-center board-cell ' + GetSquareColor(each) + GetCol(each)  + GetRow(each) + ( checkKill(each, new_move) === true ? ' kill ': '')
+								}>
+									{ player_array[ parseInt(each/8) ][each % 8] }
+							</div>
+						)
+					}
+				</div>
+				<span id='loc-state'>{ location }</span>
+		</div>
+	)
 }
 
 export default App

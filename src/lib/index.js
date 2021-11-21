@@ -20,8 +20,8 @@ export function parseBishop({row, col, init_arr, fam, spec})
 	const kill = []
 
 	/* Notice we only test for i ? if j is out of bounds the array \
-		* gives undefined which is handled in the if statements anyways \
-		* but if the i overflows, we try to access [j] from undefined which gives error */
+	 * gives undefined which is handled in the if statements anyways \
+	 * but if the i overflows, we try to access [j] from undefined which gives error */
 	for (let j = col + 1, i = row + 1 ; i < 8  ; i++, j++) {
 		// console.log(i, j)
 		if ( arr[i][j] !== '') {
@@ -299,6 +299,35 @@ export function parsePawn({row, col, init_arr, spec, fam})
 		console.log(arr)
 		return arr
 	}
+
+	if ( spec === 'normal')
+	{
+
+		const start = row + 1
+		const end   = row + 2
+		console.log(start, end, row)
+
+		for (let i = start; i < end ; i++) {
+			const _i = Math.abs(i)
+			// console.log(i, col)
+			if (_i >= 8 ) {
+				break
+			}
+			// console.log(next)
+			const next = arr[_i][col]
+			
+			if ( next == '' ) {
+				arr[_i][col] = move_dot
+				// console.log('next')
+			}
+			else {
+				// console.log('no next')
+				break
+			}
+		}
+		console.log(arr)
+		return arr
+	}
 	else if (spec === 'kill') {
 		const arr = JSON.parse(JSON.stringify(init_arr))
 		let kills = []
@@ -397,3 +426,35 @@ export function GetCol(no)
 	return ' col-' + charset[no]
 }
 
+export function CalcIfFirst(piece_type, fam, row, col, arrangement)
+{ /** Rules
+	* Pawns:   If at 2nd row in family
+	* Rook :   If at corner in family
+	* bishop:  If beside rook
+	* Knight:  If beside bishop
+	etc....
+	**/
+	
+	// For pawns 
+	if (piece_type === 'pawn') {
+		if (fam === 'positive') {
+			if (row === arrangement['white'][1]) {
+				return true
+			}
+			else {
+				return false
+			}
+		}
+		if (fam === 'negative') {
+			if (row === arrangement['black'][1]) {
+				return true
+			}
+			else {
+				return false
+			}
+		}
+		throw 'calc first error: ' + fam
+	}
+
+	return ''
+}
