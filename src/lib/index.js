@@ -28,6 +28,47 @@ export function generateRandomString(N)
 const move_dot      = '○'
 const move_dot_2    = '●'
 
+export function parseKing({row, col, init_arr, fam, spec})
+{
+	const arr = JSON.parse(JSON.stringify(init_arr))
+	const kill = []
+
+	for (let i = row - 1; i <= row + 1; i++ ) {
+		for (let j = col - 1; j <= col + 1; j++ ) {
+			console.log(i, j)
+			if (i === row && j === col) {
+				continue
+			}
+			if (i <= 0 || j <= 0) {
+				continue
+			}
+			if (i > 7 || j > 7) {
+				continue
+			}
+
+			if ( arr[i][j] !== '') {
+				if ( FamCheck(fam, arr[i][j]) ) {
+					kill.push([i, j])
+				}
+				continue
+			}
+			arr[i][j] = move_dot
+
+		}
+	}
+
+	if (spec === 'first')
+	{
+		return arr
+	}
+
+	if (spec === 'kill')
+	{
+		return kill
+	}
+}
+
+
 export function parseBishop({row, col, init_arr, fam, spec})
 {
 	const arr = JSON.parse(JSON.stringify(init_arr))
