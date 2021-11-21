@@ -32,13 +32,13 @@ const App = () =>
 	// ]
 
 	const [player_array, SetPlayer] = useState([
-		['', '', white_bishop, white_queen, white_king, white_bishop, white_knight, white_rook],
-		[white_pawn, white_pawn, white_pawn, '', white_pawn, white_pawn, white_pawn, white_pawn ] ,
+		['', '', '', white_queen, white_king, white_bishop, white_knight, white_rook],
+		[white_pawn, white_pawn, white_pawn, white_bishop, white_pawn, white_pawn, white_pawn, white_pawn ] ,
 		['', '', '', white_pawn, '', black_pawn, '', '' ],
 		['', '', '', '', '', '', '', '' ],
 		[white_rook, '', white_knight, '', '', '', '', '' ],
-		['', '', '', '', '', '', '', '' ],
-		[black_pawn, black_pawn, '', black_pawn, black_pawn, black_pawn, black_pawn, black_pawn ],
+		['', black_pawn, '', '', '', '', '', '' ],
+		[black_pawn, '', '', black_pawn, black_pawn, black_pawn, black_pawn, black_pawn ],
 		[black_rook, black_knight, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook],
 	])
 	const [location, SetLocation] = useState('nil')
@@ -160,6 +160,58 @@ const App = () =>
 		}
 		else {
 			return false
+		}
+	}
+
+	function parseBishop({row, col, init_arr, fam, spec})
+	{
+		const arr = JSON.parse(JSON.stringify(init_arr))
+		const kill = []
+
+		/* Notice we only test for i ? if j is out of bounds the array \
+		 * gives undefind which is handled in the if statements anyways \
+		 * but if the i overflows, we try to access [j] from undefined which gives error */
+		for (let j = col + 1, i = row + 1 ; i < 8  ; i++, j++) {
+			// console.log(i, j)
+			if ( arr[i][j] !== '') {
+				kill.push([i, j])
+				break
+			}
+			arr[i][j] = move_dot
+		}
+		for (let j = col - 1, i = row - 1 ; i >= 0  ; i--, j--) {
+			// console.log(i, j)
+			if ( arr[i][j] !== '') {
+				kill.push([i, j])
+				break
+			}
+			arr[i][j] = move_dot
+		}
+		for (let j = col + 1, i = row - 1 ; i >= 0  ; i--, j++) {
+			// console.log(i, j)
+			if ( arr[i][j] !== '') {
+				kill.push([i, j])
+				break
+			}
+			arr[i][j] = move_dot
+		}
+		for (let j = col - 1, i = row + 1 ; i < 8 ; i++, j--) {
+			// console.log(i, j)
+			if ( arr[i][j] !== '') {
+				kill.push([i, j])
+				break
+			}
+			arr[i][j] = move_dot
+		}
+
+		if (spec === 'first')
+		{
+			return arr
+		}
+
+		if (spec === 'kill')
+		{
+			return kill
 		}
 	}
 
@@ -495,11 +547,11 @@ const App = () =>
 					// normal : () => parsePawn(this.row, this.col, this.init_arr ),
 					kill   : () => parsePawn({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
 				},
-				// bishop: {
-				// 	first  : parseBishop(this.row, this.col, this.init_arr ),
-				// 	normal : parseBishop(this.row, this.col, this.init_arr ),
-				// 	kill   : parseBishop(this.row, this.col, this.init_arr ),
-				// },
+				bishop: {
+					first  : () => parseBishop({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					normal : () => parseBishop({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
+					kill   : () => parseBishop({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'kill'}),
+				},
 				knight: {
 					first  : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
 					normal : () => parseKnight({row: this.current_row, col: this.current_col, init_arr: this.init_arr, fam: this.family, spec: 'first'}),
