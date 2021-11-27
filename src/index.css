@@ -1,9 +1,37 @@
+:root {
+	--each: 60px;
+	--each-no: 60;
+}
+
 .board {
 	display: grid;
-	grid-template-columns: repeat(8, 60px [col-start]);
-	grid-template-rows: repeat(8, 60px [row-start]);
+	grid-template-columns: repeat(8, var(--each) [col-start]);
+	grid-template-rows: repeat(8, var(--each) [row-start]);
 	align-items: center;
 	margin: 5px;
+}
+
+.main { 
+	display: grid;
+	grid-template-columns: var(--each) calc(8 * var(--each));
+	grid-template-rows: var(--each) calc(8 * var(--each));
+}
+
+.cols { 
+	grid-column: 2 / -1;
+	display: grid;
+	grid-template-columns: repeat(8, var(--each));
+	align-items: center;
+	text-align: center;
+	font-size: calc(var(--each) / 3);
+}
+.rows {
+	grid-row: 2/ -1;
+	display: grid;
+	grid-template-rows: repeat(8, var(--each));
+	align-items: center;
+	text-align: center;
+	font-size: calc(var(--each) / 3);
 }
 
 .board-cell {

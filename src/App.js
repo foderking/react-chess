@@ -247,23 +247,51 @@ const App = () =>
 		
 	}
 
+	const cols = 'abcdefgh'.split('').reverse()
+	const rows = '12345678'.split('')
+
 	return (
 		<div className='container'>
 				<h1>Chess App</h1>
-				<div className='board' >
-					{
-						board_array.map(each =>
-							<div
-								key={each}
-								onClick={HandleClick}
-								className={
-									'text-center board-cell ' + GetSquareColor(each) + GetCol(each)  + GetRow(each) + ( checkKill(each, new_move) === true ? ' kill ': '')
-								}>
-									{ player_array[ parseInt(each/8) ][each % 8] }
-							</div>
-						)
-					}
+
+				<div className='main'>
+					<div className='cols'>
+						{
+							cols.map(each =>
+								<div key={each}>
+									{each}
+								</div>	
+							)
+						}
+					</div>
+
+					<div className='rows'>
+						{
+							rows.map(each =>
+								<div key={each}>
+									{each}
+								</div>	
+							)
+						}
+					</div>
+
+					<div className='board' >
+						{
+							board_array.map(each =>
+								<div
+									key={each}
+									onClick={HandleClick}
+									className={
+										'text-center board-cell ' + GetSquareColor(each) + GetCol(each)  +
+										GetRow(each) + ( checkKill(each, new_move) === true ? ' kill ': '')
+									}>
+										{ player_array[ parseInt(each/8) ][each % 8] }
+								</div>
+							)
+						}
+					</div>
 				</div>
+
 				<span id='loc-state'>{ location }</span>
 		</div>
 	)
