@@ -20,7 +20,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Features
 
 + Lightwieght
-+ No dependencies. All functionality is written from scratch
++ No external dependencies. All functionality is written from scratch in React.
 
 ### Prerequisites
 
