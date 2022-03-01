@@ -1,378 +1,854 @@
-/**
-abstract class Piece {
-    color : "white" | "black"
-    abstract nextMove(): string[] // Returns an array of all the valid locations of where the piece can be moved to next
+const white_king 	  = '♔'
+const white_queen 	= '♕'
+const white_rook 	  = '♖'
+const white_bishop 	= '♗'
+const white_knight 	= '♘'
+const white_pawn 	  = '♙'
+const black_king 	  = '♚'
+const black_queen 	= '♛'
+const black_rook 	  = '♜'
+const black_bishop 	= '♝'
+const black_knight 	= '♞'
+const black_pawn 	  = '♟'
+
+const white_pieces =  [white_pawn, white_rook, white_bishop, white_knight, white_king, white_queen]
+const black_pieces =  [black_pawn, black_rook, black_bishop, black_knight, black_king, black_queen]
+
+export function getType(piece) {
+	if ( [white_king, black_king].includes(piece) ) return "king"
+	if ( [white_queen, white_queen].includes(piece) ) return "queen"
+	if ( [white_bishop, white_bishop].includes(piece) ) return "bishop"
+	if ( [white_knight, white_knight].includes(piece) ) return "knight"
+	if ( [white_rook, white_rook].includes(piece) ) return "rook"
+	if ( [white_pawn, white_pawn].includes(piece) ) return "pawn"
 }
 
-class Pawn extends Piece {
-    ...
+
+function getIndex(location, board) {
+	const rows = [1,2,3,4,5,6,7,8]
+	const cols = "abcdefgh"
+
+	let [row, col] = location
+	let new_board = board.map(each => { return {...each}})
+	let row_index = parseInt(row) - 1
+	let col_index = cols.indexOf(col)
+
+	return [new_board, row_index, col_index]
 }
 
-class Rook extends Piece {
-    ...
+
+
+
+
+export function rookCapture (location, board, color) {
+	// Set possible moves for the rook
+	// https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Chess_rlt45.svg/33px-Chess_rlt45.svg.png
+	let [new_board, row_index, col_index]  = getIndex(location, board)
+	// console.log(row_index, col_index)
+	let up_isblocked = false
+	let down_isblocked = false
+	let right_isblocked = false
+	let left_isblocked = false
+
+	let main =  8 * (7 - row_index ) + col_index
+	let loc = new_board[main]
+	loc.isSelected = true
+	
+	for (let i=1; i<8 ; i++) {
+		if (!up_isblocked && row_index + i < 8) {
+			let up =  8 * (7 - (row_index + i) ) + col_index
+
+			let up_location  =  new_board[up]
+			if (getPieceColor(up_location.piece) === color) up_isblocked = true
+			else if (up_location.piece) { up_location.isKill = true; up_isblocked = true }
+			else up_location.isActive = true
+		}
+		if (!down_isblocked && row_index - i >= 0) {
+			let down =  8 * (7 - (row_index - i) ) + col_index
+
+			let down_location  =  new_board[down]
+			if (getPieceColor(down_location.piece) === color) down_isblocked = true
+			else if (down_location.piece) { down_location.isKill = true; down_isblocked = true }
+			else down_location.isActive = true
+		}
+		if (!right_isblocked && col_index + i < 8) {
+			let right =  8 * (7 - row_index ) + (col_index + i)
+
+			let right_location  =  new_board[right]
+			if (getPieceColor(right_location.piece) === color) right_isblocked = true
+			else if (right_location.piece) { right_location.isKill = true; right_isblocked = true }
+			else right_location.isActive = true
+		}
+		if (!left_isblocked && col_index - i >= 0) {
+			let left =  8 * (7 - row_index ) + (col_index - i)
+
+			let left_location  =  new_board[left]
+			if (getPieceColor(left_location.piece) === color) left_isblocked = true
+			else if (left_location.piece) { left_location.isKill = true; left_isblocked = true }
+			else left_location.isActive = true
+		}
+	}
+	return new_board
 }
 
-class Bishop extends Piece {
-    ...
+export function bishopCapture (location, board, color) {
+	// Sets the possible moves for the bishop
+	// https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Chessboard480.svg/264px-Chessboard480.svg.png
+	let [new_board, row_index, col_index] = getIndex(location, board)
+
+	let ne_isblocked = false
+	let nw_isblocked = false
+	let se_isblocked = false
+	let sw_isblocked = false
+
+	let main =  8 * (7 - row_index ) + col_index
+	let loc = new_board[main]
+	loc.isSelected = true
+
+	for (let i=1; i<8 ; i++) {
+		if ( !ne_isblocked && (row_index + i < 8 && col_index + i < 8) ) {
+			let ne =  8 * (7 - (row_index + i) ) + (col_index + i)
+
+			let ne_location  =  new_board[ne]
+			if (getPieceColor(ne_location.piece) === color) ne_isblocked = true
+			else if (ne_location.piece) { ne_location.isKill = true; ne_isblocked = true }
+			else ne_location.isActive = true
+		}
+		if (!nw_isblocked && (row_index + i < 8 && col_index - i >= 0) ) {
+			let nw =  8 * (7 - (row_index + i) ) + (col_index - i)
+
+			let nw_location  =  new_board[nw]
+			if (getPieceColor(nw_location.piece) === color) nw_isblocked = true
+			else if (nw_location.piece) { nw_location.isKill = true; nw_isblocked = true }
+			else nw_location.isActive = true
+		}
+		if ( !se_isblocked &&  (row_index - i >= 0 && col_index + i < 8)) {
+			let se =  8 * (7 - (row_index - i) ) + (col_index + i)
+
+			let se_location  =  new_board[se]
+			if (getPieceColor(se_location.piece) === color) se_isblocked = true// prevents killing pieces in the same family
+			else if (se_location.piece) { se_location.isKill = true; se_isblocked = true }
+			else se_location.isActive = true
+		}
+		if ( !sw_isblocked && (row_index - i >= 0 && col_index - i >= 0) ) {
+			let sw =  8 * (7 - (row_index - i) ) + (col_index - i)
+
+			let sw_location  =  new_board[sw]
+			if (getPieceColor(sw_location.piece) === color) sw_isblocked = true  // prevents killing pieces in the same family
+			else if (sw_location.piece) { sw_location.isKill = true; sw_isblocked = true }
+			else sw_location.isActive = true
+		}
+	}
+	return new_board
 }
 
-class Knight extends Piece {
-    ...
+export function knightCapture (location, board, color) {
+	// Set possible moves for the knight
+	// https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Chess_xot45.svg/33px-Chess_xot45.svg.png
+	let [new_board, row_index, col_index] = getIndex(location, board)
+
+	let main =  8 * (7 - row_index ) + col_index
+	let loc = new_board[main]
+	loc.isSelected = true
+
+	for (let i=row_index-2 ; i < row_index+3 ; i++) {
+		for (let j=col_index-2 ; j < col_index+3 ; j++) {
+			if (i < 0 || i >= 8) continue
+			if (j < 0 || j >= 8) continue
+
+
+			if (i === row_index) continue
+			if (j === col_index) continue
+			if (Math.abs(i - row_index) === Math.abs(j - col_index)) continue
+
+			let board_index = 8 * (7 - i) + j // gets the index of the location in the board array
+																				// the board is arranged [8a, 8b, .., 7a, 7b, .., ... , 1a, 1b, ...]
+			let active_location  =  new_board[board_index]
+			if (getPieceColor(active_location.piece) === color) continue  // prevents killing pieces in the same family
+			if (active_location.piece) active_location.isKill = true
+			else active_location.isActive = true
+		}
+	}
+	return new_board
 }
 
-class Queen extends Piece {
-    ...
+export function pawnCapture (location, board, color, isFirstMove=false) {
+	// Set possible moves the pawn
+	// https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Chessboard480.svg/264px-Chessboard480.svg.png
+	let [new_board, row_index, col_index] = getIndex(location, board)
+	let isblocked = false
+	// console.log(row_index, col_index)
+
+	let main =  8 * (7 - row_index ) + col_index
+	let loc = new_board[main]
+	loc.isSelected = true
+
+	for (let i=1 ; i < 3  ; i++) {
+		if (row_index + i >= 8) continue
+		if (isblocked) continue
+		if (i === 2 && !isFirstMove) continue
+
+		if (i === 1) {
+			let left = 8 * (7 - (row_index + i)) + col_index + i
+			let right = 8 * (7 - (row_index + i) ) + col_index - i
+			let left_location  =  new_board[left]
+			let right_location  =  new_board[right]
+			if (getPieceColor(left_location.piece) !== color && left_location.piece) left_location.isKill = true
+			if (getPieceColor(right_location.piece) !== color && right_location.piece) right_location.isKill = true
+		}
+
+		let board_index = 8 * (7 - (row_index+i) ) + col_index
+		let active_location  =  new_board[board_index]
+
+		if (active_location.piece) isblocked = true
+		else active_location.isActive = true
+	}
+	return new_board
 }
 
-class King extends Piece {
-    ...
+export function kingCapture (location, board, color) {
+	let [new_board, row_index, col_index] = getIndex(location, board)
+
+	let main =  8 * (7 - row_index ) + col_index
+	let loc = new_board[main]
+	loc.isSelected = true
+
+	for (let i=row_index-1 ; i < row_index+2  ; i++) {
+		for (let j=col_index-1 ; j < col_index+2  ; j++) {
+			if (i < 0 || i >= 8) continue
+			if (j < 0 || j >= 8) continue
+			if (i===row_index && j===col_index) continue
+
+			let board_index = 8 * (7 - i) + j // gets the index of the location in the board array
+																				// the board is arranged [8a, 8b, .., 7a, 7b, .., ... , 1a, 1b, ...]
+			let active_location  =  new_board[board_index]
+			if (getPieceColor(active_location.piece) === color) continue  // prevents killing pieces in the same family
+			if (active_location.piece) active_location.isKill = true
+			else active_location.isActive = true
+		}
+	}
+	return new_board
 }
-**/
-var Board = /** @class */ (function () {
-    function Board() {
-        // https://en.wikipedia.org/wiki/Chess#Setup
-        // The board consists 64 squares.
-        // Each square has two properties - The color, and whether there's a piece on it
-        // each rank represents each row of the chess board
-        // in each rank are 8 columns (files)  each with a color, and a possible chess piece
-        this.ranks = [
-            [
-                {
-                    position: "1a",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "1b",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "1c",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "1d",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "1e",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "1f",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "1g",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "1h",
-                    color: "white",
-                    piece: null
-                },
-            ],
-            [
-                {
-                    position: "2a",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "2b",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "2c",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "2d",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "2e",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "2f",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "2g",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "2h",
-                    color: "black",
-                    piece: null
-                },
-            ],
-            [
-                {
-                    position: "3a",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "3b",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "3c",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "3d",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "3e",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "3f",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "3g",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "3h",
-                    color: "white",
-                    piece: null
-                },
-            ],
-            [
-                {
-                    position: "4a",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "4b",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "4c",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "4d",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "4e",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "4f",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "4g",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "4h",
-                    color: "black",
-                    piece: null
-                },
-            ],
-            [
-                {
-                    position: "5a",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "5b",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "5c",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "5d",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "5e",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "5f",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "5g",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "5h",
-                    color: "white",
-                    piece: null
-                },
-            ],
-            [
-                {
-                    position: "6a",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "6b",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "6c",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "6d",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "6e",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "6f",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "6g",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "6h",
-                    color: "black",
-                    piece: null
-                },
-            ],
-            [
-                {
-                    position: "7a",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "7b",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "7c",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "7d",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "7e",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "7f",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "7g",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "7h",
-                    color: "white",
-                    piece: null
-                },
-            ],
-            [
-                {
-                    position: "8a",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "8b",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "8c",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "8d",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "8e",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "8f",
-                    color: "black",
-                    piece: null
-                },
-                {
-                    position: "8g",
-                    color: "white",
-                    piece: null
-                },
-                {
-                    position: "8h",
-                    color: "black",
-                    piece: null
-                },
-            ],
-        ];
-    }
-    return Board;
-}());
+
+
+export function queenCapture (location, board, color) { // set possible movese the queen
+	let [new_board, row_index, col_index]  = getIndex(location, board)
+
+	let up_isblocked = false
+	let down_isblocked = false
+	let right_isblocked = false
+	let left_isblocked = false
+	let ne_isblocked = false
+	let nw_isblocked = false
+	let se_isblocked = false
+	let sw_isblocked = false
+
+	let main =  8 * (7 - row_index ) + col_index
+	let loc = new_board[main]
+	loc.isSelected = true
+	
+	for (let i=1; i<8 ; i++) {
+		if (!up_isblocked && row_index + i < 8) {
+			let up =  8 * (7 - (row_index + i) ) + col_index
+
+			let up_location  =  new_board[up]
+			if (getPieceColor(up_location.piece) === color) up_isblocked = true
+			else if (up_location.piece) { up_location.isKill = true; up_isblocked = true }
+			else up_location.isActive = true
+		}
+		if (!down_isblocked && row_index - i >= 0) {
+			let down =  8 * (7 - (row_index - i) ) + col_index
+
+			let down_location  =  new_board[down]
+			if (getPieceColor(down_location.piece) === color) down_isblocked = true
+			else if (down_location.piece) { down_location.isKill = true; down_isblocked = true }
+			else down_location.isActive = true
+		}
+		if (!right_isblocked && col_index + i < 8) {
+			let right =  8 * (7 - row_index ) + (col_index + i)
+
+			let right_location  =  new_board[right]
+			if (getPieceColor(right_location.piece) === color) right_isblocked = true
+			else if (right_location.piece) { right_location.isKill = true; right_isblocked = true }
+			else right_location.isActive = true
+		}
+		if (!left_isblocked && col_index - i >= 0) {
+			let left =  8 * (7 - row_index ) + (col_index - i)
+
+			let left_location  =  new_board[left]
+			if (getPieceColor(left_location.piece) === color) left_isblocked = true
+			else if (left_location.piece) { left_location.isKill = true; left_isblocked = true }
+			else left_location.isActive = true
+		}
+
+		if (!ne_isblocked && (row_index + i < 8 && col_index + i < 8)) {
+			let ne =  8 * (7 - (row_index + i) ) + (col_index + i)
+
+			let ne_location  =  new_board[ne]
+			if (getPieceColor(ne_location.piece) === color) ne_isblocked = true
+			else if (ne_location.piece) { ne_location.isKill = true; ne_isblocked = true }
+			else ne_location.isActive = true
+		}
+		if (!nw_isblocked && (row_index + i < 8 && col_index - i >= 0)) {
+			let nw =  8 * (7 - (row_index + i) ) + (col_index - i)
+
+			let nw_location  =  new_board[nw]
+			if (getPieceColor(nw_location.piece) === color) nw_isblocked = true
+			else if (nw_location.piece) { nw_location.isKill = true; nw_isblocked = true }
+			else nw_location.isActive = true
+		}
+		if( !se_isblocked && (row_index - i >= 0 && col_index + i < 8) ) {
+			let se =  8 * (7 - (row_index - i) ) + (col_index + i)
+
+			let se_location  =  new_board[se]
+			if (getPieceColor(se_location.piece) === color) se_isblocked = true
+			else if (se_location.piece) { se_location.isKill = true; se_isblocked = true }
+			else se_location.isActive = true
+		}
+		if (!sw_isblocked && (row_index - i >= 0 && col_index - i >= 0)) {
+			let sw =  8 * (7 - (row_index - i) ) + (col_index - i)
+
+			let sw_location  =  new_board[sw]
+			if (getPieceColor(sw_location.piece) === color) sw_isblocked = true
+			else if (sw_location.piece) { sw_location.isKill = true; sw_isblocked = true }
+			else sw_location.isActive = true
+		}
+	}
+	return new_board
+}
+
+export function getPieceColor(piece) {
+	if (white_pieces.includes(piece)) return "white"
+	if (black_pieces.includes(piece)) return "black"
+	return ".."
+}
+
+
+export const Board  = [
+	// https://en.wikipedia.org/wiki/Chess#Setup
+
+	// The board consists 64 squares.
+	// Each square has two properties - The color, and whether there's a piece on it
+
+	// each rank represents each row of the chess board
+	// in each rank are 8 columns (files)  each with a color, and a possible chess piece
+	{
+		position: "8a",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_rook
+	},
+	{
+		position: "8b",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_knight
+	},
+	{
+		position: "8c",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_bishop
+	},
+	{
+		position: "8d",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_queen
+	},
+	{
+		position: "8e",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_king
+	},
+	{
+		position: "8f",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_bishop
+	},
+	{
+		position: "8g",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_knight
+	},
+	{
+		position: "8h",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_rook
+	},
+
+	{
+		position: "7a",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_pawn
+	},
+	{
+		position: "7b",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_pawn
+	},
+	{
+		position: "7c",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_pawn
+	},
+	{
+		position: "7d",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_pawn
+	},
+	{
+		position: "7e",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_pawn
+	},
+	{
+		position: "7f",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_pawn
+	},
+	{
+		position: "7g",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_pawn
+	},
+	{
+		position: "7h",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+
+	{
+		position: "6a",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "6b",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "6c",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "6d",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "6e",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "6f",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "6g",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "6h",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+
+	{
+		position: "5a",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "5b",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "5c",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "5d",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "5e",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : black_pawn
+	},
+	{
+		position: "5f",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "5g",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "5h",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	
+	{
+		position: "4a",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "4b",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "4c",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "4d",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : white_pawn
+	},
+	{
+		position: "4e",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "4f",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "4g",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "4h",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	
+	{
+		position: "3a",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "3b",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "3c",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "3d",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "3e",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "3f",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "3g",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	{
+		position: "3h",
+		color   : "white",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : ''
+	},
+	
+	{
+		position: "2a",
+		color   : "white",
+		piece   : white_pawn,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "2b",
+		color   : "black",
+		piece   : white_pawn,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "2c",
+		color   : "white",
+		piece   : white_pawn,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "2d",
+		color   : "black",
+		piece   : '',
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "2e",
+		color   : "white",
+		piece   : white_pawn,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "2f",
+		color   : "black",
+		piece   : white_pawn,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "2g",
+		color   : "white",
+		piece   : white_pawn,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "2h",
+		color   : "black",
+		isActive: false,
+		isKill  : false,
+		isSelected: false,
+		piece   : white_pawn
+	},
+
+	{
+		position: "1a",
+		color   : "black",
+		piece   : white_rook,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "1b",
+		color   : "white",
+		piece   : white_knight,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "1c",
+		color   : "black",
+		piece   : white_bishop,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "1d",
+		color   : "white",
+		piece   : white_queen,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "1e",
+		color   : "black",
+		piece   : white_king,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "1f",
+		color   : "white",
+		piece   : white_bishop,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "1g",
+		color   : "black",
+		piece   : white_knight,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	},
+	{
+		position: "1h",
+		color   : "white",
+		piece   : white_rook,
+		isActive: false,
+		isKill  : false,
+		isSelected: false
+	}
+]
