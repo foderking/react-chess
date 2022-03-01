@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { 
-	parseBishop, parseKnight, parseRook, parsePawn, GetArr, GetSquareColor, GetCol, GetFamily, GetLocation, GetRow, GetType, checkKill, CalcIfFirst, parseKing, parseQueen, 
-} from './lib'
-import { bishopCapture, Board, getPieceColor, kingCapture, knightCapture, pawnCapture, queenCapture, rookCapture } from './Utility'
+import { bishopCapture, Board, canKill, canMove, changePlayer, generateRandomString, getPieceColor, getType, killPiece, kingCapture, knightCapture, movePiece, pawnCapture, queenCapture, rookCapture } from './Utility'
 
 const App = () =>
 {
@@ -12,13 +9,40 @@ const App = () =>
 	const [location, setLocation] = useState("..")
 	const [activeSquare, setActiveSquare] = useState(false)
 	const [pieceColor, setColor] = useState("..")
+	const [current_piece, setPiece] = useState("")
+	const [kills, setKills] = useState([])
 
-	useEffect( () => {
+	useEffect( () => { // hook for moving pieces
 		if (activeSquare) { // changes possible moves when a new square is selected
-			let b = pawnCapture(location, oldboard, pieceColor) // uses old board with previously active moves
-			setBoard(b)
-			// console.log("first")
-			// console.log(b)
+			let type = getType(current_piece)
+			let possible_moves
+			// console.log(type, current_piece)
+
+			switch (type) {
+				case "king":
+					possible_moves = kingCapture(location, oldboard, pieceColor)
+					break;
+				case "queen":
+					possible_moves = queenCapture(location, oldboard, pieceColor)
+					break;
+				case "bishop":
+					possible_moves = bishopCapture(location, oldboard, pieceColor)
+					break;
+				case "knight":
+					possible_moves = knightCapture(location, oldboard, pieceColor)
+					break;
+				case "rook":
+					possible_moves = rookCapture(location, oldboard, pieceColor)
+					break;
+				case "pawn":
+					possible_moves = pawnCapture(location, oldboard, pieceColor)
+					break;
+					
+				default:
+					console.log('error')
+					break;
+			}
+			setBoard(possible_moves)
 			// setBoard(oldboard)
 			// setOldBoard(board)
 		}
@@ -34,23 +58,34 @@ const App = () =>
 		e.preventDefault()
 		//console.log(e)
 		let newLocation = e.target.id
-		let piece       = e.target.innerText
-
 		setLocation(newLocation) // changes the location to the one that was clicked
+		let piece       = e.target.innerText
+		setPiece(piece)
 		let family = getPieceColor(piece)
 		setColor(family)
 
 		if (family === player) { // only the next player is allowed make a move
-			if (activeSquare === newLocation) {
-				setActiveSquare(false)  // if the the location that was clicked has been
-																	// has been clicked before, set active to false( makes cell inactive)
-
-			}
-			else {
-				setActiveSquare(newLocation)// or else, changes the active cell to the new location
-				// let b = rookCapture(location, board)
-				// console.log(b)
-			}
+			if (activeSquare === newLocation) setActiveSquare(false)  // handles for when you click the same piece twice. it is made inactive (set to false)
+			else setActiveSquare(newLocation) // handles when a new location is clicked. changes the active cell to the new location
+		}
+		else if (activeSquare && canMove(newLocation, board)) {
+			// console.log('first')
+			let n_board = movePiece(activeSquare, newLocation, oldboard)				
+			setBoard(n_board)
+			setOldBoard(n_board) // this is needed since the useeffect changes board to oldboard when active is false
+			setActiveSquare(false)
+			let next_p = changePlayer(player)
+			nextPlayer(next_p)
+		}
+		else if (activeSquare && canKill(activeSquare, newLocation, board, pieceColor)) {
+			let [n_board, killed] = killPiece(activeSquare, newLocation, oldboard)				
+			setKills( kills.concat(killed) )
+			setBoard(n_board)
+			setOldBoard(n_board) // this is needed since the useeffect changes board to oldboard when active is false
+			setActiveSquare(false)
+			let next_p = changePlayer(player)
+			nextPlayer(next_p)
+	
 		}
 		else setActiveSquare(false) // if the clicked player is not the next, active is set to false
 	}
@@ -112,6 +147,11 @@ const App = () =>
 				</div>
 				<div>
 						piece family: { pieceColor }
+				</div>
+				<div>
+						kills : { kills.map(
+							each => <span key={generateRandomString(5)}>{each}</span>
+						)}
 				</div>
 		</div>
 	)

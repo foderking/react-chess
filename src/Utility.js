@@ -16,11 +16,29 @@ const black_pieces =  [black_pawn, black_rook, black_bishop, black_knight, black
 
 export function getType(piece) {
 	if ( [white_king, black_king].includes(piece) ) return "king"
-	if ( [white_queen, white_queen].includes(piece) ) return "queen"
-	if ( [white_bishop, white_bishop].includes(piece) ) return "bishop"
-	if ( [white_knight, white_knight].includes(piece) ) return "knight"
-	if ( [white_rook, white_rook].includes(piece) ) return "rook"
-	if ( [white_pawn, white_pawn].includes(piece) ) return "pawn"
+	if ( [white_queen, black_queen].includes(piece) ) return "queen"
+	if ( [white_bishop, black_bishop].includes(piece) ) return "bishop"
+	if ( [white_knight, black_knight].includes(piece) ) return "knight"
+	if ( [white_rook, black_rook].includes(piece) ) return "rook"
+	if ( [white_pawn, black_pawn].includes(piece) ) return "pawn"
+	return null
+}
+
+export function changePlayer(current_player) {
+	if (current_player === "white") return "black"
+	return "white"
+}
+
+export function generateRandomString(N)
+{
+	// Returns an alphanumeric string of N characters
+	let result           = '';
+	const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	const charactersLength = characters.length;
+	for ( var i = 0; i < N; i++ ) {
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	}
+ return result;
 }
 
 
@@ -35,6 +53,55 @@ function getIndex(location, board) {
 
 	return [new_board, row_index, col_index]
 }
+
+export function movePiece(init_location, final_location, board) {
+	// assumes the piece in `final_location` is empty
+	let new_board = board.map(each => { return {...each}})
+	let a = new_board.find(each => each.position === init_location)
+	let b = new_board.find(each => each.position === final_location)
+	let moved_piece = a.piece
+	a.piece  = ""
+	b.piece = moved_piece
+	return new_board
+}
+
+export function canMove(final_location, board) {
+	let l = board.find(each => each.position === final_location)
+	if (!l) return false
+
+	if (l.piece === "") return true
+	return false
+}
+
+export function canKill(init_location, final_location, board, color) {
+	let new_board = board.map(each => { return {...each}})
+	let a = new_board.find(each => each.position === init_location)
+	let b = new_board.find(each => each.position === final_location)
+
+	if (getPieceColor(b.piece) === color) return false
+	if (color === ".." ) throw  "cankill error"
+	return true
+}
+
+export function killPiece (init_location, final_location, board, color) {
+	let new_board = board.map(each => { return {...each}})
+	let a = new_board.find(each => each.position === init_location)
+	let b = new_board.find(each => each.position === final_location)
+
+	let killed_piece = b.piece
+	let moved_piece = a.piece
+	a.piece = ""
+	b.piece = moved_piece
+	return [new_board, killed_piece]
+}
+
+export function getPieceColor(piece) {
+	if (white_pieces.includes(piece)) return "white"
+	if (black_pieces.includes(piece)) return "black"
+	return ".."
+}
+
+
 
 
 
@@ -182,22 +249,25 @@ export function pawnCapture (location, board, color, isFirstMove=false) {
 	let main =  8 * (7 - row_index ) + col_index
 	let loc = new_board[main]
 	loc.isSelected = true
+	
+	let multiplier = "white" === color ? 1 : -1 // white pawn moves up, black moves down
 
 	for (let i=1 ; i < 3  ; i++) {
-		if (row_index + i >= 8) continue
+		if (multiplier === 1 && row_index + i >= 8) continue
+		if (multiplier === -1 && row_index - i < 0) continue
 		if (isblocked) continue
 		if (i === 2 && !isFirstMove) continue
 
-		if (i === 1) {
-			let left = 8 * (7 - (row_index + i)) + col_index + i
-			let right = 8 * (7 - (row_index + i) ) + col_index - i
+		if (i === 1 && (col_index - 1 >=0 && col_index + 1 < 8)) {
+			let left = 8 * (7 - (row_index + (multiplier * i) )) + col_index + i
+			let right = 8 * (7 - (row_index + (multiplier * i) )) + col_index - i
 			let left_location  =  new_board[left]
 			let right_location  =  new_board[right]
 			if (getPieceColor(left_location.piece) !== color && left_location.piece) left_location.isKill = true
 			if (getPieceColor(right_location.piece) !== color && right_location.piece) right_location.isKill = true
 		}
 
-		let board_index = 8 * (7 - (row_index+i) ) + col_index
+		let board_index = 8 * (7 - ( row_index+(multiplier*i) ) ) + col_index
 		let active_location  =  new_board[board_index]
 
 		if (active_location.piece) isblocked = true
@@ -207,6 +277,7 @@ export function pawnCapture (location, board, color, isFirstMove=false) {
 }
 
 export function kingCapture (location, board, color) {
+	// https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Chessboard480.svg/264px-Chessboard480.svg.png
 	let [new_board, row_index, col_index] = getIndex(location, board)
 
 	let main =  8 * (7 - row_index ) + col_index
@@ -230,8 +301,9 @@ export function kingCapture (location, board, color) {
 	return new_board
 }
 
-
-export function queenCapture (location, board, color) { // set possible movese the queen
+export function queenCapture (location, board, color) {
+	// Set possible moves for the queen
+	// https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Chess_xot45.svg/33px-Chess_xot45.svg.png
 	let [new_board, row_index, col_index]  = getIndex(location, board)
 
 	let up_isblocked = false
@@ -317,11 +389,6 @@ export function queenCapture (location, board, color) { // set possible movese t
 	return new_board
 }
 
-export function getPieceColor(piece) {
-	if (white_pieces.includes(piece)) return "white"
-	if (black_pieces.includes(piece)) return "black"
-	return ".."
-}
 
 
 export const Board  = [
@@ -459,7 +526,7 @@ export const Board  = [
 		isActive: false,
 		isKill  : false,
 		isSelected: false,
-		piece   : ''
+		piece   : black_pawn
 	},
 
 	{
@@ -565,7 +632,7 @@ export const Board  = [
 		isActive: false,
 		isKill  : false,
 		isSelected: false,
-		piece   : black_pawn
+		piece   : ''
 	},
 	{
 		position: "5f",
@@ -622,7 +689,7 @@ export const Board  = [
 		isActive: false,
 		isKill  : false,
 		isSelected: false,
-		piece   : white_pawn
+		piece   : ''
 	},
 	{
 		position: "4e",
@@ -749,7 +816,7 @@ export const Board  = [
 	{
 		position: "2d",
 		color   : "black",
-		piece   : '',
+		piece   : white_pawn,
 		isActive: false,
 		isKill  : false,
 		isSelected: false
