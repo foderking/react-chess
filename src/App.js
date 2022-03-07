@@ -16,8 +16,6 @@ const App = () =>
 		if (activeSquare) { // changes possible moves when a new square is selected
 			let type = getType(current_piece)
 			let possible_moves
-			// console.log(type, current_piece)
-
 			switch (type) {
 				case "king":
 					possible_moves = kingCapture(location, oldboard, pieceColor)

@@ -68,9 +68,12 @@ export function movePiece(init_location, final_location, board) {
 export function canMove(final_location, board) {
 	let l = board.find(each => each.position === final_location)
 	if (!l) return false
+	// if (l.isActive) return false
+	// console.log(l.isActive)
+	// console.log(l.isActive, "ff")
 
-	if (l.piece === "") return true
-	return false
+	if (l.piece !== "") return false
+	return l.isActive
 }
 
 export function canKill(init_location, final_location, board, color) {
@@ -78,9 +81,10 @@ export function canKill(init_location, final_location, board, color) {
 	let a = new_board.find(each => each.position === init_location)
 	let b = new_board.find(each => each.position === final_location)
 
+	// if (l.isKill) return true
 	if (getPieceColor(b.piece) === color) return false
 	if (color === ".." ) throw  "cankill error"
-	return true
+	return b.isKill
 }
 
 export function killPiece (init_location, final_location, board, color) {
