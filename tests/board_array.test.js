@@ -1,10 +1,11 @@
 const { Board, Pieces } = require("../src/constants")
 
 describe("Checks that the contents of the board array are correct", () => {
+	const rows = "12345678"
+	const cols = "abcdefgh"
+	const valid = ["black", "white"]
 	
 	test("All children should have a 2 character position in form `rowcol`", () => {
-		const rows = "12345678"
-		const cols = "abcdefgh"
 		for (let each of Board) {
 			expect(each.position.length).toBe(2) // checks that the string contains two characters
 			expect(rows).toContain(each.position[0]) // checks that the first character is a valid number
@@ -13,7 +14,6 @@ describe("Checks that the contents of the board array are correct", () => {
 	})
 
 	test("All children should have a key `color` which is either `black` or `white`", () => {
-		const valid = ["black", "white"]
 		for (let each of Board) {
 			expect(valid).toContain(each.color)
 		}

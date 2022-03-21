@@ -14,59 +14,62 @@ const black_pawn 	  = '♟'
 const white_pieces =  [white_pawn, white_rook, white_bishop, white_knight, white_king, white_queen]
 const black_pieces =  [black_pawn, black_rook, black_bishop, black_knight, black_king, black_queen]
 
+const rows = "12345678"
+const cols = "abcdefgh"
+
 const b_rook = {
 	name: black_rook,
-	first_move: true 
+	moves: 0
 }
 const b_knight = {
 	name: black_knight,
-	first_move: true 
+	moves: 0
 }
 const b_bishop = {
 	name: black_bishop,
-	first_move: true 
+	moves: 0
 }
 const b_queen = {
 	name: black_queen,
-	first_move: true 
+	moves: 0
 }
 const b_king = {
 	name: black_king,
-	first_move: true 
+	moves: 0
 }
 const b_pawn = {
 	name: black_pawn,
-	first_move: true 
+	moves: 0
 }
 
 const null_piece = {
 	name: null,
-	first_move: null
+	moves: null
 }
 
 const w_pawn = {
 	name: white_pawn,
-	first_move: true,
+	moves: 0
 }
 const w_rook = {
 	name: white_rook,
-	first_move: true 
+	moves: 0
 }
 const w_knight = {
 	name: white_knight,
-	first_move: true 
+	moves: 0
 }
 const w_bishop = {
 	name: white_bishop,
-	first_move: true 
+	moves: 0
 }
 const w_queen = {
 	name: white_queen,
-	first_move: true 
+	moves: 0
 }
 const w_king = {
 	name: white_king,
-	first_move: true 
+	moves: 0
 }
 
 
@@ -617,4 +620,8 @@ const Pieces = [
 module.exports = {
 	Board,
 	Pieces,
+	white_pieces,
+	black_pieces,
+	rows,
+	cols,
 }
