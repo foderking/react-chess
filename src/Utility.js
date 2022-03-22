@@ -1,33 +1,13 @@
 const {
-	white_pieces, black_pieces, rows, cols
+	white_pieces, black_pieces, rows, cols, white_bishop, white_knight, white_rook, white_pawn, white_king, white_queen, black_king, black_queen, black_bishop, black_knight, black_rook, black_pawn
 } = require("./constants")
 
 /*
-export function getType(piece) {
-	if ( [white_king, black_king].includes(piece) ) return "king"
-	if ( [white_queen, black_queen].includes(piece) ) return "queen"
-	if ( [white_bishop, black_bishop].includes(piece) ) return "bishop"
-	if ( [white_knight, black_knight].includes(piece) ) return "knight"
-	if ( [white_rook, black_rook].includes(piece) ) return "rook"
-	if ( [white_pawn, black_pawn].includes(piece) ) return "pawn"
-	return null
-}
+
 
 export function changePlayer(current_player) {
 	if (current_player === "white") return "black"
 	return "white"
-}
-
-export function generateRandomString(N)
-{
-	// Returns an alphanumeric string of N characters
-	let result           = '';
-	const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	const charactersLength = characters.length;
-	for ( var i = 0; i < N; i++ ) {
-		result += characters.charAt(Math.floor(Math.random() * charactersLength));
-	}
- return result;
 }
 
 export function movePiece(init_location, final_location, board) {
@@ -76,6 +56,26 @@ export function killPiece (init_location, final_location, board, color) {
 }
 
 */
+function generateRandomString(N) {
+	// Returns an alphanumeric string of N characters
+	let result           = '';
+	const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	const charactersLength = characters.length;
+	for ( var i = 0; i < N; i++ ) {
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	}
+ return result;
+}
+
+function getType(piece) {
+	if ( [white_king, black_king].includes(piece) ) return "king"
+	if ( [white_queen, black_queen].includes(piece) ) return "queen"
+	if ( [white_bishop, black_bishop].includes(piece) ) return "bishop"
+	if ( [white_knight, black_knight].includes(piece) ) return "knight"
+	if ( [white_rook, black_rook].includes(piece) ) return "rook"
+	if ( [white_pawn, black_pawn].includes(piece) ) return "pawn"
+	throw "Invalid Piece!"
+}
 
 function getIndex(location) {
 	let [row, col] = location
@@ -98,14 +98,102 @@ function calculateIndex(row, col) {
 function getPieceColor(piece) {
 	if (white_pieces.includes(piece)) return "white"
 	if (black_pieces.includes(piece)) return "black"
-	return ".."
+	return null
+}
+
+function sortMoves(a, b) {
+	return b[0] > a[0] ? -1 : 1
+}
+
+function search(board_position, moves) {
+	// search for `board_position` in moves. returns -1 if it doesn't exist
+	let i = 0
+	let n = moves.length
+	if (moves[0][0] >= board_position) return moves[i][0] === board_position ? i: -1
+	for (let b=~~(n/2); b>0; b=~~(b/2)) {
+		for(;b+i < n && moves[b+i][0] < board_position;)  i += b
+	}
+	if (i+1 >= n) return -1
+	return moves[i+1][0] === board_position ? i+1: -1
+}
+
+function generateMoveForBoard(board) {
+	let moves = [] ///1 1
+	let possible_moves /// 1 1
+	for (let each of board) { // goes through board and adds valid moves for pieces to the array
+		if (each.piece.name) { /// 1 n
+			let type = getType(each.piece.name) ///12 n // guaranteed to have a valid type
+			let piece_color = getPieceColor(each.piece.name) ///12 n
+			switch (type) {
+				case "king":   possible_moves = kingCapture(each.position, board, piece_color) ///108 n
+					break;
+				case "queen":	 possible_moves = queenCapture(each.position, board, piece_color) ///672 n
+					break;
+				case "bishop": possible_moves = bishopCapture(each.position, board, piece_color) ///336 n
+					break;
+				case "knight": possible_moves = knightCapture(each.position, board, piece_color) ///192 n
+					break;
+				case "rook":   possible_moves = rookCapture(each.position, board, piece_color) ///336 n
+					break;
+				case "pawn":   possible_moves = pawnCapture(each.position, board, piece_color)///34 n
+					break;
+				default:
+					throw "Error generating moves!"
+			}
+			moves = moves.concat(possible_moves) //m
+		}
+	}
+	moves.sort(sortMoves)///nlogn // array need to be sorted in order to be able to search for positions
+	// console.log(moves)
+	// slides through board and checks for valid moves
+	let k
+	// goes through each position in the board and looks for positions of pieces that can kill it or move to it
+	for (let i=0; i<64; i++) {//  1 n
+		if (!moves.length) break
+		k = search(board[i].position, moves) ///nlogn
+		// console.log(board[i].position, k)
+		if (k === -1) { // for locations without valid moves, clear can_kill and can_move (prevent wierd bugs) and go to next location
+			board[i].can_kill = null
+			board[i].can_move = null
+			continue
+		}
+		// moves[k][0] => the position that is to be killed, or moved into
+		// moves[k][1] => the position that is doing the moving / killing
+		// Array<[dest, src]>
+		do {
+			if (board[i].piece.name) { // if there is a piece at the location, it is to be killed
+				if (board[i].can_kill) {
+					// when key `can_kill` is not empty
+					board[i].can_kill.push(moves[k][1])
+				}
+				else {
+					// key `can_kill` is initially at null, handles for when it is null
+					board[i].can_kill = [moves[k][1]]
+				}
+			}
+			else { // if there isnt a piece at the location, it is a valid move
+				if (board[i].can_move) {
+					// when key `can_move` is not empty
+					board[i].can_move.push(moves[k][1])
+				}
+				else {
+					// key `can_move` is initially at null, handles for when it is null
+					board[i].can_move = [moves[k][1]]
+				}
+			}
+			moves.splice(k, 1) ///n n sqrt(n)
+			if (!moves.length) break
+			// console.log(moves)
+			k = search(board[i].position, moves) ///n sqrt(n) logn 
+		} while (k !== -1)
+	}
+	// console.log(board)
 }
 
 function kingCapture (location, board, color) {
 	// https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Chessboard480.svg/264px-Chessboard480.svg.png
 	// assumes the piece at `location` is a king and `color` is its color
 	// returns an array of location pairs [killed_location, king_location]
-
 	let [row_index, col_index] = getIndex(location)
 	let index = calculateIndex(row_index, col_index) 
 	let ans = []
@@ -177,7 +265,6 @@ function rookCapture (location, board, color) {
 
 	let index = calculateIndex(row_index, col_index)
 	let square = board[index]
-	// sqaure.isSelected = true
 	let ans = []
 	
 	for (let i=1; i<8 ; i++) { 
@@ -231,7 +318,6 @@ function bishopCapture (location, board, color) {
 	let index =  calculateIndex(row_index, col_index)
 	let square = board[index]
 	let ans = []
-	// square.isSelected = true
 
 	for (let i=1; i<8 ; i++) {
 		if ( !ne_isblocked && (row_index + i < 8 && col_index + i < 8) ) { // all pieces to north-east of the rook. `ne_isblocked` stops sliding if true
@@ -287,7 +373,6 @@ function queenCapture (location, board, color) {
 
 	let index = calculateIndex(row_index, col_index)
 	let square = board[index]
-	// square.isSelected = true
 	let ans = []
 	
 	for (let i=1; i<8 ; i++) {
@@ -370,7 +455,6 @@ function pawnCapture (location, board, color) {
 	let isblocked = false
 	let multiplier = "white" === color ? 1 : -1 // white pawn moves up, black moves down
 	let ans = []
-	// square.isSelected = true
 	// let en_passant_rows = [3, 4]
 	// En-passant
 	// https://en.wikipedia.org/wiki/Chess#En_passant
@@ -412,4 +496,7 @@ module.exports = {
 	bishopCapture,
 	queenCapture,
 	pawnCapture,
+	generateRandomString,
+	generateMoveForBoard,
+	getPieceColor,
 }
