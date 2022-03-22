@@ -2,7 +2,7 @@ const { Board, rows, cols } = require("../src/constants")
 const {
 	getIndex, kingCapture, knightCapture, rookCapture, bishopCapture, queenCapture, pawnCapture
 } = require("../src/Utility")
-const { pawns, knight, king } = require("./testcase")
+const { pawns, knight, king, board1 } = require("./testcase")
 
 describe("Tests all helper functions", () => {
 	
@@ -52,6 +52,7 @@ describe("Tests the movement functions", () => {
 		c_2       = knight.corner_two
 		c_3       = knight.corner_three
 		c_4       = knight.corner_four
+		b_one     = knight.board1
 		// near the center
 		for (let each of Object.keys(kc_home)) {
 			expect(knightCapture(each, Board, "white").sort(sort_)).toEqual(kc_home[each].sort(sort_))
@@ -84,6 +85,11 @@ describe("Tests the movement functions", () => {
 		}
 		for (let each of Object.keys(c_4)){
 			expect(knightCapture(each, Board, "white").sort(sort_)).toEqual(c_4[each].sort(sort_))
+		}
+		// edgecases
+		for (let each of Object.keys(b_one)){
+		// console.log(each, knightCapture(each, board1, "white"))
+			expect(knightCapture(each, board1, "white").sort(sort_)).toEqual(b_one[each].sort(sort_))
 		}
 	})
 

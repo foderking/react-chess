@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { Board } from './constants'
-import { bishopCapture, canKill, canMove, changePlayer, generateMoveForBoard, generateRandomString, getPieceColor, getType, killPiece, kingCapture, knightCapture, movePiece, pawnCapture, queenCapture, rookCapture } from './Utility'
+import { bishopCapture, calculateIndex, canKill, canMove, changePlayer, generateMoveForBoard, generateRandomString, getIndex, getPieceColor, getType, killPiece, kingCapture, knightCapture, movePiece, pawnCapture, queenCapture, rookCapture } from './Utility'
 
 const App = () =>
 {
-	generateMoveForBoard(Board)
-	console.log(Board)
 	const [board, setBoard] =  useState(Board) // represents the whole chess board
+	generateMoveForBoard(board)
+	// console.log(board.map(each => [each.can_move, each.can_kill]))
+	console.log(board)
 	// const [oldboard, setOldBoard] =  useState(Board) // represents history of the whole chess board one move ago
-	const [player, nextPlayer] = useState(true) // white is to play if player is `true` else, its black
+	const [player, setPlayer] = useState(true) // white is to play if player is `true` else, its black
 	const [location, setLocation] = useState(null)
 	// const [activeSquare, setActiveSquare] = useState(false)
 	// const [piece_color, setColor] = useState(null)
@@ -34,36 +35,45 @@ const App = () =>
 	// 	//console.log(e)
 		let piece_name       = e.target.innerText
 		let piece_location = e.target.id
-		let piece = board.find(each => each.position === piece_location)
+		let [row, col] = getIndex(piece_location)
+		let index = calculateIndex(row, col)
+		// let piece = board.find(each => each.position === piece_location)
+		let piece = board[index]
 		let family = getPieceColor(piece_name)
-		console.log(piece_name, family, clicked_piece, location)
+		// console.log(piece_name, family, clicked_piece, location)
+		// console.log(player, family)
+		// console.log(piece)
 
 		if (piece_location === location) { // undo move if you click twice
 			setLocation(null)
 			setPiece(null)
 		}
-		else if (family==="white" && player) { // change moves if another valid piece is clicked
+		else if (family==="white" && player || family==="black" && !player) { // change moves if another valid piece is clicked
 			setLocation(piece_location)
 			setPiece(piece_name)
 		}
-		else { // Three possible reasons - moving piece to a new location, killing another piece, or a totally invalid move
-			// console.log(piece)
-			if ((location && piece.can_kill) && piece.can_kill.includes(location)){ // killing another piece
-				console.log("piece can be killed!")
-				setLocation(null)
-				setPiece(null)
-			}
-			else if ((location && piece.can_move) && piece.can_move.includes(location)) { // moving to a new location
-				console.log("piece can move here!") 
-				setLocation(null)
-				setPiece(null)
-			}
-			else { // invalid move
-				// if (!location)
-				// if (!current_piece)
-				setLocation(null)
-				setPiece(null)
-			}
+		// Three possible reasons - moving piece to a new location, killing another piece, or a totally invalid move
+		else if ((location && piece.can_kill) && piece.can_kill.includes(location)){ // killing another piece
+			let [new_board, killed] = killPiece(location, piece_location, board) 
+			setBoard(new_board)
+			setKills(kills.concat(killed))
+			setLocation(null)
+			setPiece(null)
+			setPlayer(!player)
+		}
+		else if ((location && piece.can_move) && piece.can_move.includes(location)) { // moving to a new location
+			console.log("piece can move here!") 
+			setBoard(movePiece(location, piece_location, board))
+			setLocation(null)
+			setPiece(null)
+			setPlayer(!player)
+		}
+		else { // invalid move
+			console.log("invalid move")
+			setLocation(null)
+			setPiece(null)
+			// if (!location)
+			// if (!current_piece)
 		}
 
 	// 	if (family === player) { // only the next player is allowed make a move

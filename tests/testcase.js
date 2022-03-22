@@ -159,7 +159,10 @@ const knight = {
 	},
 	corner_four: {
 		"8h": [["6g", "8h"], ["7f", "8h"]]
-	}
+	},
+  board1: {
+    "4g" : [["3e", "4g"], ["2f", "4g"], ["6f", "4g"], ["6h", "4g"], ["5e", "4g"]]
+  }
 }
 const king = {
 	edges: {
@@ -191,11 +194,739 @@ const king = {
 		"4d": [
 			["3c", "4d"], ["3d", "4d"], ["3e", "4d"], ["5c", "4d"], ["5d", "4d"], ["5e", "4d"], ["4c", "4d"], ["4e", "4d"]
 		]
-	}
+	},
 }
+const board1 = [
+  {
+    "position": "8a",
+    "color": "white",
+    "piece": {
+      "name": "♜",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "8b",
+    "color": "black",
+    "piece": {
+      "name": "♞",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "8c",
+    "color": "white",
+    "piece": {
+      "name": "♝",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "8d",
+    "color": "black",
+    "piece": {
+      "name": "♛",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "8e",
+    "color": "white",
+    "piece": {
+      "name": "♚",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "8f",
+    "color": "black",
+    "piece": {
+      "name": "♝",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "8g",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "6f",
+      "8h"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "8h",
+    "color": "black",
+    "piece": {
+      "name": "♜",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "7a",
+    "color": "black",
+    "piece": {
+      "name": "♟",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "7b",
+    "color": "white",
+    "piece": {
+      "name": "♟",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "7c",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "8d"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "7d",
+    "color": "white",
+    "piece": {
+      "name": "♟",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "7e",
+    "color": "black",
+    "piece": {
+      "name": "♟",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "7f",
+    "color": "white",
+    "piece": {
+      "name": "♟",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "7g",
+    "color": "black",
+    "piece": {
+      "name": "♟",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "7h",
+    "color": "white",
+    "piece": {
+      "name": "♟",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "6a",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7a",
+      "8b"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "6b",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7b",
+      "8d"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "6c",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "8b"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "6d",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7d"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "6e",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7e"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "6f",
+    "color": "black",
+    "piece": {
+      "name": "♞",
+      "moves": 0
+    },
+    "can_move": [
+      "7f",
+      "8g"
+    ],
+    "can_kill": [
+      "4g"
+    ]
+  },
+  {
+    "position": "6g",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7g"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "6h",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7h"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "5a",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7a",
+      "8d"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "5b",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7b"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "5c",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "5d",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7d"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "5e",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7e"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "5f",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "4f"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "5g",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7g"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "5h",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "7h"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "4a",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "2a"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "4b",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "2b"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "4c",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "4d",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "2d"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "4e",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "2e",
+      "6f"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "4f",
+    "color": "black",
+    "piece": {
+      "name": "♙",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "4g",
+    "color": "white",
+    "piece": {
+      "name": "♘",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": [
+      "6f"
+    ]
+  },
+  {
+    "position": "4h",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "2h"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "3a",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "1b",
+      "2a"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "3b",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "2b"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "3c",
+    "color": "black",
+    "piece": {
+      "name": "♟",
+      "moves": 0
+    },
+    "can_move": [
+      "1b",
+      "2c",
+      "4c"
+    ],
+    "can_kill": [
+      "1b",
+      "2d",
+      "2b"
+    ]
+  },
+  {
+    "position": "3d",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "2d"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "3e",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "2e",
+      "4g"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "3f",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "3g",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "2g"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "3h",
+    "color": "white",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "2h"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "2a",
+    "color": "white",
+    "piece": {
+      "name": "♙",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "2b",
+    "color": "black",
+    "piece": {
+      "name": "♙",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": [
+      "3c"
+    ]
+  },
+  {
+    "position": "2c",
+    "color": "white",
+    "piece": {
+      "name": "♙",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "2d",
+    "color": "black",
+    "piece": {
+      "name": "♙",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": [
+      "3c"
+    ]
+  },
+  {
+    "position": "2e",
+    "color": "white",
+    "piece": {
+      "name": "♙",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "2f",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "1e",
+      "4g"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "2g",
+    "color": "white",
+    "piece": {
+      "name": "♙",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "2h",
+    "color": "black",
+    "piece": {
+      "name": "♙",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "1a",
+    "color": "black",
+    "piece": {
+      "name": "♖",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "1b",
+    "color": "white",
+    "piece": {
+      "name": "♘",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "1c",
+    "color": "black",
+    "piece": {
+      "name": "♗",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "1d",
+    "color": "white",
+    "piece": {
+      "name": "♕",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "1e",
+    "color": "black",
+    "piece": {
+      "name": "♔",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "1f",
+    "color": "white",
+    "piece": {
+      "name": "♗",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  },
+  {
+    "position": "1g",
+    "color": "black",
+    "piece": {
+      "name": null,
+      "moves": null
+    },
+    "can_move": [
+      "1h"
+    ],
+    "can_kill": null
+  },
+  {
+    "position": "1h",
+    "color": "white",
+    "piece": {
+      "name": "♖",
+      "moves": 0
+    },
+    "can_move": null,
+    "can_kill": null
+  }
+]
 
 module.exports = {
 	pawns,
 	knight,
-	king
+	king, 
+  board1
 }

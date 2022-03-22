@@ -88,7 +88,7 @@ const Board  = [
 		piece   : b_rook,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "8b",
@@ -96,7 +96,7 @@ const Board  = [
 		piece   : b_knight,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "8c",
@@ -104,7 +104,7 @@ const Board  = [
 		piece   : b_bishop,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "8d",
@@ -112,7 +112,7 @@ const Board  = [
 		piece   : b_queen,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "8e",
@@ -120,7 +120,7 @@ const Board  = [
 		piece   : b_king,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "8f",
@@ -128,7 +128,7 @@ const Board  = [
 		piece   : b_bishop,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "8g",
@@ -136,7 +136,7 @@ const Board  = [
 		piece   : b_knight,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "8h",
@@ -144,7 +144,7 @@ const Board  = [
 		piece   : b_rook,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 
 	{
@@ -153,7 +153,7 @@ const Board  = [
 		piece   : b_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "7b",
@@ -161,7 +161,7 @@ const Board  = [
 		piece   : b_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "7c",
@@ -169,7 +169,7 @@ const Board  = [
 		piece   : b_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "7d",
@@ -177,7 +177,7 @@ const Board  = [
 		piece   : b_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "7e",
@@ -185,7 +185,7 @@ const Board  = [
 		piece   : b_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "7f",
@@ -193,7 +193,7 @@ const Board  = [
 		piece   : b_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "7g",
@@ -201,7 +201,7 @@ const Board  = [
 		piece   : b_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "7h",
@@ -209,7 +209,7 @@ const Board  = [
 		piece   : b_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 
 	{
@@ -218,7 +218,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "6b",
@@ -226,7 +226,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "6c",
@@ -234,7 +234,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "6d",
@@ -242,7 +242,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "6e",
@@ -250,7 +250,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "6f",
@@ -258,7 +258,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "6g",
@@ -266,7 +266,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "6h",
@@ -274,7 +274,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 
 	{
@@ -283,7 +283,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "5b",
@@ -291,7 +291,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "5c",
@@ -299,7 +299,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "5d",
@@ -307,7 +307,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "5e",
@@ -315,7 +315,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "5f",
@@ -323,7 +323,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "5g",
@@ -331,7 +331,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "5h",
@@ -339,7 +339,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	
 	{
@@ -348,7 +348,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "4b",
@@ -356,7 +356,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "4c",
@@ -364,7 +364,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "4d",
@@ -372,7 +372,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "4e",
@@ -380,7 +380,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "4f",
@@ -388,7 +388,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "4g",
@@ -396,7 +396,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "4h",
@@ -404,7 +404,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	
 	{
@@ -413,7 +413,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "3b",
@@ -421,7 +421,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "3c",
@@ -429,7 +429,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "3d",
@@ -437,7 +437,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "3e",
@@ -445,7 +445,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "3f",
@@ -453,7 +453,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "3g",
@@ -461,7 +461,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "3h",
@@ -469,7 +469,7 @@ const Board  = [
 		piece   : null_piece,
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "2a",
@@ -477,7 +477,7 @@ const Board  = [
 		piece   : w_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "2b",
@@ -485,7 +485,7 @@ const Board  = [
 		piece   : w_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "2c",
@@ -493,7 +493,7 @@ const Board  = [
 		piece   : w_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "2d",
@@ -501,7 +501,7 @@ const Board  = [
 		piece   : w_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "2e",
@@ -509,7 +509,7 @@ const Board  = [
 		piece   : w_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "2f",
@@ -517,7 +517,7 @@ const Board  = [
 		piece   : w_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "2g",
@@ -525,7 +525,7 @@ const Board  = [
 		piece   : w_pawn,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "2h",
@@ -533,7 +533,7 @@ const Board  = [
 		piece   : w_pawn, 
 		can_move: null,
 		can_kill: null,
-		isSelected: false,
+		// isSelected: false,
 	},
 	{
 		position: "1a",
@@ -541,7 +541,7 @@ const Board  = [
 		piece   : w_rook,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "1b",
@@ -549,7 +549,7 @@ const Board  = [
 		piece   : w_knight,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "1c",
@@ -557,7 +557,7 @@ const Board  = [
 		piece   : w_bishop,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "1d",
@@ -565,7 +565,7 @@ const Board  = [
 		piece   : w_queen,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "1e",
@@ -573,7 +573,7 @@ const Board  = [
 		piece   : w_king,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "1f",
@@ -581,7 +581,7 @@ const Board  = [
 		piece   : w_bishop,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "1g",
@@ -589,7 +589,7 @@ const Board  = [
 		piece   : w_knight,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	},
 	{
 		position: "1h",
@@ -597,7 +597,7 @@ const Board  = [
 		piece   : w_rook,
 		can_move: null,
 		can_kill: null,
-		isSelected: false
+		// isSelected: false
 	}
 ]
 
@@ -636,4 +636,5 @@ module.exports = {
 	black_bishop,
 	black_knight,
 	black_pawn,
+	null_piece,
 }

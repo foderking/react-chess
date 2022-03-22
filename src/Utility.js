@@ -1,26 +1,8 @@
 const {
-	white_pieces, black_pieces, rows, cols, white_bishop, white_knight, white_rook, white_pawn, white_king, white_queen, black_king, black_queen, black_bishop, black_knight, black_rook, black_pawn
+	white_pieces, black_pieces, rows, cols, white_bishop, white_knight, white_rook, white_pawn, white_king, white_queen, black_king, black_queen, black_bishop, black_knight, black_rook, black_pawn, null_piece
 } = require("./constants")
 
 /*
-
-
-export function changePlayer(current_player) {
-	if (current_player === "white") return "black"
-	return "white"
-}
-
-export function movePiece(init_location, final_location, board) {
-	// assumes the piece in `final_location` is empty
-	let new_board = board.map(each => { return {...each}})
-	let a = new_board.find(each => each.position === init_location)
-	let b = new_board.find(each => each.position === final_location)
-	let moved_piece = a.piece
-	a.piece  = ""
-	b.piece = moved_piece
-	return new_board
-}
-
 export function canMove(final_location, board) {
 	let l = board.find(each => each.position === final_location)
 	if (!l) return false
@@ -67,6 +49,7 @@ function generateRandomString(N) {
  return result;
 }
 
+		
 function getType(piece) {
 	if ( [white_king, black_king].includes(piece) ) return "king"
 	if ( [white_queen, black_queen].includes(piece) ) return "queen"
@@ -77,6 +60,77 @@ function getType(piece) {
 	throw "Invalid Piece!"
 }
 
+function removePiece(location, board) {
+	// clears `location` from `can_kill` and `can_move` of all elements in `board`
+	function filterPiece(each) {
+		if (each.can_kill) each.can_kill = each.can_kill.filter(each => each !== location)
+		if (each.can_move) each.can_move = each.can_move.filter(each => each !== location)
+		return each
+	}
+
+	return board.map(filterPiece)
+}
+
+function movePiece(source_location, target_location, board) {
+	let new_board = cloneBoard(board)
+	let [rowa, cola] = getIndex(source_location)
+	let [rowb, colb] = getIndex(target_location)
+	let a = new_board[calculateIndex(rowa, cola)]
+	let b = new_board[calculateIndex(rowb, colb)]
+	if (b.piece.name) throw "movePiece Error!"
+	// switches the pieces
+	let moved_piece = JSON.parse(JSON.stringify(a.piece)) // copy object direct not by reference (prevent wierd bugs with pawns, since all pawns initially reference the same object)
+	moved_piece.moves += 1
+	a.piece  = null_piece
+	b.piece = moved_piece
+	// removes all possible moves previously associated with the original location
+	new_board = removePiece(source_location, new_board)
+	// clear `can_move` for destination (since it is now occupied)
+	b.can_move = null
+	b.can_kill = null // not necesssary since can_kill for an empty piece should be null, but just in case
+	// // switches `can_move` to `can_kill` for the target location (since it is now occupied) also removes the source location from it
+	// let can_move = b.can_move
+	// can_move = can_move.filter(each => each !== source_location)
+	// b.can_move  = null
+	// b.can_kill  = can_move
+	// // switches `can_kill` to `can_move` for the source location (since it is now empty)
+	// let can_kill = a.can_kill
+	// a.can_kill = null
+	// a.can_move = can_kill
+	return new_board
+}
+
+function killPiece(source_location, target_location, board) {
+	let new_board = cloneBoard(board)
+	let [rowa, cola] = getIndex(source_location)
+	let [rowb, colb] = getIndex(target_location)
+	let a = new_board[calculateIndex(rowa, cola)]
+	let b = new_board[calculateIndex(rowb, colb)]
+	if (!b.piece.name) throw "killPiece Error!"
+	// switches the pieces
+	let moved_piece = JSON.parse(JSON.stringify(a.piece)) // copy object direct not by reference (prevent wierd bugs with pawns, since all pawns initially reference the same object)
+	let killed_piece = JSON.parse(JSON.stringify(b.piece)) // copy object direct not by reference (prevent wierd bugs with pawns, since all pawns initially reference the same object)
+	moved_piece.moves += 1
+	a.piece  = null_piece
+	b.piece = moved_piece
+	// removes all possible moves previously associated with the original location
+	new_board = removePiece(source_location, new_board)
+	// removes all possible moves previously associated with the killed target
+	new_board = removePiece(target_location, new_board)
+	// clear `can_move` for destination (since it is now occupied)
+	b.can_move = null
+	b.can_kill = null
+	// // switches `can_move` to `can_kill` for the target location (since it is now occupied) also removes the source location from it
+	// let can_move = b.can_move
+	// can_move = can_move.filter(each => each !== source_location)
+	// b.can_move  = null
+	// b.can_kill  = can_move
+	// // switches `can_kill` to `can_move` for the source location (since it is now empty)
+	// let can_kill = a.can_kill
+	// a.can_kill = null
+	// a.can_move = can_kill
+	return [new_board, killed_piece.name]
+}
 function getIndex(location) {
 	let [row, col] = location
 	let row_index = rows.indexOf(row)
@@ -143,48 +197,54 @@ function generateMoveForBoard(board) {
 			moves = moves.concat(possible_moves) //m
 		}
 	}
+	for (let each of board) { // clear previously generated moves for board (prevents wierd bugs)
+		each.can_kill = null
+		each.can_move = null
+	}
 	moves.sort(sortMoves)///nlogn // array need to be sorted in order to be able to search for positions
-	// console.log(moves)
-	// slides through board and checks for valid moves
 	let k
 	// goes through each position in the board and looks for positions of pieces that can kill it or move to it
-	for (let i=0; i<64; i++) {//  1 n
+	for (let square of board) {//  1 n
 		if (!moves.length) break
-		k = search(board[i].position, moves) ///nlogn
+		k = search(square.position, moves) ///nlogn
 		// console.log(board[i].position, k)
-		if (k === -1) { // for locations without valid moves, clear can_kill and can_move (prevent wierd bugs) and go to next location
-			board[i].can_kill = null
-			board[i].can_move = null
-			continue
-		}
+		if (k === -1) continue
+		// for locations without valid moves, clear can_kill and can_move (prevent wierd bugs) and go to next location
+		// 	square.can_kill = null
+		// 	square.can_move = null
+		// 	continue
+		// }
+
 		// moves[k][0] => the position that is to be killed, or moved into
 		// moves[k][1] => the position that is doing the moving / killing
 		// Array<[dest, src]>
 		do {
-			if (board[i].piece.name) { // if there is a piece at the location, it is to be killed
-				if (board[i].can_kill) {
+			if (square.piece.name) { // if there is a piece at the location, it is to be killed
+				if (square.can_kill) {
 					// when key `can_kill` is not empty
-					board[i].can_kill.push(moves[k][1])
+					square.can_kill.push(moves[k][1])
 				}
 				else {
 					// key `can_kill` is initially at null, handles for when it is null
-					board[i].can_kill = [moves[k][1]]
+					square.can_kill = [moves[k][1]]
 				}
 			}
 			else { // if there isnt a piece at the location, it is a valid move
-				if (board[i].can_move) {
+				if (square.can_move) {
 					// when key `can_move` is not empty
-					board[i].can_move.push(moves[k][1])
+					// if (!square.can_move.includes(moves[k][1]))
+					square.can_move.push(moves[k][1])
 				}
 				else {
 					// key `can_move` is initially at null, handles for when it is null
-					board[i].can_move = [moves[k][1]]
+					// console.log(square.can_move, moves[k][1])
+					square.can_move = [moves[k][1]]
 				}
 			}
 			moves.splice(k, 1) ///n n sqrt(n)
 			if (!moves.length) break
 			// console.log(moves)
-			k = search(board[i].position, moves) ///n sqrt(n) logn 
+			k = search(square.position, moves) ///n sqrt(n) logn 
 		} while (k !== -1)
 	}
 	// console.log(board)
@@ -499,4 +559,8 @@ module.exports = {
 	generateRandomString,
 	generateMoveForBoard,
 	getPieceColor,
+	getIndex,
+	calculateIndex,
+	movePiece,
+	killPiece,
 }
