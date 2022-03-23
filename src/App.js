@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Board } from './constants'
+import Promotion from './Promotion'
 import { bishopCapture, calculateIndex, canKill, canMove, changePlayer, generateMoveForBoard, generateRandomString, getIndex, getPieceColor, getType, killPiece, kingCapture, knightCapture, movePiece, pawnCapture, queenCapture, rookCapture } from './Utility'
 
 const App = () =>
@@ -15,19 +16,6 @@ const App = () =>
 	// const [piece_color, setColor] = useState(null)
 	const [clicked_piece, setPiece] = useState(null)
 	const [kills, setKills] = useState([])
-
-	// useEffect( () => { // hook for moving pieces
-	// 	if (activeSquare) { // changes possible moves when a new square is selected
-// 				break;
-	// 		}
-	// 		setBoard(possible_moves)
-	// 		// setBoard(oldboard)
-	// 		// setOldBoard(board)
-	// 	}
-	// 	else { // unselects possible moves when activesquare is false
-	// 		setBoard(oldboard)
-	// 	}
-	// }, [activeSquare])
 
 	function handleClick(e)
 	{
@@ -75,31 +63,6 @@ const App = () =>
 			// if (!location)
 			// if (!current_piece)
 		}
-
-	// 	if (family === player) { // only the next player is allowed make a move
-	// 		if (activeSquare === newLocation) setActiveSquare(false)  // handles for when you click the same piece twice. it is made inactive (set to false)
-	// 		else setActiveSquare(newLocation) // handles when a new location is clicked. changes the active cell to the new location
-	// 	}
-	// 	else if (activeSquare && canMove(newLocation, board)) {
-	// 		// console.log('first')
-	// 		let n_board = movePiece(activeSquare, newLocation, oldboard)				
-	// 		setBoard(n_board)
-	// 		setOldBoard(n_board) // this is needed since the useeffect changes board to oldboard when active is false
-	// 		setActiveSquare(false)
-	// 		let next_p = changePlayer(player)
-	// 		nextPlayer(next_p)
-	// 	}
-	// 	else if (activeSquare && canKill(activeSquare, newLocation, board, pieceColor)) {
-	// 		let [n_board, killed] = killPiece(activeSquare, newLocation, oldboard)				
-	// 		setKills( kills.concat(killed) )
-	// 		setBoard(n_board)
-	// 		setOldBoard(n_board) // this is needed since the useeffect changes board to oldboard when active is false
-	// 		setActiveSquare(false)
-	// 		let next_p = changePlayer(player)
-	// 		nextPlayer(next_p)
-	
-	// 	}
-	// 	else setActiveSquare(false) // if the clicked player is not the next, active is set to false
 	}
 
 	const cols = 'abcdefgh'.split('')
@@ -109,6 +72,7 @@ const App = () =>
 		<div className='container'>
 				<h1>Chess App</h1>
 
+				{/* <Promotion family={"white"} /> */}
 				<div className='main'>
 					<div className='cols'>
 						{

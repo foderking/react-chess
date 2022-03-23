@@ -2,42 +2,13 @@ const {
 	white_pieces, black_pieces, rows, cols, white_bishop, white_knight, white_rook, white_pawn, white_king, white_queen, black_king, black_queen, black_bishop, black_knight, black_rook, black_pawn, null_piece
 } = require("./constants")
 
-/*
-export function canMove(final_location, board) {
-	let l = board.find(each => each.position === final_location)
-	if (!l) return false
-	// if (l.isActive) return false
-	// console.log(l.isActive)
-	// console.log(l.isActive, "ff")
-
-	if (l.piece !== "") return false
-	return l.isActive
+class PawnPromotion extends Error {
+	constructor(message) {
+		super(message)
+		this.name = "PawnPromotion"
+	}
 }
 
-export function canKill(init_location, final_location, board, color) {
-	let new_board = board.map(each => { return {...each}})
-	let a = new_board.find(each => each.position === init_location)
-	let b = new_board.find(each => each.position === final_location)
-
-	// if (l.isKill) return true
-	if (getPieceColor(b.piece) === color) return false
-	if (color === ".." ) throw  "cankill error"
-	return b.isKill
-}
-
-export function killPiece (init_location, final_location, board, color) {
-	let new_board = board.map(each => { return {...each}})
-	let a = new_board.find(each => each.position === init_location)
-	let b = new_board.find(each => each.position === final_location)
-
-	let killed_piece = b.piece
-	let moved_piece = a.piece
-	a.piece = ""
-	b.piece = moved_piece
-	return [new_board, killed_piece]
-}
-
-*/
 function generateRandomString(N) {
 	// Returns an alphanumeric string of N characters
 	let result           = '';
@@ -48,7 +19,6 @@ function generateRandomString(N) {
 	}
  return result;
 }
-
 		
 function getType(piece) {
 	if ( [white_king, black_king].includes(piece) ) return "king"
@@ -67,11 +37,11 @@ function removePiece(location, board) {
 		if (each.can_move) each.can_move = each.can_move.filter(each => each !== location)
 		return each
 	}
-
 	return board.map(filterPiece)
 }
 
 function movePiece(source_location, target_location, board) {
+throw PawnPromotion
 	let new_board = cloneBoard(board)
 	let [rowa, cola] = getIndex(source_location)
 	let [rowb, colb] = getIndex(target_location)
@@ -88,15 +58,6 @@ function movePiece(source_location, target_location, board) {
 	// clear `can_move` for destination (since it is now occupied)
 	b.can_move = null
 	b.can_kill = null // not necesssary since can_kill for an empty piece should be null, but just in case
-	// // switches `can_move` to `can_kill` for the target location (since it is now occupied) also removes the source location from it
-	// let can_move = b.can_move
-	// can_move = can_move.filter(each => each !== source_location)
-	// b.can_move  = null
-	// b.can_kill  = can_move
-	// // switches `can_kill` to `can_move` for the source location (since it is now empty)
-	// let can_kill = a.can_kill
-	// a.can_kill = null
-	// a.can_move = can_kill
 	return new_board
 }
 
@@ -120,17 +81,9 @@ function killPiece(source_location, target_location, board) {
 	// clear `can_move` for destination (since it is now occupied)
 	b.can_move = null
 	b.can_kill = null
-	// // switches `can_move` to `can_kill` for the target location (since it is now occupied) also removes the source location from it
-	// let can_move = b.can_move
-	// can_move = can_move.filter(each => each !== source_location)
-	// b.can_move  = null
-	// b.can_kill  = can_move
-	// // switches `can_kill` to `can_move` for the source location (since it is now empty)
-	// let can_kill = a.can_kill
-	// a.can_kill = null
-	// a.can_move = can_kill
 	return [new_board, killed_piece.name]
 }
+
 function getIndex(location) {
 	let [row, col] = location
 	let row_index = rows.indexOf(row)
@@ -276,6 +229,7 @@ function kingCapture (location, board, color) {
 			ans.push([active_square.position, square.position])
 		}
 	}
+	// castling
 	return ans
 }
 
