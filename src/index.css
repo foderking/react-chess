@@ -107,6 +107,10 @@
 	background-color: #89D16B;
 }
 
+.promo {
+	font-size: 4em;
+}
+
 .promotion_popup {
 /* Popup box BEGIN */
     background:rgba(0,0,0,.4);

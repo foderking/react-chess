@@ -1,7 +1,8 @@
-import { black_pieces, white_pieces } from "./constants";
+import { black_promotions, white_promotions } from "./constants";
 import React from 'react'
+import { generateRandomString } from "./Utility";
 
-export default function Promotion({ family })
+export default function Promotion({ family, handlePromotion })
 {
 	return (
 		<div className="promotion_popup">
@@ -10,9 +11,18 @@ export default function Promotion({ family })
 				<h1>Promotion</h1>
 				Please pick piece to promote to
 				<div>
-					{ family === "white" ?
-						white_pieces.join(" ")
-						: black_pieces.join(" ")
+					{
+						family
+						?	white_promotions.map(each =>
+							<span onClick={() => handlePromotion(each)} key={generateRandomString()} className="promo">
+								{ each }
+							</span>
+						)
+						: black_promotions.map(each =>
+							<span onClick={() => handlePromotion(each)} key={generateRandomString()} className="promo">
+								{ each }
+							</span>
+						)
 					}
 				</div>
 			</div>

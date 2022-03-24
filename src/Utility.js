@@ -9,7 +9,7 @@ class PawnPromotion extends Error {
 	}
 }
 
-function generateRandomString(N) {
+function generateRandomString(N=10) {
 	// Returns an alphanumeric string of N characters
 	let result           = '';
 	const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -30,6 +30,27 @@ function getType(piece) {
 	throw "Invalid Piece!"
 }
 
+function promotePawn(pawn_location, promoted, board) {
+	let [row_index, col_index] = getIndex(pawn_location)
+	let index = calculateIndex(row_index, col_index) 
+	let pawn  = board[index]
+	pawn.piece = { 
+		name: promoted,
+		moves: pawn.piece.moves
+	}
+}
+
+function checkPromotion(source_piece, target_location) {
+	let valid_white =  ["8a", "8b", "8c", "8d", "8e", "8f", "8g", "8h", ]
+	let valid_black =  ["1a", "1b", "1c", "1d", "1e", "1f", "1g", "1h", ]
+	let piece = getType(source_piece)
+	if (piece !== "pawn") return false
+	let color = getPieceColor(source_piece)
+	if (color === "white") return valid_white.includes(target_location)
+	if (color === "black") return valid_black.includes(target_location)
+	return false
+}
+
 function removePiece(location, board) {
 	// clears `location` from `can_kill` and `can_move` of all elements in `board`
 	function filterPiece(each) {
@@ -41,7 +62,6 @@ function removePiece(location, board) {
 }
 
 function movePiece(source_location, target_location, board) {
-throw PawnPromotion
 	let new_board = cloneBoard(board)
 	let [rowa, cola] = getIndex(source_location)
 	let [rowb, colb] = getIndex(target_location)
@@ -58,6 +78,7 @@ throw PawnPromotion
 	// clear `can_move` for destination (since it is now occupied)
 	b.can_move = null
 	b.can_kill = null // not necesssary since can_kill for an empty piece should be null, but just in case
+	// throw PawnPromotion
 	return new_board
 }
 
@@ -517,4 +538,7 @@ module.exports = {
 	calculateIndex,
 	movePiece,
 	killPiece,
+	promotePawn,
+	PawnPromotion,
+	checkPromotion,
 }

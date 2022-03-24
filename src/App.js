@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Board } from './constants'
 import Promotion from './Promotion'
-import { bishopCapture, calculateIndex, canKill, canMove, changePlayer, generateMoveForBoard, generateRandomString, getIndex, getPieceColor, getType, killPiece, kingCapture, knightCapture, movePiece, pawnCapture, queenCapture, rookCapture } from './Utility'
+import { bishopCapture, calculateIndex, canKill, canMove, changePlayer, checkPromotion, generateMoveForBoard, generateRandomString, getIndex, getPieceColor, getType, killPiece, kingCapture, knightCapture, movePiece, pawnCapture, promotePawn, queenCapture, rookCapture } from './Utility'
 
 const App = () =>
 {
@@ -16,9 +16,11 @@ const App = () =>
 	// const [piece_color, setColor] = useState(null)
 	const [clicked_piece, setPiece] = useState(null)
 	const [kills, setKills] = useState([])
+	const [promotion, doPromotion] = useState(false)
+	const [promoted_location, setPromoLocation] = useState(null)
+	const [promoted_family, setPromoFamily] = useState(null)
 
-	function handleClick(e)
-	{
+	function handleClick(e) {
 		e.preventDefault()
 	// 	//console.log(e)
 		let piece_name       = e.target.innerText
@@ -44,14 +46,17 @@ const App = () =>
 		else if ((location && piece.can_kill) && piece.can_kill.includes(location)){ // killing another piece
 			let [new_board, killed] = killPiece(location, piece_location, board) 
 			setBoard(new_board)
+			if (checkPromotion(clicked_piece, piece_location)) startPromotion(player, piece_location)
 			setKills(kills.concat(killed))
 			setLocation(null)
 			setPiece(null)
 			setPlayer(!player)
 		}
 		else if ((location && piece.can_move) && piece.can_move.includes(location)) { // moving to a new location
-			console.log("piece can move here!") 
-			setBoard(movePiece(location, piece_location, board))
+			// console.log("piece can move here!") 
+			let new_board = movePiece(location, piece_location, board)
+			setBoard(new_board)
+			if (checkPromotion(clicked_piece, piece_location)) startPromotion(player, piece_location)
 			setLocation(null)
 			setPiece(null)
 			setPlayer(!player)
@@ -60,9 +65,20 @@ const App = () =>
 			console.log("invalid move")
 			setLocation(null)
 			setPiece(null)
-			// if (!location)
-			// if (!current_piece)
 		}
+	}
+
+	function startPromotion(family, piece_location) {
+		doPromotion(true)
+		setPromoFamily(family)
+		setPromoLocation(piece_location)
+	}
+
+	function finishPromotion(piece) {
+		promotePawn(promoted_location, piece, board)
+		doPromotion(false)
+		setPromoFamily(false)
+		setPromoLocation(false)
 	}
 
 	const cols = 'abcdefgh'.split('')
@@ -71,8 +87,11 @@ const App = () =>
 	return (
 		<div className='container'>
 				<h1>Chess App</h1>
+				{ 
+					promotion &&
+					<Promotion family={promoted_family} handlePromotion={finishPromotion} />
+				}
 
-				{/* <Promotion family={"white"} /> */}
 				<div className='main'>
 					<div className='cols'>
 						{
