@@ -181,47 +181,28 @@ function generateMoveForBoard(board) {
 	for (let square of board) {//  1 n
 		if (!moves.length) break
 		k = search(square.position, moves) ///nlogn
-		// console.log(board[i].position, k)
 		if (k === -1) continue
-		// for locations without valid moves, clear can_kill and can_move (prevent wierd bugs) and go to next location
-		// 	square.can_kill = null
-		// 	square.can_move = null
-		// 	continue
-		// }
-
 		// moves[k][0] => the position that is to be killed, or moved into
 		// moves[k][1] => the position that is doing the moving / killing
 		// Array<[dest, src]>
 		do {
 			if (square.piece.name) { // if there is a piece at the location, it is to be killed
-				if (square.can_kill) {
-					// when key `can_kill` is not empty
-					square.can_kill.push(moves[k][1])
-				}
-				else {
-					// key `can_kill` is initially at null, handles for when it is null
-					square.can_kill = [moves[k][1]]
-				}
+				// when key `can_kill` is not empty
+				if (square.can_kill) square.can_kill.push(moves[k][1])
+				// key `can_kill` is initially at null, handles for when it is null
+				else square.can_kill = [moves[k][1]]
 			}
 			else { // if there isnt a piece at the location, it is a valid move
-				if (square.can_move) {
-					// when key `can_move` is not empty
-					// if (!square.can_move.includes(moves[k][1]))
-					square.can_move.push(moves[k][1])
-				}
-				else {
-					// key `can_move` is initially at null, handles for when it is null
-					// console.log(square.can_move, moves[k][1])
-					square.can_move = [moves[k][1]]
-				}
+				// when key `can_move` is not empty
+				if (square.can_move) square.can_move.push(moves[k][1])
+				// key `can_move` is initially at null, handles for when it is null
+				else square.can_move = [moves[k][1]]
 			}
 			moves.splice(k, 1) ///n n sqrt(n)
 			if (!moves.length) break
-			// console.log(moves)
 			k = search(square.position, moves) ///n sqrt(n) logn 
 		} while (k !== -1)
 	}
-	// console.log(board)
 }
 
 function kingCapture (location, board, color) {
@@ -243,6 +224,7 @@ function kingCapture (location, board, color) {
 			// console.log(i, j)
 			let board_index = calculateIndex(i, j) 
 			let active_square  =  board[board_index]
+			// console.log("ffff", active_square)
 
 			if (getPieceColor(active_square.piece.name) === color) continue  // prevents killing pieces in the same family
 			// if (active_square.piece.name) active_square.isKill = true

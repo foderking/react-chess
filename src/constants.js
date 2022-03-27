@@ -13,8 +13,8 @@ const black_pawn 	  = '♟'
 
 const white_pieces =  [white_pawn, white_rook, white_bishop, white_knight, white_king, white_queen]
 const black_pieces =  [black_pawn, black_rook, black_bishop, black_knight, black_king, black_queen]
-const white_promotions = [white_rook, white_bishop, white_knight, white_king, white_queen]
-const black_promotions = [black_rook, black_bishop, black_knight, black_king, black_queen]
+const white_promotions = [white_rook, white_bishop, white_knight, white_queen]
+const black_promotions = [black_rook, black_bishop, black_knight, black_queen]
 
 const rows = "12345678"
 const cols = "abcdefgh"
