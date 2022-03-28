@@ -1,36 +1,38 @@
-const white_king 	  = '♔'
-const white_queen 	= '♕'
-const white_rook 	  = '♖'
-const white_bishop 	= '♗'
-const white_knight 	= '♘'
-const white_pawn 	  = '♙'
-const black_king 	  = '♚'
-const black_queen 	= '♛'
-const black_rook 	  = '♜'
-const black_bishop 	= '♝'
-const black_knight 	= '♞'
-const black_pawn 	  = '♟'
+const {
+	white_pieces, black_pieces, rows, cols, white_bishop, white_knight, white_rook, white_pawn, white_king, white_queen, black_king, black_queen, black_bishop, black_knight, black_rook, black_pawn, null_piece
+} = require("./constants")
 
-const white_pieces =  [white_pawn, white_rook, white_bishop, white_knight, white_king, white_queen]
-const black_pieces =  [black_pawn, black_rook, black_bishop, black_knight, black_king, black_queen]
-
-export function getType(piece) {
-	if ( [white_king, black_king].includes(piece) ) return "king"
-	if ( [white_queen, black_queen].includes(piece) ) return "queen"
-	if ( [white_bishop, black_bishop].includes(piece) ) return "bishop"
-	if ( [white_knight, black_knight].includes(piece) ) return "knight"
-	if ( [white_rook, black_rook].includes(piece) ) return "rook"
-	if ( [white_pawn, black_pawn].includes(piece) ) return "pawn"
-	return null
+class PawnPromotion extends Error {
+	constructor(message) {
+		super(message)
+		this.name = "PawnPromotion"
+	}
 }
 
-export function changePlayer(current_player) {
-	if (current_player === "white") return "black"
-	return "white"
+function getPieceFromPosition(location, board) {
+	let [row, col] = getIndex(location)
+	return board[calculateIndex(row, col)].piece.name
 }
 
-export function generateRandomString(N)
-{
+function filterMovesForKing(each, filt, king_color, board) {
+	// checks if all the piece in the array represented by `filt` are of the same family with the king color
+	// returns false if theres an enemy piece that can move to the same position as king or can kill the same piece as king
+	// two possible values of `filt` "can_move" or "can_kill"
+	// basically prevents the king from moving to locations that it can be killed by enemy
+	return each[filt].map(pos => getPieceColor(getPieceFromPosition(pos,board))).filter(color => color !== king_color).length === 0
+}
+function getKings(board) {
+	let white
+	let black
+	for (let each of board) {
+		let name = each.piece.name
+		if ((name && getType(name) === "king") && getPieceColor(name) === "white") white = each.position
+		if ((name && getType(name) === "king") && getPieceColor(name) === "black") black = each.position
+	}
+	return [white, black]
+}
+
+function generateRandomString(N=10) {
 	// Returns an alphanumeric string of N characters
 	let result           = '';
 	const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -40,886 +42,518 @@ export function generateRandomString(N)
 	}
  return result;
 }
-
-
-function getIndex(location, board) {
-	const rows = [1,2,3,4,5,6,7,8]
-	const cols = "abcdefgh"
-
-	let [row, col] = location
-	let new_board = board.map(each => { return {...each}})
-	let row_index = parseInt(row) - 1
-	let col_index = cols.indexOf(col)
-
-	return [new_board, row_index, col_index]
+		
+function getType(piece) {
+	if ( [white_king, black_king].includes(piece) ) return "king"
+	if ( [white_queen, black_queen].includes(piece) ) return "queen"
+	if ( [white_bishop, black_bishop].includes(piece) ) return "bishop"
+	if ( [white_knight, black_knight].includes(piece) ) return "knight"
+	if ( [white_rook, black_rook].includes(piece) ) return "rook"
+	if ( [white_pawn, black_pawn].includes(piece) ) return "pawn"
+	throw "Invalid Piece!"
 }
 
-export function movePiece(init_location, final_location, board) {
-	// assumes the piece in `final_location` is empty
-	let new_board = board.map(each => { return {...each}})
-	let a = new_board.find(each => each.position === init_location)
-	let b = new_board.find(each => each.position === final_location)
-	let moved_piece = a.piece
-	a.piece  = ""
+function promotePawn(pawn_location, promoted, board) {
+	let [row_index, col_index] = getIndex(pawn_location)
+	let index = calculateIndex(row_index, col_index) 
+	let pawn  = board[index]
+	pawn.piece = { 
+		name: promoted,
+		moves: pawn.piece.moves
+	}
+}
+
+function checkPromotion(source_piece, target_location) {
+	let valid_white =  ["8a", "8b", "8c", "8d", "8e", "8f", "8g", "8h", ]
+	let valid_black =  ["1a", "1b", "1c", "1d", "1e", "1f", "1g", "1h", ]
+	let piece = getType(source_piece)
+	if (piece !== "pawn") return false
+	let color = getPieceColor(source_piece)
+	if (color === "white") return valid_white.includes(target_location)
+	if (color === "black") return valid_black.includes(target_location)
+	return false
+}
+
+function removePiece(location, board) {
+	// clears `location` from `can_kill` and `can_move` of all elements in `board`
+	function filterPiece(each) {
+		if (each.can_kill) each.can_kill = each.can_kill.filter(each => each !== location)
+		if (each.can_move) each.can_move = each.can_move.filter(each => each !== location)
+		return each
+	}
+	return board.map(filterPiece)
+}
+
+function movePiece(source_location, target_location, board) {
+	let new_board = cloneBoard(board)
+	let [rowa, cola] = getIndex(source_location)
+	let [rowb, colb] = getIndex(target_location)
+	let a = new_board[calculateIndex(rowa, cola)]
+	let b = new_board[calculateIndex(rowb, colb)]
+	if (b.piece.name) throw "movePiece Error!"
+	// switches the pieces
+	let moved_piece = JSON.parse(JSON.stringify(a.piece)) // copy object direct not by reference (prevent wierd bugs with pawns, since all pawns initially reference the same object)
+	moved_piece.moves += 1
+	a.piece  = null_piece
 	b.piece = moved_piece
+	// removes all possible moves previously associated with the original location
+	new_board = removePiece(source_location, new_board)
+	// clear `can_move` for destination (since it is now occupied)
+	b.can_move = null
+	b.can_kill = null // not necesssary since can_kill for an empty piece should be null, but just in case
+	// throw PawnPromotion
 	return new_board
 }
 
-export function canMove(final_location, board) {
-	let l = board.find(each => each.position === final_location)
-	if (!l) return false
-	// if (l.isActive) return false
-	// console.log(l.isActive)
-	// console.log(l.isActive, "ff")
-
-	if (l.piece !== "") return false
-	return l.isActive
-}
-
-export function canKill(init_location, final_location, board, color) {
-	let new_board = board.map(each => { return {...each}})
-	let a = new_board.find(each => each.position === init_location)
-	let b = new_board.find(each => each.position === final_location)
-
-	// if (l.isKill) return true
-	if (getPieceColor(b.piece) === color) return false
-	if (color === ".." ) throw  "cankill error"
-	return b.isKill
-}
-
-export function killPiece (init_location, final_location, board, color) {
-	let new_board = board.map(each => { return {...each}})
-	let a = new_board.find(each => each.position === init_location)
-	let b = new_board.find(each => each.position === final_location)
-
-	let killed_piece = b.piece
-	let moved_piece = a.piece
-	a.piece = ""
+function killPiece(source_location, target_location, board) {
+	let new_board = cloneBoard(board)
+	let [rowa, cola] = getIndex(source_location)
+	let [rowb, colb] = getIndex(target_location)
+	let a = new_board[calculateIndex(rowa, cola)]
+	let b = new_board[calculateIndex(rowb, colb)]
+	if (!b.piece.name) throw "killPiece Error!"
+	// switches the pieces
+	let moved_piece = JSON.parse(JSON.stringify(a.piece)) // copy object direct not by reference (prevent wierd bugs with pawns, since all pawns initially reference the same object)
+	let killed_piece = JSON.parse(JSON.stringify(b.piece)) // copy object direct not by reference (prevent wierd bugs with pawns, since all pawns initially reference the same object)
+	moved_piece.moves += 1
+	a.piece  = null_piece
 	b.piece = moved_piece
-	return [new_board, killed_piece]
+	// removes all possible moves previously associated with the original location
+	new_board = removePiece(source_location, new_board)
+	// removes all possible moves previously associated with the killed target
+	new_board = removePiece(target_location, new_board)
+	// clear `can_move` for destination (since it is now occupied)
+	b.can_move = null
+	b.can_kill = null
+	return [new_board, killed_piece.name]
 }
 
-export function getPieceColor(piece) {
+function getIndex(location) {
+	let [row, col] = location
+	let row_index = rows.indexOf(row)
+	let col_index = cols.indexOf(col)
+	return [row_index, col_index]
+}
+
+function cloneBoard(board) {
+	let new_board = board.map(each => { return {...each}})
+	return new_board
+}
+
+function calculateIndex(row, col) {
+	// calculates the index in `board_array` given the position e.g `3h`
+	// the board is arranged [8a, 8b, .., 7a, 7b, .., ... , 1a, 1b, ...]
+	return 8 * (7 - row ) + col
+}
+
+function getPieceColor(piece) {
 	if (white_pieces.includes(piece)) return "white"
 	if (black_pieces.includes(piece)) return "black"
-	return ".."
+	return null
 }
 
+function sortMoves(a, b) {
+	return b[0] > a[0] ? -1 : 1
+}
 
+function search(board_position, moves) {
+	// search for `board_position` in moves. returns -1 if it doesn't exist
+	let i = 0
+	let n = moves.length
+	if (moves[0][0] >= board_position) return moves[i][0] === board_position ? i: -1
+	for (let b=~~(n/2); b>0; b=~~(b/2)) {
+		for(;b+i < n && moves[b+i][0] < board_position;)  i += b
+	}
+	if (i+1 >= n) return -1
+	return moves[i+1][0] === board_position ? i+1: -1
+}
 
-
-
-
-
-export function rookCapture (location, board, color) {
-	// Set possible moves for the rook
-	// https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Chess_rlt45.svg/33px-Chess_rlt45.svg.png
-	let [new_board, row_index, col_index]  = getIndex(location, board)
-	// console.log(row_index, col_index)
-	let up_isblocked = false
-	let down_isblocked = false
-	let right_isblocked = false
-	let left_isblocked = false
-
-	let main =  8 * (7 - row_index ) + col_index
-	let loc = new_board[main]
-	loc.isSelected = true
-	
-	for (let i=1; i<8 ; i++) {
-		if (!up_isblocked && row_index + i < 8) {
-			let up =  8 * (7 - (row_index + i) ) + col_index
-
-			let up_location  =  new_board[up]
-			if (getPieceColor(up_location.piece) === color) up_isblocked = true
-			else if (up_location.piece) { up_location.isKill = true; up_isblocked = true }
-			else up_location.isActive = true
-		}
-		if (!down_isblocked && row_index - i >= 0) {
-			let down =  8 * (7 - (row_index - i) ) + col_index
-
-			let down_location  =  new_board[down]
-			if (getPieceColor(down_location.piece) === color) down_isblocked = true
-			else if (down_location.piece) { down_location.isKill = true; down_isblocked = true }
-			else down_location.isActive = true
-		}
-		if (!right_isblocked && col_index + i < 8) {
-			let right =  8 * (7 - row_index ) + (col_index + i)
-
-			let right_location  =  new_board[right]
-			if (getPieceColor(right_location.piece) === color) right_isblocked = true
-			else if (right_location.piece) { right_location.isKill = true; right_isblocked = true }
-			else right_location.isActive = true
-		}
-		if (!left_isblocked && col_index - i >= 0) {
-			let left =  8 * (7 - row_index ) + (col_index - i)
-
-			let left_location  =  new_board[left]
-			if (getPieceColor(left_location.piece) === color) left_isblocked = true
-			else if (left_location.piece) { left_location.isKill = true; left_isblocked = true }
-			else left_location.isActive = true
+function generateMoveForBoard(board, white_k, black_k) {
+	let moves = [] ///1 1
+	let possible_moves /// 1 1
+	for (let each of board) { // goes through board and adds valid moves for pieces to the array
+		if (each.piece.name) { /// 1 n
+			let type = getType(each.piece.name) ///12 n // guaranteed to have a valid type
+			let piece_color = getPieceColor(each.piece.name) ///12 n
+			switch (type) {
+				case "king":   possible_moves = kingCapture(each.position, board, piece_color) ///108 n
+					break;
+				case "queen":	 possible_moves = queenCapture(each.position, board, piece_color) ///672 n
+					break;
+				case "bishop": possible_moves = bishopCapture(each.position, board, piece_color) ///336 n
+					break;
+				case "knight": possible_moves = knightCapture(each.position, board, piece_color) ///192 n
+					break;
+				case "rook":   possible_moves = rookCapture(each.position, board, piece_color) ///336 n
+					break;
+				case "pawn":   possible_moves = pawnCapture(each.position, board, piece_color)///34 n
+					break;
+				default:
+					throw "Error generating moves!"
+			}
+			moves = moves.concat(possible_moves) //m
 		}
 	}
-	return new_board
+	for (let each of board) { // clear previously generated moves for board (prevents wierd bugs)
+		each.can_kill = null
+		each.can_move = null
+	}
+	moves.sort(sortMoves)///nlogn // array need to be sorted in order to be able to search for positions
+	let k
+	// goes through each position in the board and looks for positions of pieces that can kill it or move to it
+	for (let square of board) {//  1 n
+		if (!moves.length) break
+		k = search(square.position, moves) ///nlogn
+		if (k === -1) continue
+		// moves[k][0] => the position that is to be killed, or moved into
+		// moves[k][1] => the position that is doing the moving / killing
+		// Array<[dest, src]>
+		do {
+			if (square.piece.name) { // if there is a piece at the location, it is to be killed
+				// when key `can_kill` is not empty
+				if (square.can_kill) square.can_kill.push(moves[k][1])
+				// key `can_kill` is initially at null, handles for when it is null
+				else square.can_kill = [moves[k][1]]
+			}
+			else { // if there isnt a piece at the location, it is a valid move
+				// when key `can_move` is not empty
+				if (square.can_move) square.can_move.push(moves[k][1])
+				// key `can_move` is initially at null, handles for when it is null
+				else square.can_move = [moves[k][1]]
+			}
+			moves.splice(k, 1) ///n n sqrt(n)
+			if (!moves.length) break
+			k = search(square.position, moves) ///n sqrt(n) logn 
+		} while (k !== -1)
+	}
+	// prevent kings from moving to places it can be killed
+	for (let each of board) {
+		// if king moves to empty space, there should be no enemy capable of killing it (only same family should be present in its `can_move`)
+		if ((each.can_move && each.can_move.includes(white_k)) && !filterMovesForKing(each, "can_move", "white", board)) each.can_move = each.can_move.filter(p => p !== white_k)
+		// king should not be able to kill piece 
+		// if ((each.can_kill && each.can_move.includes(white_k)) && !filterMovesForKing(each, "can_move", "white", board)) console.log(filterMovesForKing(each, "can_move", "white", board))
+		// let color = each.piece.name ? getPieceColor(each.piece.name) : null
+		// if (each.can_kill)
+	}
 }
 
-export function bishopCapture (location, board, color) {
-	// Sets the possible moves for the bishop
+function kingCapture (location, board, color) {
 	// https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Chessboard480.svg/264px-Chessboard480.svg.png
-	let [new_board, row_index, col_index] = getIndex(location, board)
+	// assumes the piece at `location` is a king and `color` is its color
+	// returns an array of location pairs [killed_location, king_location]
+	let [row_index, col_index] = getIndex(location)
+	let index = calculateIndex(row_index, col_index) 
+	let ans = []
 
-	let ne_isblocked = false
-	let nw_isblocked = false
-	let se_isblocked = false
-	let sw_isblocked = false
+	let square = board[index] // gets object representing location from board array
+	// square.isSelected = true  // ???
 
-	let main =  8 * (7 - row_index ) + col_index
-	let loc = new_board[main]
-	loc.isSelected = true
+	for (let i=row_index-1 ; i < row_index+2  ; i++) {
+		for (let j=col_index-1 ; j < col_index+2  ; j++) {
+			if (i===row_index && j===col_index) continue
+			if (i<0 || i>=8) continue
+			if (j<0 || j>=8) continue
+			// console.log(i, j)
+			let board_index = calculateIndex(i, j) 
+			let active_square  =  board[board_index]
+			// console.log("ffff", active_square)
 
-	for (let i=1; i<8 ; i++) {
-		if ( !ne_isblocked && (row_index + i < 8 && col_index + i < 8) ) {
-			let ne =  8 * (7 - (row_index + i) ) + (col_index + i)
-
-			let ne_location  =  new_board[ne]
-			if (getPieceColor(ne_location.piece) === color) ne_isblocked = true
-			else if (ne_location.piece) { ne_location.isKill = true; ne_isblocked = true }
-			else ne_location.isActive = true
-		}
-		if (!nw_isblocked && (row_index + i < 8 && col_index - i >= 0) ) {
-			let nw =  8 * (7 - (row_index + i) ) + (col_index - i)
-
-			let nw_location  =  new_board[nw]
-			if (getPieceColor(nw_location.piece) === color) nw_isblocked = true
-			else if (nw_location.piece) { nw_location.isKill = true; nw_isblocked = true }
-			else nw_location.isActive = true
-		}
-		if ( !se_isblocked &&  (row_index - i >= 0 && col_index + i < 8)) {
-			let se =  8 * (7 - (row_index - i) ) + (col_index + i)
-
-			let se_location  =  new_board[se]
-			if (getPieceColor(se_location.piece) === color) se_isblocked = true// prevents killing pieces in the same family
-			else if (se_location.piece) { se_location.isKill = true; se_isblocked = true }
-			else se_location.isActive = true
-		}
-		if ( !sw_isblocked && (row_index - i >= 0 && col_index - i >= 0) ) {
-			let sw =  8 * (7 - (row_index - i) ) + (col_index - i)
-
-			let sw_location  =  new_board[sw]
-			if (getPieceColor(sw_location.piece) === color) sw_isblocked = true  // prevents killing pieces in the same family
-			else if (sw_location.piece) { sw_location.isKill = true; sw_isblocked = true }
-			else sw_location.isActive = true
+			if (getPieceColor(active_square.piece.name) === color) continue  // prevents killing pieces in the same family
+			// if (active_square.piece.name) active_square.isKill = true
+			// else active_square.isActive = true
+			ans.push([active_square.position, square.position])
 		}
 	}
-	return new_board
+	// castling
+	return ans
 }
 
-export function knightCapture (location, board, color) {
-	// Set possible moves for the knight
+function knightCapture (location, board, color) {
 	// https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Chess_xot45.svg/33px-Chess_xot45.svg.png
-	let [new_board, row_index, col_index] = getIndex(location, board)
+	// Set possible moves for the knight
+	// assumes the piece at `location` is a knight and `color` is its color
 
-	let main =  8 * (7 - row_index ) + col_index
-	let loc = new_board[main]
-	loc.isSelected = true
+	let [row_index, col_index] = getIndex(location)
+
+	let index = calculateIndex(row_index, col_index)
+	let ans = []
+
+	let square = board[index]
+	// square.isSelected = true
 
 	for (let i=row_index-2 ; i < row_index+3 ; i++) {
 		for (let j=col_index-2 ; j < col_index+3 ; j++) {
 			if (i < 0 || i >= 8) continue
 			if (j < 0 || j >= 8) continue
-
-
 			if (i === row_index) continue
 			if (j === col_index) continue
+
 			if (Math.abs(i - row_index) === Math.abs(j - col_index)) continue
 
-			let board_index = 8 * (7 - i) + j // gets the index of the location in the board array
-																				// the board is arranged [8a, 8b, .., 7a, 7b, .., ... , 1a, 1b, ...]
-			let active_location  =  new_board[board_index]
-			if (getPieceColor(active_location.piece) === color) continue  // prevents killing pieces in the same family
-			if (active_location.piece) active_location.isKill = true
-			else active_location.isActive = true
+			let board_index = calculateIndex(i, j)
+			let active_square  =  board[board_index]
+			if (getPieceColor(active_square.piece.name) === color) continue  // prevents killing pieces in the same family
+			// if (active_square.piece) active_square.isKill = true
+			// else active_square.isActive = true
+			ans.push([active_square.position, square.position])
 		}
 	}
-	return new_board
+	return ans
 }
 
-export function pawnCapture (location, board, color, isFirstMove=false) {
-	// Set possible moves the pawn
-	// https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Chessboard480.svg/264px-Chessboard480.svg.png
-	let [new_board, row_index, col_index] = getIndex(location, board)
-	let isblocked = false
-	// console.log(row_index, col_index)
+function rookCapture (location, board, color) {
+	// https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Chess_rlt45.svg/33px-Chess_rlt45.svg.png
+	// Set possible moves for the rook
+	// assumes the piece at `location` is a knight and `color` is its color
 
-	let main =  8 * (7 - row_index ) + col_index
-	let loc = new_board[main]
-	loc.isSelected = true
-	
-	let multiplier = "white" === color ? 1 : -1 // white pawn moves up, black moves down
-
-	for (let i=1 ; i < 3  ; i++) {
-		if (multiplier === 1 && row_index + i >= 8) continue
-		if (multiplier === -1 && row_index - i < 0) continue
-		if (isblocked) continue
-		if (i === 2 && !isFirstMove) continue
-
-		if (i === 1 && (col_index - 1 >=0 && col_index + 1 < 8)) {
-			let left = 8 * (7 - (row_index + (multiplier * i) )) + col_index + i
-			let right = 8 * (7 - (row_index + (multiplier * i) )) + col_index - i
-			let left_location  =  new_board[left]
-			let right_location  =  new_board[right]
-			if (getPieceColor(left_location.piece) !== color && left_location.piece) left_location.isKill = true
-			if (getPieceColor(right_location.piece) !== color && right_location.piece) right_location.isKill = true
-		}
-
-		let board_index = 8 * (7 - ( row_index+(multiplier*i) ) ) + col_index
-		let active_location  =  new_board[board_index]
-
-		if (active_location.piece) isblocked = true
-		else active_location.isActive = true
-	}
-	return new_board
-}
-
-export function kingCapture (location, board, color) {
-	// https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Chessboard480.svg/264px-Chessboard480.svg.png
-	let [new_board, row_index, col_index] = getIndex(location, board)
-
-	let main =  8 * (7 - row_index ) + col_index
-	let loc = new_board[main]
-	loc.isSelected = true
-
-	for (let i=row_index-1 ; i < row_index+2  ; i++) {
-		for (let j=col_index-1 ; j < col_index+2  ; j++) {
-			if (i < 0 || i >= 8) continue
-			if (j < 0 || j >= 8) continue
-			if (i===row_index && j===col_index) continue
-
-			let board_index = 8 * (7 - i) + j // gets the index of the location in the board array
-																				// the board is arranged [8a, 8b, .., 7a, 7b, .., ... , 1a, 1b, ...]
-			let active_location  =  new_board[board_index]
-			if (getPieceColor(active_location.piece) === color) continue  // prevents killing pieces in the same family
-			if (active_location.piece) active_location.isKill = true
-			else active_location.isActive = true
-		}
-	}
-	return new_board
-}
-
-export function queenCapture (location, board, color) {
-	// Set possible moves for the queen
-	// https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Chess_xot45.svg/33px-Chess_xot45.svg.png
-	let [new_board, row_index, col_index]  = getIndex(location, board)
-
-	let up_isblocked = false
-	let down_isblocked = false
+	let [row_index, col_index]  = getIndex(location)
+	let up_isblocked    = false
+	let down_isblocked  = false
 	let right_isblocked = false
-	let left_isblocked = false
+	let left_isblocked  = false
+
+	let index = calculateIndex(row_index, col_index)
+	let square = board[index]
+	let ans = []
+	
+	for (let i=1; i<8 ; i++) { 
+		if (!up_isblocked && row_index + i < 8) { // all pieces above the rook. `up_isblocked` stops sliding if true
+			let up =  calculateIndex(row_index+i, col_index)
+			let up_square  =  board[up]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(up_square.piece.name) === color) up_isblocked = true
+			else if (up_square.piece.name) { ans.push([up_square.position, square.position]); up_isblocked = true }
+			else ans.push([up_square.position, square.position])
+		}
+		if (!down_isblocked && row_index - i >= 0) { // all pieces below the rook. `down_isblocked` stops sliding if true
+			let down =  calculateIndex(row_index-i, col_index)
+			let down_square  =  board[down]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(down_square.piece.name) === color) down_isblocked = true
+			else if (down_square.piece.name) { ans.push([down_square.position, square.position]); down_isblocked = true }
+			else ans.push([down_square.position, square.position])
+		}
+		if (!right_isblocked && col_index + i < 8) { // all pieces to right of the rook. `right_isblocked` stops sliding if true
+			let right =  calculateIndex(row_index, col_index+i)
+			let right_square  =  board[right]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(right_square.piece.name) === color) right_isblocked = true
+			else if (right_square.piece.name) { ans.push([right_square.position, square.position]); right_isblocked = true }
+			else ans.push([right_square.position, square.position])
+		}
+		if (!left_isblocked && col_index - i >= 0) { // all pieces to left of the rook. `left_isblocked` stops sliding if true
+			let left =  calculateIndex(row_index, col_index-i)
+			let left_square  =  board[left]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(left_square.piece.name) === color) left_isblocked = true
+			else if (left_square.piece.name) { ans.push([left_square.position, square.position]); left_isblocked = true }
+			else ans.push([left_square.position, square.position])
+		}
+	}
+	return ans
+}
+
+function bishopCapture (location, board, color) {
+	// https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Chessboard480.svg/264px-Chessboard480.svg.png
+	// Sets the possible moves for the bishop
+	// assumes the piece at `location` is a bishop and `color` is its color
+
+	let [row_index, col_index] = getIndex(location)
 	let ne_isblocked = false
 	let nw_isblocked = false
 	let se_isblocked = false
 	let sw_isblocked = false
 
-	let main =  8 * (7 - row_index ) + col_index
-	let loc = new_board[main]
-	loc.isSelected = true
-	
+	let index =  calculateIndex(row_index, col_index)
+	let square = board[index]
+	let ans = []
+
 	for (let i=1; i<8 ; i++) {
-		if (!up_isblocked && row_index + i < 8) {
-			let up =  8 * (7 - (row_index + i) ) + col_index
-
-			let up_location  =  new_board[up]
-			if (getPieceColor(up_location.piece) === color) up_isblocked = true
-			else if (up_location.piece) { up_location.isKill = true; up_isblocked = true }
-			else up_location.isActive = true
+		if ( !ne_isblocked && (row_index + i < 8 && col_index + i < 8) ) { // all pieces to north-east of the rook. `ne_isblocked` stops sliding if true
+			let ne = calculateIndex(row_index+i, col_index+i)
+			let ne_square  =  board[ne]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(ne_square.piece.name) === color) ne_isblocked = true
+			else if (ne_square.piece.name) { ans.push([ne_square.position, square.position]); ne_isblocked = true }
+			else ans.push([ne_square.position, square.position])
 		}
-		if (!down_isblocked && row_index - i >= 0) {
-			let down =  8 * (7 - (row_index - i) ) + col_index
-
-			let down_location  =  new_board[down]
-			if (getPieceColor(down_location.piece) === color) down_isblocked = true
-			else if (down_location.piece) { down_location.isKill = true; down_isblocked = true }
-			else down_location.isActive = true
+		if (!nw_isblocked && (row_index + i < 8 && col_index - i >= 0) ) { // all pieces to north-west of the rook. `nw_isblocked` stops sliding if true
+			let nw =  calculateIndex(row_index+i,col_index-i)
+			let nw_square  =  board[nw]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(nw_square.piece.name) === color) nw_isblocked = true
+			else if (nw_square.piece.name) { ans.push([nw_square.position, square.position]); nw_isblocked = true }
+			else ans.push([nw_square.position, square.position])
 		}
-		if (!right_isblocked && col_index + i < 8) {
-			let right =  8 * (7 - row_index ) + (col_index + i)
-
-			let right_location  =  new_board[right]
-			if (getPieceColor(right_location.piece) === color) right_isblocked = true
-			else if (right_location.piece) { right_location.isKill = true; right_isblocked = true }
-			else right_location.isActive = true
+		if ( !se_isblocked &&  (row_index - i >= 0 && col_index + i < 8)) { // all pieces to south-east of the rook. `se_isblocked` stops sliding if true
+			let se =  calculateIndex(row_index-i, col_index+i)
+			let se_square  =  board[se]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(se_square.piece.name) === color) se_isblocked = true
+			else if (se_square.piece.name) { ans.push([se_square.position, square.position]); se_isblocked = true }
+			else ans.push([se_square.position, square.position])
 		}
-		if (!left_isblocked && col_index - i >= 0) {
-			let left =  8 * (7 - row_index ) + (col_index - i)
-
-			let left_location  =  new_board[left]
-			if (getPieceColor(left_location.piece) === color) left_isblocked = true
-			else if (left_location.piece) { left_location.isKill = true; left_isblocked = true }
-			else left_location.isActive = true
-		}
-
-		if (!ne_isblocked && (row_index + i < 8 && col_index + i < 8)) {
-			let ne =  8 * (7 - (row_index + i) ) + (col_index + i)
-
-			let ne_location  =  new_board[ne]
-			if (getPieceColor(ne_location.piece) === color) ne_isblocked = true
-			else if (ne_location.piece) { ne_location.isKill = true; ne_isblocked = true }
-			else ne_location.isActive = true
-		}
-		if (!nw_isblocked && (row_index + i < 8 && col_index - i >= 0)) {
-			let nw =  8 * (7 - (row_index + i) ) + (col_index - i)
-
-			let nw_location  =  new_board[nw]
-			if (getPieceColor(nw_location.piece) === color) nw_isblocked = true
-			else if (nw_location.piece) { nw_location.isKill = true; nw_isblocked = true }
-			else nw_location.isActive = true
-		}
-		if( !se_isblocked && (row_index - i >= 0 && col_index + i < 8) ) {
-			let se =  8 * (7 - (row_index - i) ) + (col_index + i)
-
-			let se_location  =  new_board[se]
-			if (getPieceColor(se_location.piece) === color) se_isblocked = true
-			else if (se_location.piece) { se_location.isKill = true; se_isblocked = true }
-			else se_location.isActive = true
-		}
-		if (!sw_isblocked && (row_index - i >= 0 && col_index - i >= 0)) {
-			let sw =  8 * (7 - (row_index - i) ) + (col_index - i)
-
-			let sw_location  =  new_board[sw]
-			if (getPieceColor(sw_location.piece) === color) sw_isblocked = true
-			else if (sw_location.piece) { sw_location.isKill = true; sw_isblocked = true }
-			else sw_location.isActive = true
+		if ( !sw_isblocked && (row_index - i >= 0 && col_index - i >= 0) ) { // all pieces to south-west of the rook. `sw_isblocked` stops sliding if true
+			let sw =  calculateIndex(row_index-i, col_index-i)
+			let sw_square  =  board[sw]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(sw_square.piece.name) === color) sw_isblocked = true  // prevents killing pieces in the same family
+			else if (sw_square.piece.name) { ans.push([sw_square.position, square.position]); sw_isblocked = true }
+			else ans.push([sw_square.position, square.position])
 		}
 	}
-	return new_board
+	return ans
 }
 
+function queenCapture (location, board, color) {
+	// https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Chess_xot45.svg/33px-Chess_xot45.svg.png
+	// Sets the possible moves for the bishop
+	// assumes the piece at `location` is a bishop and `color` is its color
 
+	let [row_index, col_index]  = getIndex(location)
+	let up_isblocked    = false
+	let down_isblocked  = false
+	let right_isblocked = false
+	let left_isblocked  = false
+	let ne_isblocked = false
+	let nw_isblocked = false
+	let se_isblocked = false
+	let sw_isblocked = false
 
-export const Board  = [
-	// https://en.wikipedia.org/wiki/Chess#Setup
-
-	// The board consists 64 squares.
-	// Each square has two properties - The color, and whether there's a piece on it
-
-	// each rank represents each row of the chess board
-	// in each rank are 8 columns (files)  each with a color, and a possible chess piece
-	{
-		position: "8a",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_rook
-	},
-	{
-		position: "8b",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_knight
-	},
-	{
-		position: "8c",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_bishop
-	},
-	{
-		position: "8d",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_queen
-	},
-	{
-		position: "8e",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_king
-	},
-	{
-		position: "8f",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_bishop
-	},
-	{
-		position: "8g",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_knight
-	},
-	{
-		position: "8h",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_rook
-	},
-
-	{
-		position: "7a",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_pawn
-	},
-	{
-		position: "7b",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_pawn
-	},
-	{
-		position: "7c",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_pawn
-	},
-	{
-		position: "7d",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_pawn
-	},
-	{
-		position: "7e",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_pawn
-	},
-	{
-		position: "7f",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_pawn
-	},
-	{
-		position: "7g",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_pawn
-	},
-	{
-		position: "7h",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : black_pawn
-	},
-
-	{
-		position: "6a",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "6b",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "6c",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "6d",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "6e",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "6f",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "6g",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "6h",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-
-	{
-		position: "5a",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "5b",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "5c",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "5d",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "5e",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "5f",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "5g",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "5h",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
+	let index = calculateIndex(row_index, col_index)
+	let square = board[index]
+	let ans = []
 	
-	{
-		position: "4a",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "4b",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "4c",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "4d",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "4e",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "4f",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "4g",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "4h",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	
-	{
-		position: "3a",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "3b",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "3c",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "3d",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "3e",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "3f",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "3g",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	{
-		position: "3h",
-		color   : "white",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : ''
-	},
-	
-	{
-		position: "2a",
-		color   : "white",
-		piece   : white_pawn,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "2b",
-		color   : "black",
-		piece   : white_pawn,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "2c",
-		color   : "white",
-		piece   : white_pawn,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "2d",
-		color   : "black",
-		piece   : white_pawn,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "2e",
-		color   : "white",
-		piece   : white_pawn,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "2f",
-		color   : "black",
-		piece   : white_pawn,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "2g",
-		color   : "white",
-		piece   : white_pawn,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "2h",
-		color   : "black",
-		isActive: false,
-		isKill  : false,
-		isSelected: false,
-		piece   : white_pawn
-	},
-
-	{
-		position: "1a",
-		color   : "black",
-		piece   : white_rook,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "1b",
-		color   : "white",
-		piece   : white_knight,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "1c",
-		color   : "black",
-		piece   : white_bishop,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "1d",
-		color   : "white",
-		piece   : white_queen,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "1e",
-		color   : "black",
-		piece   : white_king,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "1f",
-		color   : "white",
-		piece   : white_bishop,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "1g",
-		color   : "black",
-		piece   : white_knight,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
-	},
-	{
-		position: "1h",
-		color   : "white",
-		piece   : white_rook,
-		isActive: false,
-		isKill  : false,
-		isSelected: false
+	for (let i=1; i<8 ; i++) {
+		if (!up_isblocked && row_index + i < 8) { // all pieces above the rook. `up_isblocked` stops sliding if true
+			let up =  calculateIndex(row_index+i, col_index)
+			let up_square  =  board[up]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(up_square.piece.name) === color) up_isblocked = true
+			else if (up_square.piece.name) { ans.push([up_square.position, square.position]); up_isblocked = true }
+			else ans.push([up_square.position, square.position])
+		}
+		if (!down_isblocked && row_index - i >= 0) { // all pieces below the rook. `down_isblocked` stops sliding if true
+			let down =  calculateIndex(row_index-i, col_index)
+			let down_square  =  board[down]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(down_square.piece.name) === color) down_isblocked = true
+			else if (down_square.piece.name) { ans.push([down_square.position, square.position]); down_isblocked = true }
+			else ans.push([down_square.position, square.position])
+		}
+		if (!right_isblocked && col_index + i < 8) { // all pieces to right of the rook. `right_isblocked` stops sliding if true
+			let right =  calculateIndex(row_index, col_index+i)
+			let right_square  =  board[right]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(right_square.piece.name) === color) right_isblocked = true
+			else if (right_square.piece.name) { ans.push([right_square.position, square.position]); right_isblocked = true }
+			else ans.push([right_square.position, square.position])
+		}
+		if (!left_isblocked && col_index - i >= 0) { // all pieces to left of the rook. `left_isblocked` stops sliding if true
+			let left =  calculateIndex(row_index, col_index-i)
+			let left_square  =  board[left]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(left_square.piece.name) === color) left_isblocked = true
+			else if (left_square.piece.name) { ans.push([left_square.position, square.position]); left_isblocked = true }
+			else ans.push([left_square.position, square.position])
+		}
+		if ( !ne_isblocked && (row_index + i < 8 && col_index + i < 8) ) { // all pieces to north-east of the rook. `ne_isblocked` stops sliding if true
+			let ne = calculateIndex(row_index+i, col_index+i)
+			let ne_square  =  board[ne]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(ne_square.piece.name) === color) ne_isblocked = true
+			else if (ne_square.piece.name) { ans.push([ne_square.position, square.position]); ne_isblocked = true }
+			else ans.push([ne_square.position, square.position])
+		}
+		if (!nw_isblocked && (row_index + i < 8 && col_index - i >= 0) ) { // all pieces to north-west of the rook. `nw_isblocked` stops sliding if true
+			let nw =  calculateIndex(row_index+i,col_index-i)
+			let nw_square  =  board[nw]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(nw_square.piece.name) === color) nw_isblocked = true
+			else if (nw_square.piece.name) { ans.push([nw_square.position, square.position]); nw_isblocked = true }
+			else ans.push([nw_square.position, square.position])
+		}
+		if ( !se_isblocked &&  (row_index - i >= 0 && col_index + i < 8)) { // all pieces to south-east of the rook. `se_isblocked` stops sliding if true
+			let se =  calculateIndex(row_index-i, col_index+i)
+			let se_square  =  board[se]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(se_square.piece.name) === color) se_isblocked = true
+			else if (se_square.piece.name) { ans.push([se_square.position, square.position]); se_isblocked = true }
+			else ans.push([se_square.position, square.position])
+		}
+		if ( !sw_isblocked && (row_index - i >= 0 && col_index - i >= 0) ) { // all pieces to south-west of the rook. `sw_isblocked` stops sliding if true
+			let sw =  calculateIndex(row_index-i, col_index-i)
+			let sw_square  =  board[sw]
+			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
+			if (getPieceColor(sw_square.piece.name) === color) sw_isblocked = true  // prevents killing pieces in the same family
+			else if (sw_square.piece.name) { ans.push([sw_square.position, square.position]); sw_isblocked = true }
+			else ans.push([sw_square.position, square.position])
+		}
 	}
-]
+	return ans
+}
+
+function pawnCapture (location, board, color) {
+	// Set possible moves the pawn
+	// https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Chessboard480.svg/264px-Chessboard480.svg.png
+
+	let [row_index, col_index] = getIndex(location)
+	let index =  calculateIndex(row_index, col_index)
+	let square = board[index]
+
+	let isblocked = false
+	let multiplier = "white" === color ? 1 : -1 // white pawn moves up, black moves down
+	let ans = []
+	// let en_passant_rows = [3, 4]
+	// En-passant
+	// https://en.wikipedia.org/wiki/Chess#En_passant
+	// if (en_passant_rows.includes(row_index)) {
+	// }
+
+	for (let i=1 ; i < 3  ; i++) {
+		if (row_index+multiplier*i >= 8) continue //stops at the end of the board
+		if (row_index+multiplier*i <  0) continue //stops at the end of the board
+		if (isblocked) continue
+		if (i === 2 && square.piece.moves !== 0) continue // skips if it is not first move
+
+		// killing pieces left and right
+		if (i === 1 && col_index-i >=0) {
+			let left  = calculateIndex(row_index+multiplier*i, col_index-i) // multiplier determines if it moves up or down
+			let left_square  = board[left]
+			if (getPieceColor(left_square.piece.name) !== color && left_square.piece.name) ans.push([left_square.position, square.position])
+		}
+		if (i === 1 && col_index+i < 8) {
+			let right = calculateIndex(row_index+multiplier*i, col_index+i) // multiplier determines if it moves up or down
+			let right_square = board[right]
+			if (getPieceColor(right_square.piece.name) !== color && right_square.piece.name) ans.push([right_square.position, square.position])
+		}
+		// check movement for i=1 (and i=2 when its pawns first move)
+		let board_index = calculateIndex(row_index+multiplier*i, col_index)
+		let active_square  =  board[board_index]
+
+		if (active_square.piece.name) isblocked = true
+		else ans.push([active_square.position, square.position])
+	}
+	return ans
+}
+
+module.exports = {
+	getIndex,
+	kingCapture,
+	knightCapture,
+	rookCapture,
+	bishopCapture,
+	queenCapture,
+	pawnCapture,
+	generateRandomString,
+	generateMoveForBoard,
+	getPieceColor,
+	getIndex,
+	calculateIndex,
+	movePiece,
+	killPiece,
+	promotePawn,
+	PawnPromotion,
+	checkPromotion,
+	getKings,
+}
