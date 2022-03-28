@@ -3,14 +3,15 @@ import { Board } from './constants'
 import Promotion from './Promotion'
 import {
 	calculateIndex, checkPromotion, generateMoveForBoard, generateRandomString,
-	getIndex, getPieceColor, getType, killPiece, movePiece, promotePawn
+	getIndex, getKings, getPieceColor, getType, killPiece, movePiece, promotePawn
 } from './Utility'
 
 const App = () =>
 {
 	const [board, setBoard] =  useState(Board) // represents the whole chess board
-	generateMoveForBoard(board) // map all moves for the board
-	console.log(board)
+	const [white_k, black_k] = getKings(board) // stores the location of the white and black kings
+	generateMoveForBoard(board, white_k, black_k) // map all moves for the board
+	console.log(board, )
 	const [player, setPlayer] = useState(true) // white is to play if player is `true` else, its black
 	const [location, setLocation] = useState(null) // location of clicked piece, killable/movable locations are highlighted if its `can_kill` or `can_move` contains `location`
 	const [clicked_piece, setPiece] = useState(null) // value of clicked piece

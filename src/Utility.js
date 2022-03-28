@@ -9,6 +9,29 @@ class PawnPromotion extends Error {
 	}
 }
 
+function getPieceFromPosition(location, board) {
+	let [row, col] = getIndex(location)
+	return board[calculateIndex(row, col)].piece.name
+}
+
+function filterMovesForKing(each, filt, king_color, board) {
+	// checks if all the piece in the array represented by `filt` are of the same family with the king color
+	// returns false if theres an enemy piece that can move to the same position as king or can kill the same piece as king
+	// two possible values of `filt` "can_move" or "can_kill"
+	// basically prevents the king from moving to locations that it can be killed by enemy
+	return each[filt].map(pos => getPieceColor(getPieceFromPosition(pos,board))).filter(color => color !== king_color).length === 0
+}
+function getKings(board) {
+	let white
+	let black
+	for (let each of board) {
+		let name = each.piece.name
+		if ((name && getType(name) === "king") && getPieceColor(name) === "white") white = each.position
+		if ((name && getType(name) === "king") && getPieceColor(name) === "black") black = each.position
+	}
+	return [white, black]
+}
+
 function generateRandomString(N=10) {
 	// Returns an alphanumeric string of N characters
 	let result           = '';
@@ -145,7 +168,7 @@ function search(board_position, moves) {
 	return moves[i+1][0] === board_position ? i+1: -1
 }
 
-function generateMoveForBoard(board) {
+function generateMoveForBoard(board, white_k, black_k) {
 	let moves = [] ///1 1
 	let possible_moves /// 1 1
 	for (let each of board) { // goes through board and adds valid moves for pieces to the array
@@ -202,6 +225,15 @@ function generateMoveForBoard(board) {
 			if (!moves.length) break
 			k = search(square.position, moves) ///n sqrt(n) logn 
 		} while (k !== -1)
+	}
+	// prevent kings from moving to places it can be killed
+	for (let each of board) {
+		// if king moves to empty space, there should be no enemy capable of killing it (only same family should be present in its `can_move`)
+		if ((each.can_move && each.can_move.includes(white_k)) && !filterMovesForKing(each, "can_move", "white", board)) each.can_move = each.can_move.filter(p => p !== white_k)
+		// king should not be able to kill piece 
+		// if ((each.can_kill && each.can_move.includes(white_k)) && !filterMovesForKing(each, "can_move", "white", board)) console.log(filterMovesForKing(each, "can_move", "white", board))
+		// let color = each.piece.name ? getPieceColor(each.piece.name) : null
+		// if (each.can_kill)
 	}
 }
 
@@ -523,4 +555,5 @@ module.exports = {
 	promotePawn,
 	PawnPromotion,
 	checkPromotion,
+	getKings,
 }
