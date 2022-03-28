@@ -1,13 +1,7 @@
 <h2 align="center">React - Chess</h2>
 
+![chess-image](chess.PNG)
 
-
-## Table of Contents
-
-+ [About](#about)
-+ [Getting Started](#getting_started)
-+ [Usage](#usage)
-+ [Contributing](../CONTRIBUTING.md)
 
 ## About <a name = "about"></a>
 
@@ -20,21 +14,22 @@ These instructions will get you a copy of the project up and running on your loc
 ### Features
 
 + Lightwieght
-+ No external dependencies. All functionality is written from scratch in React.
++ No external dependencies. All functionality is written purely in React.
 
 ### Prerequisites
 
 Things you'll to install this project..
 
-+ An Operating System with a working shell ( Bash, Powershell, zsh etc.)
++ A working shell ( Bash, Powershell, zsh etc.)
 + The latest version of Git
 + npm
++ yarn
 
-To install Yarn
+if you don't already have yarn
+
 ```sh
 npm install --global yarn
 ```
-
 
 ### Installing
 
@@ -51,7 +46,7 @@ cd react-chess
 Then install dependencies:
 
 ```sh
-yarn install
+yarn
 ```
 
 To run in hot module reloading mode:
@@ -72,7 +67,6 @@ To run tests:
 yarn test
 ```
 
-End with an example of getting some data out of the system or using it for a little demo.
 ## Credits
 
 + [yarn](https://classic.yarnpkg.com/en/)
