@@ -106,3 +106,38 @@
 .selected {
 	background-color: #89D16B;
 }
+
+.promo {
+	font-size: 4em;
+}
+
+.promotion_popup {
+/* Popup box BEGIN */
+    background:rgba(0,0,0,.4);
+    cursor:pointer;
+    /* display:none; */
+    height:100%;
+    position:fixed;
+    text-align:center;
+    top:0;
+    width:100%;
+    z-index:10000;
+}
+.promotion_popup .helper{
+    display:inline-block;
+    height:100%;
+    vertical-align:middle;
+}
+.promotion_popup > div {
+    background-color: #fff;
+    box-shadow: 10px 10px 60px #555;
+    display: inline-block;
+    height: auto;
+    max-width: 551px;
+    min-height: 100px;
+    vertical-align: middle;
+    width: 60%;
+    position: relative;
+    border-radius: 8px;
+    padding: 15px 5%;
+}
