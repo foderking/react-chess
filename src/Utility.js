@@ -14,13 +14,80 @@ function getPieceFromPosition(location, board) {
 	return board[calculateIndex(row, col)].piece.name
 }
 
-function filterMovesForKing(each, filt, king_color, board) {
-	// checks if all the piece in the array represented by `filt` are of the same family with the king color
-	// returns false if theres an enemy piece that can move to the same position as king or can kill the same piece as king
-	// two possible values of `filt` "can_move" or "can_kill"
-	// basically prevents the king from moving to locations that it can be killed by enemy
-	return each[filt].map(pos => getPieceColor(getPieceFromPosition(pos,board))).filter(color => color !== king_color).length === 0
+function getPiece(location, board) {
+	let [row, col] = getIndex(location)
+	return board[calculateIndex(row, col)]
 }
+
+function filterMovesForKing(moves, color, board) {
+	return moves.map(each => getPieceColor(getPieceFromPosition(each, board))).filter(each => each !== color).length
+}
+
+function checkForPawn(moves, color, board) {
+	let count = 0
+	let last
+	for (let each of moves) {
+		let piece = getPieceFromPosition(each, board)
+		let piece_color =  getPieceColor(piece)
+		if (piece_color === color) continue
+		count++
+		last = piece
+	}
+	if (count === 1) return getType(last)
+	else return "random_string"
+}
+/**
+ * 
+	On an empty space
+	- If all the pieces that can move are same color as king, then it is valid
+	- if there's only a pawn of opposite color, the pawn doesnt pose a threat ( since it can't move/kill forward when blocked)
+	- If enemy pieces can move to the same place, then king cannot move to that place cause of the risk of being killed
+
+	On an occupied space
+	- If all the pieces that can move are same color as king, then it is valid
+	- If an enemy piece is friendly (a piece of the color that can move if occupied piece moves) , the king cannot move
+ * @param {string} white_k  The position of white king
+ * @param {string} black_k  The position of white king
+ * @param  moves  array of all valid moves
+ * @param  board array representing the board
+ * @returns {boolean} If the current move doesnt affect the king
+ */
+function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
+	if (![white_k, black_k].includes(moves[k][1])) return true // if the piece acting on the position is not a king or queen, the move won't affect any king
+	let color = white_k === moves[k][1] ? "white" : "black" // color of the king
+	friends.sort(sortMoves)
+	console.log(friends)
+
+	let piece = getPiece(moves[k][0], board) // the tareget piece. if the piece is an empty space, it's value is null
+	// empty piece
+	if (!piece.piece.name) {
+		if (!piece.can_move) return true // if there are no other moves, then it is also valid
+		//- If all the pieces that can move are same color as king, then it is valid
+		if (!filterMovesForKing(piece.can_move, color, board) ) return true
+		//- if there's only a pawn of opposite color, the pawn doesnt pose a threat ( since it can't move/kill forward when blocked)
+		else if (filterMovesForKing(piece.can_move, color, board) === 1 && checkForPawn(piece.can_move, color, board) === "pawn") return true
+		//- If enemy pieces can move to the same place, then king cannot move to that place cause of the risk of being killed
+		else return false
+	}// occupied piece
+	else {
+		if (!piece.can_kill) return true // if there are no other moves, then it is also valid
+		//- If all the pieces that can 'kill' are same color as king, then it is valid 
+		if (!filterMovesForKing(piece.can_kill, color, board) ) return true
+		//- If an enemy piece is friendly (a piece of the color that can move if occupied piece moves) , the king cannot move
+		f = search(square.position, friends) // checks pieces of the same family that can move to the position
+		return f === -1 ? true : false // if there are no friendly  pieces, it returns -1
+	}
+}
+/**
+ * Helps checking of pieces that are the same color as the king
+ * To be used in the map function
+ * 
+ * @param {string} each 
+ * @param {"white" | "black"} king_color 
+ * @param  board 
+ * @returns  number of pieces with different color than king
+ */
+
 function getKings(board) {
 	let white
 	let black
@@ -170,28 +237,30 @@ function search(board_position, moves) {
 
 function generateMoveForBoard(board, white_k, black_k) {
 	let moves = [] ///1 1
-	let possible_moves /// 1 1
+	let friends = []
+	let possible_moves, friend /// 1 1
 	for (let each of board) { // goes through board and adds valid moves for pieces to the array
 		if (each.piece.name) { /// 1 n
 			let type = getType(each.piece.name) ///12 n // guaranteed to have a valid type
 			let piece_color = getPieceColor(each.piece.name) ///12 n
 			switch (type) {
-				case "king":   possible_moves = kingCapture(each.position, board, piece_color) ///108 n
+				case "king":   [possible_moves, friend] = kingCapture(each.position, board, piece_color) ///108 n
 					break;
-				case "queen":	 possible_moves = queenCapture(each.position, board, piece_color) ///672 n
+				case "queen":	 [possible_moves, friend] = queenCapture(each.position, board, piece_color) ///672 n
 					break;
-				case "bishop": possible_moves = bishopCapture(each.position, board, piece_color) ///336 n
+				case "bishop": [possible_moves, friend] = bishopCapture(each.position, board, piece_color) ///336 n
 					break;
-				case "knight": possible_moves = knightCapture(each.position, board, piece_color) ///192 n
+				case "knight": [possible_moves, friend] = knightCapture(each.position, board, piece_color) ///192 n
 					break;
-				case "rook":   possible_moves = rookCapture(each.position, board, piece_color) ///336 n
+				case "rook":   [possible_moves, friend] = rookCapture(each.position, board, piece_color) ///336 n
 					break;
-				case "pawn":   possible_moves = pawnCapture(each.position, board, piece_color)///34 n
+				case "pawn":   [possible_moves, friend] = pawnCapture(each.position, board, piece_color)///34 n
 					break;
 				default:
 					throw "Error generating moves!"
 			}
 			moves = moves.concat(possible_moves) //m
+			friends = friends.concat(friend) //m
 		}
 	}
 	for (let each of board) { // clear previously generated moves for board (prevents wierd bugs)
@@ -204,6 +273,7 @@ function generateMoveForBoard(board, white_k, black_k) {
 	for (let square of board) {//  1 n
 		if (!moves.length) break
 		k = search(square.position, moves) ///nlogn
+		
 		if (k === -1) continue
 		// moves[k][0] => the position that is to be killed, or moved into
 		// moves[k][1] => the position that is doing the moving / killing
@@ -211,13 +281,18 @@ function generateMoveForBoard(board, white_k, black_k) {
 		do {
 			if (square.piece.name) { // if there is a piece at the location, it is to be killed
 				// when key `can_kill` is not empty
-				if (square.can_kill) square.can_kill.push(moves[k][1])
+				if (square.can_kill) {
+					if (validateKingNotAffected(white_k, black_k, k, moves, friends,  board)) square.can_kill.push(moves[k][1])// prevents king from moving where it could be kill
+					
+				}
 				// key `can_kill` is initially at null, handles for when it is null
 				else square.can_kill = [moves[k][1]]
 			}
 			else { // if there isnt a piece at the location, it is a valid move
 				// when key `can_move` is not empty
-				if (square.can_move) square.can_move.push(moves[k][1])
+				if (square.can_move){
+					if (validateKingNotAffected(white_k, black_k, k, moves, friends,  board)) square.can_move.push(moves[k][1])
+				}
 				// key `can_move` is initially at null, handles for when it is null
 				else square.can_move = [moves[k][1]]
 			}
@@ -225,15 +300,6 @@ function generateMoveForBoard(board, white_k, black_k) {
 			if (!moves.length) break
 			k = search(square.position, moves) ///n sqrt(n) logn 
 		} while (k !== -1)
-	}
-	// prevent kings from moving to places it can be killed
-	for (let each of board) {
-		// if king moves to empty space, there should be no enemy capable of killing it (only same family should be present in its `can_move`)
-		if ((each.can_move && each.can_move.includes(white_k)) && !filterMovesForKing(each, "can_move", "white", board)) each.can_move = each.can_move.filter(p => p !== white_k)
-		// king should not be able to kill piece 
-		// if ((each.can_kill && each.can_move.includes(white_k)) && !filterMovesForKing(each, "can_move", "white", board)) console.log(filterMovesForKing(each, "can_move", "white", board))
-		// let color = each.piece.name ? getPieceColor(each.piece.name) : null
-		// if (each.can_kill)
 	}
 }
 
@@ -244,6 +310,7 @@ function kingCapture (location, board, color) {
 	let [row_index, col_index] = getIndex(location)
 	let index = calculateIndex(row_index, col_index) 
 	let ans = []
+	let friends = []
 
 	let square = board[index] // gets object representing location from board array
 	// square.isSelected = true  // ???
@@ -258,14 +325,14 @@ function kingCapture (location, board, color) {
 			let active_square  =  board[board_index]
 			// console.log("ffff", active_square)
 
-			if (getPieceColor(active_square.piece.name) === color) continue  // prevents killing pieces in the same family
+			if (getPieceColor(active_square.piece.name) === color) friends.push([active_square.position, square.position])
 			// if (active_square.piece.name) active_square.isKill = true
 			// else active_square.isActive = true
-			ans.push([active_square.position, square.position])
+			else ans.push([active_square.position, square.position])
 		}
 	}
 	// castling
-	return ans
+	return [ans, friends]
 }
 
 function knightCapture (location, board, color) {
@@ -277,6 +344,7 @@ function knightCapture (location, board, color) {
 
 	let index = calculateIndex(row_index, col_index)
 	let ans = []
+	let friends = []
 
 	let square = board[index]
 	// square.isSelected = true
@@ -292,13 +360,13 @@ function knightCapture (location, board, color) {
 
 			let board_index = calculateIndex(i, j)
 			let active_square  =  board[board_index]
-			if (getPieceColor(active_square.piece.name) === color) continue  // prevents killing pieces in the same family
+			if (getPieceColor(active_square.piece.name) === color) friends.push([active_square.position, square.position]) 
 			// if (active_square.piece) active_square.isKill = true
 			// else active_square.isActive = true
-			ans.push([active_square.position, square.position])
+			else ans.push([active_square.position, square.position])
 		}
 	}
-	return ans
+	return [ans, friends]
 }
 
 function rookCapture (location, board, color) {
@@ -315,13 +383,14 @@ function rookCapture (location, board, color) {
 	let index = calculateIndex(row_index, col_index)
 	let square = board[index]
 	let ans = []
+	let friends = []
 	
 	for (let i=1; i<8 ; i++) { 
 		if (!up_isblocked && row_index + i < 8) { // all pieces above the rook. `up_isblocked` stops sliding if true
 			let up =  calculateIndex(row_index+i, col_index)
 			let up_square  =  board[up]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(up_square.piece.name) === color) up_isblocked = true
+			if (getPieceColor(up_square.piece.name) === color) { friends.push([up_square.position, square.position]); up_isblocked = true }
 			else if (up_square.piece.name) { ans.push([up_square.position, square.position]); up_isblocked = true }
 			else ans.push([up_square.position, square.position])
 		}
@@ -329,7 +398,7 @@ function rookCapture (location, board, color) {
 			let down =  calculateIndex(row_index-i, col_index)
 			let down_square  =  board[down]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(down_square.piece.name) === color) down_isblocked = true
+			if (getPieceColor(down_square.piece.name) === color) { friends.push([down_square.position, square.position]); down_isblocked = true }
 			else if (down_square.piece.name) { ans.push([down_square.position, square.position]); down_isblocked = true }
 			else ans.push([down_square.position, square.position])
 		}
@@ -337,7 +406,7 @@ function rookCapture (location, board, color) {
 			let right =  calculateIndex(row_index, col_index+i)
 			let right_square  =  board[right]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(right_square.piece.name) === color) right_isblocked = true
+			if (getPieceColor(right_square.piece.name) === color) { friends.push([right_square.position, square.position]); right_isblocked = true }
 			else if (right_square.piece.name) { ans.push([right_square.position, square.position]); right_isblocked = true }
 			else ans.push([right_square.position, square.position])
 		}
@@ -345,12 +414,12 @@ function rookCapture (location, board, color) {
 			let left =  calculateIndex(row_index, col_index-i)
 			let left_square  =  board[left]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(left_square.piece.name) === color) left_isblocked = true
+			if (getPieceColor(left_square.piece.name) === color) { friends.push([left_square.position, square.position]); left_isblocked = true }
 			else if (left_square.piece.name) { ans.push([left_square.position, square.position]); left_isblocked = true }
 			else ans.push([left_square.position, square.position])
 		}
 	}
-	return ans
+	return [ans, friends]
 }
 
 function bishopCapture (location, board, color) {
@@ -367,13 +436,14 @@ function bishopCapture (location, board, color) {
 	let index =  calculateIndex(row_index, col_index)
 	let square = board[index]
 	let ans = []
+	let friends = []
 
 	for (let i=1; i<8 ; i++) {
 		if ( !ne_isblocked && (row_index + i < 8 && col_index + i < 8) ) { // all pieces to north-east of the rook. `ne_isblocked` stops sliding if true
 			let ne = calculateIndex(row_index+i, col_index+i)
 			let ne_square  =  board[ne]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(ne_square.piece.name) === color) ne_isblocked = true
+			if (getPieceColor(ne_square.piece.name) === color) { friends.push([ne_square.position, square.position]); ne_isblocked = true }
 			else if (ne_square.piece.name) { ans.push([ne_square.position, square.position]); ne_isblocked = true }
 			else ans.push([ne_square.position, square.position])
 		}
@@ -381,7 +451,7 @@ function bishopCapture (location, board, color) {
 			let nw =  calculateIndex(row_index+i,col_index-i)
 			let nw_square  =  board[nw]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(nw_square.piece.name) === color) nw_isblocked = true
+			if (getPieceColor(nw_square.piece.name) === color) { friends.push([nw_square.position, square.position]); nw_isblocked = true }
 			else if (nw_square.piece.name) { ans.push([nw_square.position, square.position]); nw_isblocked = true }
 			else ans.push([nw_square.position, square.position])
 		}
@@ -389,7 +459,7 @@ function bishopCapture (location, board, color) {
 			let se =  calculateIndex(row_index-i, col_index+i)
 			let se_square  =  board[se]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(se_square.piece.name) === color) se_isblocked = true
+			if (getPieceColor(se_square.piece.name) === color) { friends.push([se_square.position, square.position]); se_isblocked = true }
 			else if (se_square.piece.name) { ans.push([se_square.position, square.position]); se_isblocked = true }
 			else ans.push([se_square.position, square.position])
 		}
@@ -397,12 +467,12 @@ function bishopCapture (location, board, color) {
 			let sw =  calculateIndex(row_index-i, col_index-i)
 			let sw_square  =  board[sw]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(sw_square.piece.name) === color) sw_isblocked = true  // prevents killing pieces in the same family
+			if (getPieceColor(sw_square.piece.name) === color) { friends.push([sw_square.position, square.position]); sw_isblocked = true }  // prevents killing pieces in the same family
 			else if (sw_square.piece.name) { ans.push([sw_square.position, square.position]); sw_isblocked = true }
 			else ans.push([sw_square.position, square.position])
 		}
 	}
-	return ans
+	return [ans, friends]
 }
 
 function queenCapture (location, board, color) {
@@ -423,13 +493,14 @@ function queenCapture (location, board, color) {
 	let index = calculateIndex(row_index, col_index)
 	let square = board[index]
 	let ans = []
+	let friends = []
 	
 	for (let i=1; i<8 ; i++) {
 		if (!up_isblocked && row_index + i < 8) { // all pieces above the rook. `up_isblocked` stops sliding if true
 			let up =  calculateIndex(row_index+i, col_index)
 			let up_square  =  board[up]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(up_square.piece.name) === color) up_isblocked = true
+			if (getPieceColor(up_square.piece.name) === color) { friends.push([up_square.position, square.position]); up_isblocked = true }
 			else if (up_square.piece.name) { ans.push([up_square.position, square.position]); up_isblocked = true }
 			else ans.push([up_square.position, square.position])
 		}
@@ -437,7 +508,7 @@ function queenCapture (location, board, color) {
 			let down =  calculateIndex(row_index-i, col_index)
 			let down_square  =  board[down]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(down_square.piece.name) === color) down_isblocked = true
+			if (getPieceColor(down_square.piece.name) === color) { friends.push([down_square.position, square.position]); down_isblocked = true }
 			else if (down_square.piece.name) { ans.push([down_square.position, square.position]); down_isblocked = true }
 			else ans.push([down_square.position, square.position])
 		}
@@ -445,7 +516,7 @@ function queenCapture (location, board, color) {
 			let right =  calculateIndex(row_index, col_index+i)
 			let right_square  =  board[right]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(right_square.piece.name) === color) right_isblocked = true
+			if (getPieceColor(right_square.piece.name) === color) { friends.push([right_square.position, square.position]); right_isblocked = true }
 			else if (right_square.piece.name) { ans.push([right_square.position, square.position]); right_isblocked = true }
 			else ans.push([right_square.position, square.position])
 		}
@@ -453,7 +524,7 @@ function queenCapture (location, board, color) {
 			let left =  calculateIndex(row_index, col_index-i)
 			let left_square  =  board[left]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(left_square.piece.name) === color) left_isblocked = true
+			if (getPieceColor(left_square.piece.name) === color) { friends.push([left_square.position, square.position]); left_isblocked = true }
 			else if (left_square.piece.name) { ans.push([left_square.position, square.position]); left_isblocked = true }
 			else ans.push([left_square.position, square.position])
 		}
@@ -461,7 +532,7 @@ function queenCapture (location, board, color) {
 			let ne = calculateIndex(row_index+i, col_index+i)
 			let ne_square  =  board[ne]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(ne_square.piece.name) === color) ne_isblocked = true
+			if (getPieceColor(ne_square.piece.name) === color) { friends.push([ne_square.position, square.position]);  ne_isblocked = true }
 			else if (ne_square.piece.name) { ans.push([ne_square.position, square.position]); ne_isblocked = true }
 			else ans.push([ne_square.position, square.position])
 		}
@@ -469,7 +540,7 @@ function queenCapture (location, board, color) {
 			let nw =  calculateIndex(row_index+i,col_index-i)
 			let nw_square  =  board[nw]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(nw_square.piece.name) === color) nw_isblocked = true
+			if (getPieceColor(nw_square.piece.name) === color) { friends.push([nw_square.position, square.position]); nw_isblocked = true }
 			else if (nw_square.piece.name) { ans.push([nw_square.position, square.position]); nw_isblocked = true }
 			else ans.push([nw_square.position, square.position])
 		}
@@ -477,7 +548,7 @@ function queenCapture (location, board, color) {
 			let se =  calculateIndex(row_index-i, col_index+i)
 			let se_square  =  board[se]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(se_square.piece.name) === color) se_isblocked = true
+			if (getPieceColor(se_square.piece.name) === color) { friends.push([se_square.position, square.position]); se_isblocked = true }
 			else if (se_square.piece.name) { ans.push([se_square.position, square.position]); se_isblocked = true }
 			else ans.push([se_square.position, square.position])
 		}
@@ -485,12 +556,12 @@ function queenCapture (location, board, color) {
 			let sw =  calculateIndex(row_index-i, col_index-i)
 			let sw_square  =  board[sw]
 			// all the below are in an if-else block so no need for `continue` for when the selected piece has the same color
-			if (getPieceColor(sw_square.piece.name) === color) sw_isblocked = true  // prevents killing pieces in the same family
+			if (getPieceColor(sw_square.piece.name) === color) { friends.push([sw_square.position, square.position]); sw_isblocked = true } // prevents killing pieces in the same family
 			else if (sw_square.piece.name) { ans.push([sw_square.position, square.position]); sw_isblocked = true }
 			else ans.push([sw_square.position, square.position])
 		}
 	}
-	return ans
+	return [ans, friends]
 }
 
 function pawnCapture (location, board, color) {
@@ -504,6 +575,7 @@ function pawnCapture (location, board, color) {
 	let isblocked = false
 	let multiplier = "white" === color ? 1 : -1 // white pawn moves up, black moves down
 	let ans = []
+	let friends = []
 	// let en_passant_rows = [3, 4]
 	// En-passant
 	// https://en.wikipedia.org/wiki/Chess#En_passant
@@ -521,11 +593,13 @@ function pawnCapture (location, board, color) {
 			let left  = calculateIndex(row_index+multiplier*i, col_index-i) // multiplier determines if it moves up or down
 			let left_square  = board[left]
 			if (getPieceColor(left_square.piece.name) !== color && left_square.piece.name) ans.push([left_square.position, square.position])
+			if (getPieceColor(left_square.piece.name) === color) friends.push([left_square.position, square.position])
 		}
 		if (i === 1 && col_index+i < 8) {
 			let right = calculateIndex(row_index+multiplier*i, col_index+i) // multiplier determines if it moves up or down
 			let right_square = board[right]
 			if (getPieceColor(right_square.piece.name) !== color && right_square.piece.name) ans.push([right_square.position, square.position])
+			if (getPieceColor(right_square.piece.name) === color) friends.push([right_square.position, square.position])
 		}
 		// check movement for i=1 (and i=2 when its pawns first move)
 		let board_index = calculateIndex(row_index+multiplier*i, col_index)
@@ -534,7 +608,7 @@ function pawnCapture (location, board, color) {
 		if (active_square.piece.name) isblocked = true
 		else ans.push([active_square.position, square.position])
 	}
-	return ans
+	return [ans, friends]
 }
 
 module.exports = {
