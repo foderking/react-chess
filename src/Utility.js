@@ -23,6 +23,37 @@ function filterMovesForKing(moves, color, board) {
 	return moves.map(each => getPieceColor(getPieceFromPosition(each, board))).filter(each => each !== color).length
 }
 
+function checkNoPawnKill(piece, color, board) {
+	let multiplier = color === "white" ? true : false
+	const cols = "abcdefgh"
+	const rows = "12345678"
+	let pos = piece.position
+	// if white a pawn above can kill
+	if (multiplier){
+		let new_row = rows[rows.indexOf(pos.charAt(0))+1]
+		let l_col = cols[cols.indexOf(pos.charAt(1))-1]
+		let r_col = cols[cols.indexOf(pos.charAt(1))+1]
+		let left  = pos.charAt(1) !== "a" && pos.charAt(0) !== "8" ?  getPieceFromPosition(new_row+l_col, board) : null
+		let right = pos.charAt(1) !== "h" && pos.charAt(0) !== "8" ?  getPieceFromPosition(new_row+r_col, board) : null
+		console.log(color, left, right, new_row, l_col, r_col)
+		if (left && getType(left)==="pawn")   return false
+		if (right && getType(right)==="pawn") return false
+		return true
+	}
+	// if black a pawn below can kill
+	else {
+		let new_row = rows[rows.indexOf(pos.charAt(0))-1]
+		let l_col = cols[cols.indexOf(pos.charAt(1))-1]
+		let r_col = cols[cols.indexOf(pos.charAt(1))+1]
+		let left  = pos.charAt(1) !== "a" && pos.charAt(0) !== "1" ?  getPieceFromPosition(new_row+l_col, board) : null
+		let right = pos.charAt(1) !== "h" && pos.charAt(0) !== "1" ?  getPieceFromPosition(new_row+r_col, board) : null
+		console.log(color, left, right, new_row, l_col, r_col)
+		if (left && getType(left)==="pawn")   return false
+		if (right && getType(right)==="pawn") return false
+		return true
+	}
+}
+
 function checkForPawn(moves, color, board) {
 	let count = 0
 	let last
@@ -33,8 +64,8 @@ function checkForPawn(moves, color, board) {
 		count++
 		last = piece
 	}
-	if (count === 1) return getType(last)
-	else return "random_string"
+	if (count === 1) return getType(last) === "pawn"
+	return false
 }
 /**
  * 
@@ -53,29 +84,36 @@ function checkForPawn(moves, color, board) {
  * @returns {boolean} If the current move doesnt affect the king
  */
 function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
-	if (![white_k, black_k].includes(moves[k][1])) return true // if the piece acting on the position is not a king or queen, the move won't affect any king
+	// the move at `moves[k][1]` is guaranteed to be a king (since we go through a separate for loop for king only - as of the time this was commented)
 	let color = white_k === moves[k][1] ? "white" : "black" // color of the king
-	friends.sort(sortMoves)
-	console.log(friends)
-
+	// friends.sort(sortMoves)
+	// console.log(friends)
 	let piece = getPiece(moves[k][0], board) // the tareget piece. if the piece is an empty space, it's value is null
 	// empty piece
 	if (!piece.piece.name) {
 		if (!piece.can_move) return true // if there are no other moves, then it is also valid
+		if (!checkNoPawnKill(piece, color, board)) return false
 		//- If all the pieces that can move are same color as king, then it is valid
 		if (!filterMovesForKing(piece.can_move, color, board) ) return true
-		//- if there's only a pawn of opposite color, the pawn doesnt pose a threat ( since it can't move/kill forward when blocked)
-		else if (filterMovesForKing(piece.can_move, color, board) === 1 && checkForPawn(piece.can_move, color, board) === "pawn") return true
+
+		//console.log(color, "sda", moves[k][0])
+		//- if there's only a pawn of opposite color moving foward, the pawn doesnt pose a threat ( since it can't move/kill forward when blocked)
+		if (filterMovesForKing(piece.can_move, color, board) === 1 && checkForPawn(piece.can_move, color, board)) return true
+		// check if theres a pawn that can kill if it moves there
+		// let multiplier = color === "white" ? true : false
 		//- If enemy pieces can move to the same place, then king cannot move to that place cause of the risk of being killed
 		else return false
 	}// occupied piece
 	else {
+		return false
+	/*
 		if (!piece.can_kill) return true // if there are no other moves, then it is also valid
 		//- If all the pieces that can 'kill' are same color as king, then it is valid 
 		if (!filterMovesForKing(piece.can_kill, color, board) ) return true
 		//- If an enemy piece is friendly (a piece of the color that can move if occupied piece moves) , the king cannot move
 		f = search(square.position, friends) // checks pieces of the same family that can move to the position
 		return f === -1 ? true : false // if there are no friendly  pieces, it returns -1
+	*/
 	}
 }
 /**
@@ -268,8 +306,9 @@ function generateMoveForBoard(board, white_k, black_k) {
 		each.can_move = null
 	}
 	moves.sort(sortMoves)///nlogn // array need to be sorted in order to be able to search for positions
+	let moves_2 = moves.concat()
 	let k
-	// goes through each position in the board and looks for positions of pieces that can kill it or move to it
+	// (only for pawns that are not king) goes through each position in the board and looks for positions of pieces that can kill it or move to it
 	for (let square of board) {//  1 n
 		if (!moves.length) break
 		k = search(square.position, moves) ///nlogn
@@ -280,19 +319,16 @@ function generateMoveForBoard(board, white_k, black_k) {
 		// Array<[dest, src]>
 		do {
 			if (square.piece.name) { // if there is a piece at the location, it is to be killed
+				if ([white_k, black_k].includes(moves[k][1])) 5
 				// when key `can_kill` is not empty
-				if (square.can_kill) {
-					if (validateKingNotAffected(white_k, black_k, k, moves, friends,  board)) square.can_kill.push(moves[k][1])// prevents king from moving where it could be kill
-					
-				}
+				else if (square.can_kill) square.can_kill.push(moves[k][1])
 				// key `can_kill` is initially at null, handles for when it is null
 				else square.can_kill = [moves[k][1]]
 			}
 			else { // if there isnt a piece at the location, it is a valid move
+				if ([white_k, black_k].includes(moves[k][1])) 5
 				// when key `can_move` is not empty
-				if (square.can_move){
-					if (validateKingNotAffected(white_k, black_k, k, moves, friends,  board)) square.can_move.push(moves[k][1])
-				}
+				else if (square.can_move) square.can_move.push(moves[k][1])
 				// key `can_move` is initially at null, handles for when it is null
 				else square.can_move = [moves[k][1]]
 			}
@@ -301,6 +337,42 @@ function generateMoveForBoard(board, white_k, black_k) {
 			k = search(square.position, moves) ///n sqrt(n) logn 
 		} while (k !== -1)
 	}
+	// /*
+	// does moves for king
+	for (let square of board) {//  1 n
+		if (!moves_2.length) break
+		k = search(square.position, moves_2) ///nlogn
+		// console.log("firsdsfakslfaj;lkjdf;alkjlskfdat")
+		
+		if (k === -1) continue
+		// moves[k][0] => the position that is to be killed, or moved into
+		// moves[k][1] => the position that is doing the moving / killing
+		// Array<[dest, src]>
+		do {
+			if (square.piece.name) { // if there is a piece at the location, it is to be killed
+				if (![white_k, black_k].includes(moves_2[k][1])) 5
+
+				if (!validateKingNotAffected(white_k, black_k, k, moves_2, friends,  board)) 3
+				// when key `can_kill` is not empty
+				else if (square.can_kill) square.can_kill.push(moves_2[k][1]) // prevents king from moving where it could be kill
+				// key `can_kill` is initially at null, handles for when it is null
+				else square.can_kill = [moves_2[k][1]] // if theres only king, then, there's no problem
+			}
+			else { // if there isnt a piece at the location, it is a valid move
+				if (![white_k, black_k].includes(moves_2[k][1])) 5
+
+				if (!validateKingNotAffected(white_k, black_k, k, moves_2, friends,  board)) 3
+				// when key `can_move` is not empty
+				else if (square.can_move && validateKingNotAffected(white_k, black_k, k, moves_2, friends,  board) ) square.can_move.push(moves_2[k][1]) // prevents king from moving where it could be kill
+				// key `can_move` is initially at null, handles for when it is null
+				else square.can_move = [moves_2[k][1]]
+			}
+			moves_2.splice(k, 1) ///n n sqrt(n)
+			if (!moves_2.length) break
+			k = search(square.position, moves_2) ///n sqrt(n) logn 
+		} while (k !== -1)
+	}
+// */
 }
 
 function kingCapture (location, board, color) {
