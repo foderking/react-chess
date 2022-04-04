@@ -36,8 +36,8 @@ function checkNoPawnKill(piece, color, board) {
 		let left  = pos.charAt(1) !== "a" && pos.charAt(0) !== "8" ?  getPieceFromPosition(new_row+l_col, board) : null
 		let right = pos.charAt(1) !== "h" && pos.charAt(0) !== "8" ?  getPieceFromPosition(new_row+r_col, board) : null
 		console.log(color, left, right, new_row, l_col, r_col)
-		if (left && getType(left)==="pawn")   return false
-		if (right && getType(right)==="pawn") return false
+		if (left  && (getType(left)==="pawn"  && getPieceColor(left)  !== color)) return false
+		if (right && (getType(right)==="pawn" && getPieceColor(right) !== color)) return false
 		return true
 	}
 	// if black a pawn below can kill
@@ -48,8 +48,10 @@ function checkNoPawnKill(piece, color, board) {
 		let left  = pos.charAt(1) !== "a" && pos.charAt(0) !== "1" ?  getPieceFromPosition(new_row+l_col, board) : null
 		let right = pos.charAt(1) !== "h" && pos.charAt(0) !== "1" ?  getPieceFromPosition(new_row+r_col, board) : null
 		console.log(color, left, right, new_row, l_col, r_col)
-		if (left && getType(left)==="pawn")   return false
-		if (right && getType(right)==="pawn") return false
+		// if (left && getType(left)==="pawn")   return false
+		if (left  && (getType(left)==="pawn"  && getPieceColor(left)  !== color)) return false
+		if (right && (getType(right)==="pawn" && getPieceColor(right) !== color)) return false
+		// if (right && getType(right)==="pawn") return false
 		return true
 	}
 }
@@ -92,6 +94,7 @@ function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
 	// empty piece
 	if (!piece.piece.name) {
 		if (!piece.can_move) return true // if there are no other moves, then it is also valid
+		// prevents pawn from being able to kill king
 		if (!checkNoPawnKill(piece, color, board)) return false
 		//- If all the pieces that can move are same color as king, then it is valid
 		if (!filterMovesForKing(piece.can_move, color, board) ) return true
@@ -105,7 +108,9 @@ function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
 		else return false
 	}// occupied piece
 	else {
-		return false
+		// prevents pawn from being able to kill king
+		if (!checkNoPawnKill(piece, color, board)) return false
+		return true
 	/*
 		if (!piece.can_kill) return true // if there are no other moves, then it is also valid
 		//- If all the pieces that can 'kill' are same color as king, then it is valid 
@@ -352,7 +357,7 @@ function generateMoveForBoard(board, white_k, black_k) {
 			if (square.piece.name) { // if there is a piece at the location, it is to be killed
 				if (![white_k, black_k].includes(moves_2[k][1])) 5
 
-				if (!validateKingNotAffected(white_k, black_k, k, moves_2, friends,  board)) 3
+				else if (!validateKingNotAffected(white_k, black_k, k, moves_2, friends,  board)) 3
 				// when key `can_kill` is not empty
 				else if (square.can_kill) square.can_kill.push(moves_2[k][1]) // prevents king from moving where it could be kill
 				// key `can_kill` is initially at null, handles for when it is null
@@ -361,7 +366,7 @@ function generateMoveForBoard(board, white_k, black_k) {
 			else { // if there isnt a piece at the location, it is a valid move
 				if (![white_k, black_k].includes(moves_2[k][1])) 5
 
-				if (!validateKingNotAffected(white_k, black_k, k, moves_2, friends,  board)) 3
+				else if (!validateKingNotAffected(white_k, black_k, k, moves_2, friends,  board)) 3
 				// when key `can_move` is not empty
 				else if (square.can_move && validateKingNotAffected(white_k, black_k, k, moves_2, friends,  board) ) square.can_move.push(moves_2[k][1]) // prevents king from moving where it could be kill
 				// key `can_move` is initially at null, handles for when it is null
