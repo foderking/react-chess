@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
+import Check from './Check'
 import { Board } from './constants'
 import Promotion from './Promotion'
 import {
 	calculateIndex, checkPromotion, generateMoveForBoard, generateRandomString,
-	getIndex, getKings, getPieceColor, getType, killPiece, movePiece, promotePawn
+	getIndex, getKings, getPiece, getPieceColor, getType, killPiece, movePiece, promotePawn
 } from './Utility'
 
 const App = () =>
@@ -20,6 +21,13 @@ const App = () =>
 	const [promotion, doPromotion] = useState(false) // controls whether the promotion popup shows
 	const [promoted_location, setPromoLocation] = useState(null)
 	const [promoted_family, setPromoFamily] = useState(null)
+
+	const [isCheck, setCheck] = useState(null) // sets when a king is in check; 3 possible value `null`, position of white king, and position of black king
+
+	useEffect(()=> {
+		if (player && getPiece(white_k, board).can_kill) setCheck(true)
+	}, [board])
+
 
 	function handleClick(e) {
 		e.preventDefault()
@@ -92,6 +100,10 @@ const App = () =>
 					promotion &&
 					<Promotion family={promoted_family} handlePromotion={finishPromotion} />
 				}
+				{
+					isCheck &&
+					<Check />
+				}
 
 				<div className='main'>
 					<div className='cols'>
@@ -125,7 +137,8 @@ const App = () =>
 										`text-center board-cell row-${ each.position[0] } ${ each.color }
 										col-${ each.position[1] } ${ each.position === location ? "selected" : "" }
 										${ (location && each.can_kill) && each.can_kill.includes(location) ? 'kill'   : '' }
-										${ (location && each.can_move) && each.can_move.includes(location) ? "active" : '' }`
+										${ (location && each.can_move) && each.can_move.includes(location) ? "active" : '' }
+										${ each.position === isCheck ? "check" : "" }`
 									}
 								>
 									{ each.piece.name }

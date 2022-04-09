@@ -124,6 +124,17 @@ function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
 	*/
 	}
 }
+
+
+function verifyStopCheck() {
+	/*
+	A check can be stopped by:
+		- Capturing the checking piece
+		- Interposing a piece between the checking piece and the king (which is possible only if the attacking piece is a queen, rook, or bishop and there is a square between it and the king);
+		- Moving the king to a square where it is not under attack.
+		- Castling is not a permissible response to a check.[1]
+	*/
+}
 /**
  * Helps checking of pieces that are the same color as the king
  * To be used in the map function
@@ -711,4 +722,5 @@ module.exports = {
 	PawnPromotion,
 	checkPromotion,
 	getKings,
+	getPiece,
 }
