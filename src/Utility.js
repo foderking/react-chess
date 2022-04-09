@@ -35,7 +35,7 @@ function checkNoPawnKill(piece, color, board) {
 		let r_col = cols[cols.indexOf(pos.charAt(1))+1]
 		let left  = pos.charAt(1) !== "a" && pos.charAt(0) !== "8" ?  getPieceFromPosition(new_row+l_col, board) : null
 		let right = pos.charAt(1) !== "h" && pos.charAt(0) !== "8" ?  getPieceFromPosition(new_row+r_col, board) : null
-		console.log(color, left, right, new_row, l_col, r_col)
+		//console.log(color, left, right, new_row, l_col, r_col)
 		if (left  && (getType(left)==="pawn"  && getPieceColor(left)  !== color)) return false
 		if (right && (getType(right)==="pawn" && getPieceColor(right) !== color)) return false
 		return true
@@ -47,7 +47,7 @@ function checkNoPawnKill(piece, color, board) {
 		let r_col = cols[cols.indexOf(pos.charAt(1))+1]
 		let left  = pos.charAt(1) !== "a" && pos.charAt(0) !== "1" ?  getPieceFromPosition(new_row+l_col, board) : null
 		let right = pos.charAt(1) !== "h" && pos.charAt(0) !== "1" ?  getPieceFromPosition(new_row+r_col, board) : null
-		console.log(color, left, right, new_row, l_col, r_col)
+		//console.log(color, left, right, new_row, l_col, r_col)
 		// if (left && getType(left)==="pawn")   return false
 		if (left  && (getType(left)==="pawn"  && getPieceColor(left)  !== color)) return false
 		if (right && (getType(right)==="pawn" && getPieceColor(right) !== color)) return false
@@ -110,7 +110,10 @@ function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
 	else {
 		// prevents pawn from being able to kill king
 		if (!checkNoPawnKill(piece, color, board)) return false
-		return true
+		let k = search(piece.position, friends) ///nlogn
+		if (k===-1) return true
+		console.log(friends)
+		return false
 	/*
 		if (!piece.can_kill) return true // if there are no other moves, then it is also valid
 		//- If all the pieces that can 'kill' are same color as king, then it is valid 
@@ -342,6 +345,7 @@ function generateMoveForBoard(board, white_k, black_k) {
 			k = search(square.position, moves) ///n sqrt(n) logn 
 		} while (k !== -1)
 	}
+	friends.sort(sortMoves)///nlogn // array need to be sorted in order to be able to search for positions
 	// /*
 	// does moves for king
 	for (let square of board) {//  1 n
