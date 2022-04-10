@@ -106,6 +106,12 @@
 .selected {
 	background-color: #89D16B;
 }
+.black.check {
+	background-color: purple;
+}
+.white.check {
+	background-color: #a865c8;
+}
 
 .promo {
 	font-size: 4em;
