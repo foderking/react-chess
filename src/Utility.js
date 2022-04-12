@@ -129,22 +129,59 @@ function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
 function checkIntersposable(square, checking_piece, king,  board) {
 	// checks if an empty square is a valid location to put between the king and the checking piece
 	const valid = ["queen", "rook", "bishop"]
+	let between, other
 	console.log(checking_piece, king, "yy")
 	let type  =  getType(getPieceFromPosition(checking_piece, board))
 	if (!valid.includes(type)) return false
 	switch (type) {
 		case "queen": 
+			// rook part
+			between = checking_piece[0]===king[0] ? 0 : 1
+			other   = checking_piece[0]===king[0] ? 1 : 0
+			if (square.position[between]===king[between]){
+				console.log("rook", square.position)
+				if ( (king[other] < square.position[other])===(square.position[other] < checking_piece[other]) ) return true
+			}
+			// bishop part
+			else if(
+				( Math.abs(rows.indexOf(checking_piece[0]) - rows.indexOf(square.position[0])) === 
+					Math.abs(cols.indexOf(checking_piece[1]) - cols.indexOf(square.position[1]))
+				) &&
+				( Math.abs(rows.indexOf(square.position[0]) - rows.indexOf(king[0])) === 
+					Math.abs(cols.indexOf(square.position[1]) - cols.indexOf(king[1]))
+				) 
+			){
+				console.log("bishop", square.position)
+				let  dx_from_checking = checking_piece[1]  < square.position[1]
+				let  dy_from_checking = checking_piece[0]  < square.position[0]
+				let  dx_from_block    = square.position[1] < king[1]
+				let  dy_from_block    = square.position[0] < king[0]
+				console.log(square.position, dx_from_checking, dy_from_checking, dx_from_block, dy_from_block)
+				if (dx_from_checking===dx_from_block && dy_from_checking===dy_from_block) return true
+			}
 			break
 		case "rook": 
 			// valid moves will be in the row or column between rook and king
-			let between = checking_piece[0]===king[0] ? 0 : 1
-			let other   = checking_piece[0]===king[0] ? 1 : 0
+			between = checking_piece[0]===king[0] ? 0 : 1
+			other   = checking_piece[0]===king[0] ? 1 : 0
 			if (square.position[between]!==king[between]) return false
 			console.log("rook", between, other, square)
 			console.log(square.position, (king[other] < square.position[other]), (square.position[other] < checking_piece[other]) )
 			if ( (king[other] < square.position[other])===(square.position[other] < checking_piece[other]) ) return true
 			break
 		case "bishop": 
+			if ( Math.abs(rows.indexOf(checking_piece[0]) - rows.indexOf(square.position[0])) !== 
+					 Math.abs(cols.indexOf(checking_piece[1]) - cols.indexOf(square.position[1]))
+				 	) return false
+			if ( Math.abs(rows.indexOf(square.position[0]) - rows.indexOf(king[0])) !== 
+					 Math.abs(cols.indexOf(square.position[1]) - cols.indexOf(king[1]))
+				 	) return false
+			let  dx_from_checking = checking_piece[1]  < square.position[1]
+			let  dy_from_checking = checking_piece[0]  < square.position[0]
+			let  dx_from_block    = square.position[1] < king[1]
+			let  dy_from_block    = square.position[0] < king[0]
+			// console.log(square.position, dx_from_checking, dy_from_checking, dx_from_block, dy_from_block)
+			if (dx_from_checking===dx_from_block && dy_from_checking===dy_from_block) return true
 			break
 		default:
 			throw "Error checking intersposables"
@@ -153,19 +190,35 @@ function checkIntersposable(square, checking_piece, king,  board) {
 }
 
 function checkCheckKing(square, checking_piece, king,  board) {
-	// checks if an empty square is a valid location to put between the king and the checking piece
+	let between
+	// checks if an empty square is a valid location to put the king when it is checked
 	const valid = ["queen", "rook", "bishop"]
 	let type  =  getType(getPieceFromPosition(checking_piece, board))
 	if (!valid.includes(type)) return false
 	switch (type) {
 		case "queen": 
+			between = checking_piece[0]===king[0] ? 0 : 1
+			if (square.position[between]===king[between] && checking_piece[between]!== square.position) return true
+			if ( Math.abs(rows.indexOf(checking_piece[0]) - rows.indexOf(square.position[0])) !== 
+					 Math.abs(cols.indexOf(checking_piece[1]) - cols.indexOf(square.position[1]))
+				 	) return true
+			// if ( Math.abs(rows.indexOf(square.position[0]) - rows.indexOf(king[0])) !== 
+			// 		 Math.abs(cols.indexOf(square.position[1]) - cols.indexOf(king[1]))
+			// 	 	) return true
 			break
 		case "rook": 
 			// valid moves will be in the row or column between rook and king
-			let between = checking_piece[0]===king[0] ? 0 : 1
-			if (square.position[between]!==king[between]) return true
+			between = checking_piece[0]===king[0] ? 0 : 1
+			// if (square.position[between]!==king[between]) return true
+			if (square.position[between]===king[between] && checking_piece[between]!== square.position) return true
 			break
 		case "bishop": 
+			if ( Math.abs(rows.indexOf(checking_piece[0]) - rows.indexOf(square.position[0])) !== 
+					 Math.abs(cols.indexOf(checking_piece[1]) - cols.indexOf(square.position[1]))
+				 	) return true
+			// if ( Math.abs(rows.indexOf(square.position[0]) - rows.indexOf(king[0])) !== 
+			// 		 Math.abs(cols.indexOf(square.position[1]) - cols.indexOf(king[1]))
+			// 	 	) return true
 			break
 		default:
 			throw "Error checking intersposables"
@@ -267,7 +320,7 @@ function movePiece(source_location, target_location, board) {
 	return new_board
 }
 
-function killPiece(source_location, target_location, board) {
+function killPiece(source_location, target_location, board, isCheck) {
 	let new_board = cloneBoard(board)
 	let [rowa, cola] = getIndex(source_location)
 	let [rowb, colb] = getIndex(target_location)
@@ -439,6 +492,7 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 				else square.can_kill = [moves_2[k][1]] // if theres only king, then, there's no problem
 				// handle check
 				// if (checking_piece && is_valid) square.check=[true, null]
+				if (checking_piece && (is_valid && checkCheckKing(square, checking_piece[0], checked_king.position, board))) square.check[0]=true
 				// square.check = [true, null]
 			}
 			else { // if there isnt a piece at the location, it is a valid move

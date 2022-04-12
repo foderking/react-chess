@@ -46,6 +46,14 @@ const App = () =>
 		let [row, col] = getIndex(piece_location)
 		let index      = calculateIndex(row, col)
 		let piece = board[index]
+		// bolean to determine if piece can kill
+		let pieceKill = ((isCheck===null && (location && piece.can_kill)) && piece.can_kill.includes(location))
+										||
+										((isCheck && (location && (piece.can_kill&&(piece.check[0]||piece.check[1])))) && piece.can_kill.includes(location))
+		// bolean to determine if piece can move
+		let pieceMove = isCheck==null && ((location && piece.can_move) && piece.can_move.includes(location))
+										||
+										((isCheck && (location && (piece.can_move&&(piece.check[0]||piece.check[1])))) && piece.can_move.includes(location))
 
 		// undo move if you click twice
 		if (piece_location === location) {
@@ -58,7 +66,7 @@ const App = () =>
 			setPiece(piece_name)
 		}
 		// killing a piece
-		else if ((location && piece.can_kill) && piece.can_kill.includes(location)) {
+		else if (pieceKill) {
 			let [new_board, killed] = killPiece(location, piece_location, board) 
 			setBoard(new_board)
 			if (checkPromotion(clicked_piece, piece_location)) startPromotion(player, piece_location) // opens promotion popup if there is a promotion
@@ -70,7 +78,7 @@ const App = () =>
 			setCheck(null)
 		}
 		// moving to an empty location
-		else if ((location && piece.can_move) && piece.can_move.includes(location)) {
+		else if (pieceMove) {
 			let new_board = movePiece(location, piece_location, board)
 			setBoard(new_board)
 			if (checkPromotion(clicked_piece, piece_location)) startPromotion(player, piece_location) // opens promotion popup if there is a promotion
