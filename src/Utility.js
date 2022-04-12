@@ -132,7 +132,7 @@ function checkIntersposable(square, checking_piece, king,  board) {
 	let between, other
 	console.log(checking_piece, king, "yy")
 	let type  =  getType(getPieceFromPosition(checking_piece, board))
-	if (!valid.includes(type)) return false
+	if (!valid.includes(type)) return true
 	switch (type) {
 		case "queen": 
 			// rook part
@@ -186,15 +186,23 @@ function checkIntersposable(square, checking_piece, king,  board) {
 		default:
 			throw "Error checking intersposables"
 	}
+	if (square.position===checking_piece) return true
 	return false
 }
 
+	/*
+	A check can be stopped by:
+		- Capturing the checking piece
+		- Interposing a piece between the checking piece and the king (which is possible only if the attacking piece is a queen, rook, or bishop and there is a square between it and the king);
+		- Moving the king to a square where it is not under attack.(last for loop already automatically handles that)
+	*/
+
 function checkCheckKing(square, checking_piece, king,  board) {
-	let between
 	// checks if an empty square is a valid location to put the king when it is checked
+	let between
 	const valid = ["queen", "rook", "bishop"]
 	let type  =  getType(getPieceFromPosition(checking_piece, board))
-	if (!valid.includes(type)) return false
+	if (!valid.includes(type)) return true
 	switch (type) {
 		case "queen": 
 			between = checking_piece[0]===king[0] ? 0 : 1
@@ -223,6 +231,7 @@ function checkCheckKing(square, checking_piece, king,  board) {
 		default:
 			throw "Error checking intersposables"
 	}
+	if (square.position===checking_piece) return true
 	return false
 }
 /**
@@ -258,13 +267,12 @@ function generateRandomString(N=10) {
 }
 		
 function getType(piece) {
-	// console.log("type", piece)
-	if ( [white_king, black_king].includes(piece) ) return "king"
-	if ( [white_queen, black_queen].includes(piece) ) return "queen"
-	if ( [white_bishop, black_bishop].includes(piece) ) return "bishop"
-	if ( [white_knight, black_knight].includes(piece) ) return "knight"
-	if ( [white_rook, black_rook].includes(piece) ) return "rook"
-	if ( [white_pawn, black_pawn].includes(piece) ) return "pawn"
+	if ([white_king  , black_king  ].includes(piece)) return "king"
+	if ([white_queen , black_queen ].includes(piece)) return "queen"
+	if ([white_bishop, black_bishop].includes(piece)) return "bishop"
+	if ([white_knight, black_knight].includes(piece)) return "knight"
+	if ([white_rook  , black_rook  ].includes(piece)) return "rook"
+	if ([white_pawn  , black_pawn  ].includes(piece)) return "pawn"
 	throw "Invalid Piece!"
 }
 
@@ -424,14 +432,6 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 	let moves_2 = moves.concat()
 	let k
 
-	/*
-	A check can be stopped by:
-		- Capturing the checking piece
-		- Interposing a piece between the checking piece and the king (which is possible only if the attacking piece is a queen, rook, or bishop and there is a square between it and the king);
-		- Moving the king to a square where it is not under attack.(last for loop already automatically handles that)
-
-
-	*/
 	
 	// (only for pawns that are not king) goes through each position in the board and looks for positions of pieces that can kill it or move to it
 	for (let square of board) {//  1 n
