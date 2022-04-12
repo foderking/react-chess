@@ -125,21 +125,30 @@ function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
 	}
 }
 
+function getColor(location, board) {
+	return getPieceColor(getPieceFromPosition(location, board))
+}
+
 
 function checkIntersposable(square, checking_piece, king,  board) {
 	// checks if an empty square is a valid location to put between the king and the checking piece
 	const valid = ["queen", "rook", "bishop"]
 	let between, other
-	console.log(checking_piece, king, "yy")
+
+	/// prevents pieces in the same family as checked king from being processed
+	if (square.can_kill && square.can_kill.filter(each => getColor(each, board)===getColor(king, board)).length===0) return false
+	if (square.can_move && square.can_move.filter(each => getColor(each, board)===getColor(king, board)).length===0) return false
+	
+	// console.log(checking_piece, king, "yy")
 	let type  =  getType(getPieceFromPosition(checking_piece, board))
-	if (!valid.includes(type)) return true
+	if (!valid.includes(type)) return false
 	switch (type) {
 		case "queen": 
 			// rook part
 			between = checking_piece[0]===king[0] ? 0 : 1
 			other   = checking_piece[0]===king[0] ? 1 : 0
-			if (square.position[between]===king[between]){
-				console.log("rook", square.position)
+			if (square.position[between]===king[between] && checking_piece[between]===square.position[between]){
+				// console.log("rook", square.position)
 				if ( (king[other] < square.position[other])===(square.position[other] < checking_piece[other]) ) return true
 			}
 			// bishop part
@@ -151,12 +160,12 @@ function checkIntersposable(square, checking_piece, king,  board) {
 					Math.abs(cols.indexOf(square.position[1]) - cols.indexOf(king[1]))
 				) 
 			){
-				console.log("bishop", square.position)
+				// console.log("bishop", square.position)
 				let  dx_from_checking = checking_piece[1]  < square.position[1]
 				let  dy_from_checking = checking_piece[0]  < square.position[0]
 				let  dx_from_block    = square.position[1] < king[1]
 				let  dy_from_block    = square.position[0] < king[0]
-				console.log(square.position, dx_from_checking, dy_from_checking, dx_from_block, dy_from_block)
+				// console.log(square.position, dx_from_checking, dy_from_checking, dx_from_block, dy_from_block)
 				if (dx_from_checking===dx_from_block && dy_from_checking===dy_from_block) return true
 			}
 			break
@@ -164,7 +173,7 @@ function checkIntersposable(square, checking_piece, king,  board) {
 			// valid moves will be in the row or column between rook and king
 			between = checking_piece[0]===king[0] ? 0 : 1
 			other   = checking_piece[0]===king[0] ? 1 : 0
-			if (square.position[between]!==king[between]) return false
+			if (square.position[between]!==king[between] || checking_piece[between]!==square.position[between]) return false
 			console.log("rook", between, other, square)
 			console.log(square.position, (king[other] < square.position[other]), (square.position[other] < checking_piece[other]) )
 			if ( (king[other] < square.position[other])===(square.position[other] < checking_piece[other]) ) return true
@@ -186,7 +195,7 @@ function checkIntersposable(square, checking_piece, king,  board) {
 		default:
 			throw "Error checking intersposables"
 	}
-	if (square.position===checking_piece) return true
+	if (square.can_kill && square.position===checking_piece) return true
 	return false
 }
 
@@ -202,6 +211,11 @@ function checkCheckKing(square, checking_piece, king,  board) {
 	let between
 	const valid = ["queen", "rook", "bishop"]
 	let type  =  getType(getPieceFromPosition(checking_piece, board))
+
+	/// prevents pieces in the same family as checked king from being processed
+	if (square.can_kill && square.can_kill.filter(each => getColor(each, board)===getColor(king, board)).length===0) return false
+	if (square.can_move && square.can_move.filter(each => getColor(each, board)===getColor(king, board)).length===0) return false
+
 	if (!valid.includes(type)) return true
 	switch (type) {
 		case "queen": 
@@ -375,6 +389,10 @@ function getPieceColor(piece) {
 	return null
 }
 
+function getColorFromPos(location, board) {
+	return getPieceColor(getPieceFromPosition(location, board))
+}
+
 function sortMoves(a, b) {
 	return b[0] > a[0] ? -1 : 1
 }
@@ -397,7 +415,7 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 	let checked_king   = check==="white" ? getPiece(white_k, board) :  check==="black" ? getPiece(black_k, board) : null
 	// let checking_piece = check==="white" ? getPiece(white_k, board).can_kill : check==="black" ? getPiece(black_k, board).can_kill : null
 	let checking_piece = checked_king ? checked_king.can_kill : null
-	console.log(checking_piece, checked_king)
+	// console.log(checking_piece, checked_king)
 	let possible_moves, friend /// 1 1
 	for (let each of board) { // goes through board and adds valid moves for pieces to the array
 		if (each.piece.name) { /// 1 n
@@ -425,6 +443,7 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 	}
 	for (let each of board) { // clear previously generated moves for board (prevents wierd bugs)
 		if (!check) each.check = [null, null]
+		// each.check = [null, null]
 		each.can_kill = null
 		each.can_move = null
 	}
@@ -443,24 +462,25 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 		// moves[k][1] => the position that is doing the moving / killing
 		// Array<[dest, src]>
 		do {
+			isValid = true
 			if (square.piece.name) { // if there is a piece at the location, it is to be killed
-				if ([white_k, black_k].includes(moves[k][1])) 5
+				if ([white_k, black_k].includes(moves[k][1])) isValid =  false
 				// when key `can_kill` is not empty
 				else if (square.can_kill) square.can_kill.push(moves[k][1])
 				// key `can_kill` is initially at null, handles for when it is null
 				else square.can_kill = [moves[k][1]]
 				// handling check
-				if (checking_piece && square.position===checking_piece[0]) square.check[1] = true
+				if ((isValid && checking_piece) && square.position===checking_piece[0]) square.check[1] = true
 		
 			}
 			else { // if there isnt a piece at the location, it is a valid move
-				if ([white_k, black_k].includes(moves[k][1])) 5
+				if ([white_k, black_k].includes(moves[k][1])) isValid =  false
 				// when key `can_move` is not empty
 				else if (square.can_move) square.can_move.push(moves[k][1])
 				// key `can_move` is initially at null, handles for when it is null
 				else square.can_move = [moves[k][1]]
 				// handling check
-				if (checking_piece && checkIntersposable(square, checking_piece[0], checked_king.position, board)) square.check[1]=true
+				if ((isValid && checking_piece) && checkIntersposable(square, checking_piece[0], checked_king.position, board)) square.check[1]=true
 				
 			}
 			moves.splice(k, 1) ///n n sqrt(n)

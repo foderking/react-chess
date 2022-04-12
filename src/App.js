@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Check from './Check'
+import Checkmate from './Checkmate'
 import { Board } from './constants'
 import Promotion from './Promotion'
 import {
@@ -10,12 +10,11 @@ import {
 const App = () =>
 {
 	const [isCheck, setCheck] = useState(null) // sets when a king is in check; 3 possible value `null`, position of pieces checking white and black king
-	const [checking, setChecking] = useState(null)
+	const [isCheckmate, setCheckmate] = useState(null)
 
 	const [board, setBoard] =  useState(Board) // represents the whole chess board
 	const [white_k, black_k] = getKings(board) // stores the location of the white and black kings
-	generateMoveForBoard(board, white_k, black_k, isCheck) // map all moves for the board
-	console.log(board, )
+
 	const [player, setPlayer] = useState(true) // white is to play if player is `true` else, its black
 	const [location, setLocation] = useState(null) // location of clicked piece, killable/movable locations are highlighted if its `can_kill` or `can_move` contains `location`
 	const [clicked_piece, setPiece] = useState(null) // value of clicked piece
@@ -25,16 +24,24 @@ const App = () =>
 	const [promoted_location, setPromoLocation] = useState(null)
 	const [promoted_family, setPromoFamily] = useState(null)
 
-	function getCheck(player, white_k, black_k) {
-		if (player) return getPiece(white_k, board).can_kill
-		else return getPiece(black_k, board).can_kill
-	}
 
-
+	generateMoveForBoard(board, white_k, black_k, isCheck) // generate moves
+	console.log(board, )
+	
 	useEffect(()=> {
 		if (player && getPiece(white_k, board).can_kill) setCheck("white")
 		if (!player && getPiece(black_k, board).can_kill) setCheck("black")
 	}, [board])
+
+// hook for checkmating
+			console.log(board.filter(each => each.check[0] || each.check[1]))
+	useEffect(() => {
+		if (isCheck) {
+			// console.log(board.filter(each => each.check[0] || each.check[1]))
+			if (board.filter(each => each.check[0] || each.check[1]).length===0) setCheckmate(true)
+		}
+	}, [isCheck])
+	
 
 
 	function handleClick(e) {
@@ -129,10 +136,10 @@ const App = () =>
 					promotion &&
 					<Promotion family={promoted_family} handlePromotion={finishPromotion} />
 				}
-				{/* {
-					isCheck &&
-					<Check />
-				} */}
+				{
+					isCheckmate &&
+					<Checkmate king={ player ? "white" : "black" }/>
+				}
 
 				<div className='main'>
 					<div className='cols'>
