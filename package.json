@@ -10,8 +10,7 @@
     "clean": "rm dist/bundle.js",
     "start": "parcel public/index.html",
     "build": "parcel build public/index.html",
-    "test": "jest",
-    "heroku-postbuild" : "parcel build src/index.html"
+    "test": "jest"
   },
   "dependencies": {
     "react": "^17.0.2",
