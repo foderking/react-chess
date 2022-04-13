@@ -47,11 +47,8 @@ function checkNoPawnKill(piece, color, board) {
 		let r_col = cols[cols.indexOf(pos.charAt(1))+1]
 		let left  = pos.charAt(1) !== "a" && pos.charAt(0) !== "1" ?  getPieceFromPosition(new_row+l_col, board) : null
 		let right = pos.charAt(1) !== "h" && pos.charAt(0) !== "1" ?  getPieceFromPosition(new_row+r_col, board) : null
-		//console.log(color, left, right, new_row, l_col, r_col)
-		// if (left && getType(left)==="pawn")   return false
 		if (left  && (getType(left)==="pawn"  && getPieceColor(left)  !== color)) return false
 		if (right && (getType(right)==="pawn" && getPieceColor(right) !== color)) return false
-		// if (right && getType(right)==="pawn") return false
 		return true
 	}
 }
@@ -88,8 +85,6 @@ function checkForPawn(moves, color, board) {
 function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
 	// the move at `moves[k][1]` is guaranteed to be a king (since we go through a separate for loop for king only - as of the time this was commented)
 	let color = white_k === moves[k][1] ? "white" : "black" // color of the king
-	// friends.sort(sortMoves)
-	// console.log(friends)
 	let piece = getPiece(moves[k][0], board) // the tareget piece. if the piece is an empty space, it's value is null
 	// empty piece
 	if (!piece.piece.name) {
@@ -99,7 +94,6 @@ function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
 		//- If all the pieces that can move are same color as king, then it is valid
 		if (!filterMovesForKing(piece.can_move, color, board) ) return true
 
-		//console.log(color, "sda", moves[k][0])
 		//- if there's only a pawn of opposite color moving foward, the pawn doesnt pose a threat ( since it can't move/kill forward when blocked)
 		if (filterMovesForKing(piece.can_move, color, board) === 1 && checkForPawn(piece.can_move, color, board)) return true
 		// check if theres a pawn that can kill if it moves there
@@ -110,7 +104,7 @@ function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
 	else {
 		// prevents pawn from being able to kill king
 		if (!checkNoPawnKill(piece, color, board)) return false
-		let k = search(piece.position, friends) ///nlogn
+		let k = search(piece.position, friends)
 		if (k===-1) return true
 		console.log(friends)
 		return false
@@ -131,7 +125,6 @@ function checkIntersposable(square, checking_piece, king,  board) {
 	if (square.can_kill && square.can_kill.filter(each => getColor(each, board)===getColor(king, board)).length===0) return false
 	if (square.can_move && square.can_move.filter(each => getColor(each, board)===getColor(king, board)).length===0) return false
 	
-	// console.log(checking_piece, king, "yy")
 	let type  =  getType(getPieceFromPosition(checking_piece, board))
 	if (!valid.includes(type)) return false
 	switch (type) {
@@ -140,7 +133,6 @@ function checkIntersposable(square, checking_piece, king,  board) {
 			between = checking_piece[0]===king[0] ? 0 : 1
 			other   = checking_piece[0]===king[0] ? 1 : 0
 			if (square.position[between]===king[between] && checking_piece[between]===square.position[between]){
-				// console.log("rook", square.position)
 				if ( (king[other] < square.position[other])===(square.position[other] < checking_piece[other]) ) return true
 			}
 			// bishop part
@@ -181,7 +173,7 @@ function checkIntersposable(square, checking_piece, king,  board) {
 			let  dy_from_checking = checking_piece[0]  < square.position[0]
 			let  dx_from_block    = square.position[1] < king[1]
 			let  dy_from_block    = square.position[0] < king[0]
-			// console.log(square.position, dx_from_checking, dy_from_checking, dx_from_block, dy_from_block)
+			
 			if (dx_from_checking===dx_from_block && dy_from_checking===dy_from_block) return true
 			break
 		default:
@@ -191,13 +183,12 @@ function checkIntersposable(square, checking_piece, king,  board) {
 	return false
 }
 
-	/*
-	A check can be stopped by:
-		- Capturing the checking piece
-		- Interposing a piece between the checking piece and the king (which is possible only if the attacking piece is a queen, rook, or bishop and there is a square between it and the king);
-		- Moving the king to a square where it is not under attack.(last for loop already automatically handles that)
-	*/
-
+/*
+A check can be stopped by:
+	- Capturing the checking piece
+	- Interposing a piece between the checking piece and the king (which is possible only if the attacking piece is a queen, rook, or bishop and there is a square between it and the king);
+	- Moving the king to a square where it is not under attack.(last for loop already automatically handles that)
+*/
 function checkCheckKing(square, checking_piece, king,  board) {
 	// checks if an empty square is a valid location to put the king when it is checked
 	let between
@@ -216,23 +207,16 @@ function checkCheckKing(square, checking_piece, king,  board) {
 			if ( Math.abs(rows.indexOf(checking_piece[0]) - rows.indexOf(square.position[0])) !== 
 					 Math.abs(cols.indexOf(checking_piece[1]) - cols.indexOf(square.position[1]))
 				 	) return true
-			// if ( Math.abs(rows.indexOf(square.position[0]) - rows.indexOf(king[0])) !== 
-			// 		 Math.abs(cols.indexOf(square.position[1]) - cols.indexOf(king[1]))
-			// 	 	) return true
 			break
 		case "rook": 
 			// valid moves will be in the row or column between rook and king
 			between = checking_piece[0]===king[0] ? 0 : 1
-			// if (square.position[between]!==king[between]) return true
 			if (square.position[between]===king[between] && checking_piece[between]!== square.position) return true
 			break
 		case "bishop": 
 			if ( Math.abs(rows.indexOf(checking_piece[0]) - rows.indexOf(square.position[0])) !== 
 					 Math.abs(cols.indexOf(checking_piece[1]) - cols.indexOf(square.position[1]))
 				 	) return true
-			// if ( Math.abs(rows.indexOf(square.position[0]) - rows.indexOf(king[0])) !== 
-			// 		 Math.abs(cols.indexOf(square.position[1]) - cols.indexOf(king[1]))
-			// 	 	) return true
 			break
 		default:
 			throw "Error checking intersposables"
@@ -381,9 +365,9 @@ function getPieceColor(piece) {
 	return null
 }
 
-function getColorFromPos(location, board) {
-	return getPieceColor(getPieceFromPosition(location, board))
-}
+// function getColorFromPos(location, board) {
+// 	return getPieceColor(getPieceFromPosition(location, board))
+// }
 
 function sortMoves(a, b) {
 	return b[0] > a[0] ? -1 : 1
@@ -402,17 +386,15 @@ function search(board_position, moves) {
 }
 
 function generateMoveForBoard(board, white_k, black_k, check) {
-	let moves = [] ///1 1
+	let moves = []
 	let friends = []
 	let checked_king   = check==="white" ? getPiece(white_k, board) :  check==="black" ? getPiece(black_k, board) : null
-	// let checking_piece = check==="white" ? getPiece(white_k, board).can_kill : check==="black" ? getPiece(black_k, board).can_kill : null
 	let checking_piece = checked_king ? checked_king.can_kill : null
-	// console.log(checking_piece, checked_king)
-	let possible_moves, friend /// 1 1
+	let possible_moves, friend
 	for (let each of board) { // goes through board and adds valid moves for pieces to the array
-		if (each.piece.name) { /// 1 n
-			let type = getType(each.piece.name) ///12 n // guaranteed to have a valid type
-			let piece_color = getPieceColor(each.piece.name) ///12 n
+		if (each.piece.name) { 
+			let type = getType(each.piece.name) // guaranteed to have a valid type
+			let piece_color = getPieceColor(each.piece.name)
 			switch (type) {
 				case "king":   [possible_moves, friend] = kingCapture(each.position, board, piece_color) ///108 n
 					break;
@@ -429,25 +411,25 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 				default:
 					throw "Error generating moves!"
 			}
-			moves = moves.concat(possible_moves) //m
-			friends = friends.concat(friend) //m
+			moves = moves.concat(possible_moves)
+			friends = friends.concat(friend)
 		}
 	}
+
 	for (let each of board) { // clear previously generated moves for board (prevents wierd bugs)
 		if (!check) each.check = [null, null]
-		// each.check = [null, null]
 		each.can_kill = null
 		each.can_move = null
 	}
-	moves.sort(sortMoves)///nlogn // array need to be sorted in order to be able to search for positions
+
+	moves.sort(sortMoves)// array need to be sorted in order to be able to search for positions
 	let moves_2 = moves.concat()
 	let k
-
 	
 	// (only for pawns that are not king) goes through each position in the board and looks for positions of pieces that can kill it or move to it
-	for (let square of board) {//  1 n
+	for (let square of board) {
 		if (!moves.length) break
-		k = search(square.position, moves) ///nlogn
+		k = search(square.position, moves)
 		
 		if (k === -1) continue
 		// moves[k][0] => the position that is to be killed, or moved into
@@ -463,7 +445,6 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 				else square.can_kill = [moves[k][1]]
 				// handling check
 				if ((isValid && checking_piece) && square.position===checking_piece[0]) square.check[1] = true
-		
 			}
 			else { // if there isnt a piece at the location, it is a valid move
 				if ([white_k, black_k].includes(moves[k][1])) isValid =  false
@@ -473,20 +454,17 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 				else square.can_move = [moves[k][1]]
 				// handling check
 				if ((isValid && checking_piece) && checkIntersposable(square, checking_piece[0], checked_king.position, board)) square.check[1]=true
-				
 			}
-			moves.splice(k, 1) ///n n sqrt(n)
+			moves.splice(k, 1)
 			if (!moves.length) break
-			k = search(square.position, moves) ///n sqrt(n) logn 
+			k = search(square.position, moves)
 		} while (k !== -1)
 	}
-	friends.sort(sortMoves)///nlogn // array need to be sorted in order to be able to search for positions
-	// /*
+	friends.sort(sortMoves)// array need to be sorted in order to be able to search for positions
 	// does moves for king
-	for (let square of board) {//  1 n
+	for (let square of board) {
 		if (!moves_2.length) break
-		k = search(square.position, moves_2) ///nlogn
-		// console.log("firsdsfakslfaj;lkjdf;alkjlskfdat")
+		k = search(square.position, moves_2)
 		
 		if (k === -1) continue
 		// moves[k][0] => the position that is to be killed, or moved into
@@ -503,9 +481,7 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 				// key `can_kill` is initially at null, handles for when it is null
 				else square.can_kill = [moves_2[k][1]] // if theres only king, then, there's no problem
 				// handle check
-				// if (checking_piece && is_valid) square.check=[true, null]
 				if (checking_piece && (is_valid && checkCheckKing(square, checking_piece[0], checked_king.position, board))) square.check[0]=true
-				// square.check = [true, null]
 			}
 			else { // if there isnt a piece at the location, it is a valid move
 				if (![white_k, black_k].includes(moves_2[k][1])) is_valid=false
@@ -518,14 +494,12 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 
 				// handle check
 				if (checking_piece && (is_valid && checkCheckKing(square, checking_piece[0], checked_king.position, board))) square.check[0]=true
-				// square.check = [true, null]
 			}
-			moves_2.splice(k, 1) ///n n sqrt(n)
+			moves_2.splice(k, 1)
 			if (!moves_2.length) break
-			k = search(square.position, moves_2) ///n sqrt(n) logn 
+			k = search(square.position, moves_2)
 		} while (k !== -1)
 	}
-// */
 }
 
 function kingCapture (location, board, color) {
@@ -538,25 +512,20 @@ function kingCapture (location, board, color) {
 	let friends = []
 
 	let square = board[index] // gets object representing location from board array
-	// square.isSelected = true  // ???
 
 	for (let i=row_index-1 ; i < row_index+2  ; i++) {
 		for (let j=col_index-1 ; j < col_index+2  ; j++) {
 			if (i===row_index && j===col_index) continue
 			if (i<0 || i>=8) continue
 			if (j<0 || j>=8) continue
-			// console.log(i, j)
+
 			let board_index = calculateIndex(i, j) 
 			let active_square  =  board[board_index]
-			// console.log("ffff", active_square)
 
 			if (getPieceColor(active_square.piece.name) === color) friends.push([active_square.position, square.position])
-			// if (active_square.piece.name) active_square.isKill = true
-			// else active_square.isActive = true
 			else ans.push([active_square.position, square.position])
 		}
 	}
-	// castling
 	return [ans, friends]
 }
 
@@ -564,7 +533,6 @@ function knightCapture (location, board, color) {
 	// https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Chess_xot45.svg/33px-Chess_xot45.svg.png
 	// Set possible moves for the knight
 	// assumes the piece at `location` is a knight and `color` is its color
-
 	let [row_index, col_index] = getIndex(location)
 
 	let index = calculateIndex(row_index, col_index)
@@ -572,7 +540,6 @@ function knightCapture (location, board, color) {
 	let friends = []
 
 	let square = board[index]
-	// square.isSelected = true
 
 	for (let i=row_index-2 ; i < row_index+3 ; i++) {
 		for (let j=col_index-2 ; j < col_index+3 ; j++) {
@@ -585,9 +552,8 @@ function knightCapture (location, board, color) {
 
 			let board_index = calculateIndex(i, j)
 			let active_square  =  board[board_index]
+
 			if (getPieceColor(active_square.piece.name) === color) friends.push([active_square.position, square.position]) 
-			// if (active_square.piece) active_square.isKill = true
-			// else active_square.isActive = true
 			else ans.push([active_square.position, square.position])
 		}
 	}
@@ -598,7 +564,6 @@ function rookCapture (location, board, color) {
 	// https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Chess_rlt45.svg/33px-Chess_rlt45.svg.png
 	// Set possible moves for the rook
 	// assumes the piece at `location` is a knight and `color` is its color
-
 	let [row_index, col_index]  = getIndex(location)
 	let up_isblocked    = false
 	let down_isblocked  = false
@@ -651,7 +616,6 @@ function bishopCapture (location, board, color) {
 	// https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Chessboard480.svg/264px-Chessboard480.svg.png
 	// Sets the possible moves for the bishop
 	// assumes the piece at `location` is a bishop and `color` is its color
-
 	let [row_index, col_index] = getIndex(location)
 	let ne_isblocked = false
 	let nw_isblocked = false
@@ -704,7 +668,6 @@ function queenCapture (location, board, color) {
 	// https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Chess_xot45.svg/33px-Chess_xot45.svg.png
 	// Sets the possible moves for the bishop
 	// assumes the piece at `location` is a bishop and `color` is its color
-
 	let [row_index, col_index]  = getIndex(location)
 	let up_isblocked    = false
 	let down_isblocked  = false
@@ -801,11 +764,6 @@ function pawnCapture (location, board, color) {
 	let multiplier = "white" === color ? 1 : -1 // white pawn moves up, black moves down
 	let ans = []
 	let friends = []
-	// let en_passant_rows = [3, 4]
-	// En-passant
-	// https://en.wikipedia.org/wiki/Chess#En_passant
-	// if (en_passant_rows.includes(row_index)) {
-	// }
 
 	for (let i=1 ; i < 3  ; i++) {
 		if (row_index+multiplier*i >= 8) continue //stops at the end of the board
@@ -826,6 +784,7 @@ function pawnCapture (location, board, color) {
 			if (getPieceColor(right_square.piece.name) !== color && right_square.piece.name) ans.push([right_square.position, square.position])
 			if (getPieceColor(right_square.piece.name) === color) friends.push([right_square.position, square.position])
 		}
+
 		// check movement for i=1 (and i=2 when its pawns first move)
 		let board_index = calculateIndex(row_index+multiplier*i, col_index)
 		let active_square  =  board[board_index]
