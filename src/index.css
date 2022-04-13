@@ -120,6 +120,13 @@
 	background-color: #e6d355;
 }
 
+.white.en-passant {
+	background-color:#ffec8c;
+}
+.black.en-passant {
+	background-color: #e6d355;
+}
+
 .promo {
 	font-size: 4em;
 }

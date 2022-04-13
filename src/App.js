@@ -19,6 +19,8 @@ const App = () =>
 	const [location, setLocation] = useState(null) // location of clicked piece, killable/movable locations are highlighted if its `can_kill` or `can_move` contains `location`
 	const [clicked_piece, setPiece] = useState(null) // value of clicked piece
 	const [kills, setKills] = useState([]) // all the pieces that have been killed
+	const [last_piece, setLast]  = useState(null)
+	const [last_location, setLastLocation]  = useState(null)
 
 	const [promotion, doPromotion] = useState(false) // controls whether the promotion popup shows
 	const [promoted_location, setPromoLocation] = useState(null)
@@ -47,7 +49,7 @@ const App = () =>
 	}, [board])
 
 // hook for checkmating
-			console.log(board.filter(each => each.check[0] || each.check[1]))
+			// console.log(board.filter(each => each.check[0] || each.check[1]))
 	useEffect(() => {
 		if (isCheck) {
 			// console.log(board.filter(each => each.check[0] || each.check[1]))
@@ -75,6 +77,8 @@ const App = () =>
 										||
 										((isCheck && (location && (piece.can_move&&(piece.check[0]||piece.check[1])))) && piece.can_move.includes(location))
 
+			// console.log(checkEnPassant(last_piece, last_location, piece_location, board))
+		// {}
 		// undo move if you click twice
 		if (piece_location === location) {
 			setLocation(null)
@@ -86,16 +90,50 @@ const App = () =>
 			let new_board = castle(piece_location, board)
 			setBoard(new_board)
 
+			setLast(clicked_piece) // stores the last moved piece
+			setLastLocation(piece_location) // stores location of last moved piece
 			setLocation(null)
 			setPiece(null)
+
 			setPlayer(!player)
 			setCheck(null)
 		}
+		// en passant
+		else if (validPassant(getPiece(piece_location, board), "left")||validPassant(getPiece(piece_location, board), "right")) {
+			// console.log("en passant to the right")
+				// let left = String.fromCharCode(last_location.charCodeAt(1)-1)
+			let color = getPieceColor(clicked_piece)
+			let mul = (color==="white") ? 1 : -1
+			let new_loc = (piece_location[0]-mul)+piece_location[1]
+			console.log(new_loc, color, mul)
+			let new_board, killed
+			// first kill the pawn en passing
+			[new_board, killed] = killPiece(location, new_loc, board) 
+			new_board = movePiece(new_loc, piece_location, new_board)
+
+			setBoard(new_board)
+			setKills(kills.concat(killed))
+
+			setLast(clicked_piece) // stores the last moved piece
+			setLastLocation(piece_location) // stores location of last moved piece
+			setLocation(null)
+			setPiece(null)
+
+			setPlayer(!player)
+			setCheck(null)
+		}
+		/*
+		function enPassant(target, clicked_piece) {
+			let new_board
+			new_board=  movePiece(location , board)
+		}
+		*/
 		// change moves if another valid piece is clicked
 		else if (family==="white" && player || family==="black" && !player) { 
 			setLocation(piece_location)
 			setPiece(piece_name)
 		}
+		// {checkEnPassant(last_piece, last_location, piece_location, board)}
 		// killing a piece
 		else if (pieceKill) {
 			let [new_board, killed] = killPiece(location, piece_location, board) 
@@ -103,8 +141,11 @@ const App = () =>
 			if (checkPromotion(clicked_piece, piece_location)) startPromotion(player, piece_location) // opens promotion popup if there is a promotion
 			setKills(kills.concat(killed))
 
+			setLast(clicked_piece) // stores the last moved piece
+			setLastLocation(piece_location) // stores location of last moved piece
 			setLocation(null)
 			setPiece(null)
+
 			setPlayer(!player)
 			setCheck(null)
 		}
@@ -114,8 +155,11 @@ const App = () =>
 			setBoard(new_board)
 			if (checkPromotion(clicked_piece, piece_location)) startPromotion(player, piece_location) // opens promotion popup if there is a promotion
 
+			setLast(clicked_piece) // stores the last moved piece
+			setLastLocation(piece_location) // stores location of last moved piece
 			setLocation(null)
 			setPiece(null)
+
 			setPlayer(!player)
 			setCheck(null)
 		}
@@ -205,6 +249,26 @@ const App = () =>
 		}
 		return new_board
 	}
+	/*
+	Conditions for En Passant
+		- last moved piece is a pawn
+		- last moved piece must have moved once with two steps
+		- current moveing piece is a pawn
+		- current piece must be directly to the left or right of target
+
+	*/
+	function checkEnPassant(last_piece, last_location, current_location, board) {
+		const ranks = {
+			"white" : "4", "black" : "5"
+		}
+		let current_piece = getPieceFromPosition(current_location, board) 
+		if (!last_piece || !current_piece || !current_location || !last_location) return false
+		if (getType(last_piece) !== "pawn" || getType(current_piece) !== "pawn") return false
+		if (getPiece(last_location, board).piece.moves !== 1) return false
+		if (ranks[getPieceColor(last_piece)] !== last_location[0]) return false // checks if first move is two steps
+		if (last_location[0]===current_location[0] && Math.abs(cols.indexOf(last_location[1])-cols.indexOf(current_location[1]))===1) return true
+		return false
+	}
 
 	function startPromotion(family, piece_location) {
 		doPromotion(true)
@@ -221,6 +285,32 @@ const App = () =>
 		// console.log(each.chce)
 		let king = isCheck==="white" ? white_k : black_k
 		return (clicked_piece === getPieceFromPosition(king, board) ? !isCheck===!each.check[0] : !isCheck===!each.check[1])
+	}
+
+	function validPassant(each, pos) {
+		if (!last_piece || !last_location) return false
+		if (getType(last_piece)!=="pawn") return false
+		let color = getPieceColor(last_piece)
+		let mul = color==="white" ? -1 : 1
+		let full
+		if (each.position[1]!==last_location[1]) return false
+		if (each.position[0]-last_location[0]!==mul) return false
+		switch (pos) {
+			case "right":
+				let left = String.fromCharCode(last_location.charCodeAt(1)-1)
+				if (left<"a") return false
+				full = last_location[0]+left
+				// console.log(location, full)
+				if (full!==location) return false
+				return checkEnPassant(last_piece, last_location, full, board)
+			case "left":
+				let right = String.fromCharCode(last_location.charCodeAt(1)+1)
+				if (right>"h") return false
+				full = last_location[0]+right
+				if (full!==location) return false
+				return checkEnPassant(last_piece, last_location, full, board)
+			default: throw "valid passant error"
+		}
 	}
 
 	function finishPromotion(piece) {
@@ -279,7 +369,8 @@ const App = () =>
 										${ (location && each.can_kill) && (validDuringCheck(each) && each.can_kill.includes(location)) ? 'kill'   : '' }
 										${ (location && each.can_move) && (validDuringCheck(each) && each.can_move.includes(location)) ? "active" : '' }
 										${ isCheck==="white" && each.position===white_k || isCheck==="black" && each.position===black_k ? "check" : "" }
-										${ (location ) && castle_positions.contains([location, each.position]) ? "castle" : ""}`
+										${ (location ) && castle_positions.contains([location, each.position]) ? "castle" : ""}
+										${ validPassant(each, "left") || validPassant(each, "right") ? "en-passant" : ""}`
 									}
 								>
 									{ each.piece.name }
@@ -306,6 +397,13 @@ const App = () =>
 						: "..."
 					}
 				</div>
+				<div>
+					last: { last_piece ? last_piece : ""}
+				</div>
+				<div>
+					last location: { last_location ? last_location : ""}
+				</div>
+				{ clicked_piece ? clicked_piece : ".."}
 		</div>
 	)
 }

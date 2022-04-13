@@ -114,14 +114,6 @@ function validateKingNotAffected(white_k, black_k, k, moves, friends, board) {
 		if (k===-1) return true
 		console.log(friends)
 		return false
-	/*
-		if (!piece.can_kill) return true // if there are no other moves, then it is also valid
-		//- If all the pieces that can 'kill' are same color as king, then it is valid 
-		if (!filterMovesForKing(piece.can_kill, color, board) ) return true
-		//- If an enemy piece is friendly (a piece of the color that can move if occupied piece moves) , the king cannot move
-		f = search(square.position, friends) // checks pieces of the same family that can move to the position
-		return f === -1 ? true : false // if there are no friendly  pieces, it returns -1
-	*/
 	}
 }
 
