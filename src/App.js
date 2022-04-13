@@ -26,7 +26,20 @@ const App = () =>
 
 
 	generateMoveForBoard(board, white_k, black_k, isCheck) // generate moves
-	console.log(board, )
+	checkCastle(board)
+	const castle_positions = checkCastle(board)
+	console.log(board, castle_positions)
+
+	// i have to write this fucking shit because of javascript stupidity
+	Array.prototype.contains = function(val){
+  let hash = {};
+    for (let i=0; i<this.length; i++) {
+			hash[this[i]] = i 
+		}
+    return hash.hasOwnProperty(val)
+	}
+	// useEffect(()=> {
+	// }, [location, player, board])
 	
 	useEffect(()=> {
 		if (player && getPiece(white_k, board).can_kill) setCheck("white")
@@ -67,6 +80,17 @@ const App = () =>
 			setLocation(null)
 			setPiece(null)
 		}
+		// castling
+		else if (isCheck===null && castle_positions.contains([location, piece_location])) {
+			console.log(player ? "white" : "black" , "just castled")
+			let new_board = castle(piece_location, board)
+			setBoard(new_board)
+
+			setLocation(null)
+			setPiece(null)
+			setPlayer(!player)
+			setCheck(null)
+		}
 		// change moves if another valid piece is clicked
 		else if (family==="white" && player || family==="black" && !player) { 
 			setLocation(piece_location)
@@ -100,6 +124,86 @@ const App = () =>
 			setLocation(null)
 			setPiece(null)
 		}
+	}
+
+	/* 
+	Castling is permissible if the following conditions are met:
+		- Neither the king nor the rook has previously moved during the game.
+		- There are no pieces between the king and the rook.
+		- The king is not in check and does not pass through or land on any square attacked by an enemy piece.
+*/
+	function checkCastle(board) {
+		const white_left  = board.find(each => each.position==="1a").piece
+		const white_right = board.find(each => each.position==="1h").piece
+		const black_left  = board.find(each => each.position==="8a").piece
+		const black_right = board.find(each => each.position==="8h").piece
+		const white_king  =  board.find(each => each.position==="1e").piece
+		const black_king  =  board.find(each => each.position==="8e").piece
+		let ans = []
+
+		let wl_valid = white_left.moves ===0 && (getType(white_left.name )==="rook" && getPieceColor(white_left.name )==="white")
+		let wr_valid = white_right.moves===0 && (getType(white_right.name)==="rook" && getPieceColor(white_right.name)==="white")
+		let bl_valid = black_left.moves ===0 && (getType(black_left.name )==="rook" && getPieceColor(black_left.name )==="black")
+		let br_valid = black_right.moves===0 && (getType(black_right.name)==="rook" && getPieceColor(black_right.name)==="black")
+		
+		let wk_valid = white_king.moves===0 && (getType(white_king.name)==="king" && getPieceColor(white_king.name)==="white")
+		let bk_valid = black_king.moves===0 && (getType(black_king.name)==="king" && getPieceColor(black_king.name)==="black")
+
+		// castle for 1c
+		if (wl_valid && wk_valid){
+			if (board.filter(each => each.position[0]==="1" && each.position[1] > "a"
+														&& each.position[1] < "e" && each.piece.name).length===0) ans.push(["1e","1c"])
+		}
+		// castle for 1g
+		if (wr_valid && wk_valid){
+			if (board.filter(each => each.position[0]==="1" && each.position[1] > "e"
+														&& each.position[1] < "h" && each.piece.name).length===0) ans.push(["1e","1g"])
+		}
+		// castle for 8c
+		if (bl_valid && bk_valid) {
+			if (board.filter(each => each.position[0]==="8" && each.position[1] > "a"
+														&& each.position[1] < "e" && each.piece.name).length===0) ans.push(["8e","8c"])
+		}
+		// castle for 8g
+		if (br_valid && bk_valid){
+			if (board.filter(each => each.position[0]==="8" && each.position[1] > "e"
+														&& each.position[1] < "h" && each.piece.name).length===0) ans.push(["8e","8g"])
+		}
+
+		return ans
+	}
+
+	function castle(position, board){
+		// const castle_positions = ["8c", "8g", "1c", "1g"]
+		let new_board
+		switch (position) {
+			case "1g":
+				//move king
+				new_board = movePiece("1e", "1g", board)
+				//move knight
+				new_board = movePiece("1h", "1f", new_board)
+				break
+			case "8g":
+				//move king
+				new_board = movePiece("8e", "8g", board)
+				//move knight
+				new_board = movePiece("8h", "8f", new_board)
+				break
+			case "1c":
+				// move king
+				new_board = movePiece("1e", "1c", board)
+				//move knight
+				new_board = movePiece("1a", "1d", new_board)
+				break
+			case "8c":
+				// move king
+				new_board = movePiece("8e", "8c", board)
+				//move knight
+				new_board = movePiece("8a", "8d", new_board)
+				break
+			default: throw "castle error"
+		}
+		return new_board
 	}
 
 	function startPromotion(family, piece_location) {
@@ -174,7 +278,8 @@ const App = () =>
 										col-${ each.position[1] } ${ each.position === location ? "selected" : "" }
 										${ (location && each.can_kill) && (validDuringCheck(each) && each.can_kill.includes(location)) ? 'kill'   : '' }
 										${ (location && each.can_move) && (validDuringCheck(each) && each.can_move.includes(location)) ? "active" : '' }
-										${ isCheck==="white" && each.position===white_k || isCheck==="black" && each.position===black_k ? "check" : "" }`
+										${ isCheck==="white" && each.position===white_k || isCheck==="black" && each.position===black_k ? "check" : "" }
+										${ (location ) && castle_positions.contains([location, each.position]) ? "castle" : ""}`
 									}
 								>
 									{ each.piece.name }
@@ -205,4 +310,5 @@ const App = () =>
 	)
 }
 
+// console.log([location, ])
 export default App

@@ -113,6 +113,13 @@
 	background-color: #a865c8;
 }
 
+.white.castle {
+	background-color:#ffec8c;
+}
+.black.castle {
+	background-color: #e6d355;
+}
+
 .promo {
 	font-size: 4em;
 }

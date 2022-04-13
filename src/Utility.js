@@ -865,4 +865,5 @@ module.exports = {
 	getKings,
 	getPiece,
 	getPieceFromPosition,
+	getType,
 }
