@@ -1,8 +1,19 @@
 :root {
-	--each: 60px;
-	--each-no: 60;
+	--each: 70px;
+	--each-no: 70;
+	--piece : 63px;
 }
 
+#root {
+	background-color: rgba(22,21,17);
+}
+
+.contain {
+	margin-left: 2em;
+	margin-right: 2em;
+}
+
+/* chessboard grid */
 .board {
 	display: grid;
 	grid-template-columns: repeat(8, var(--each) [col-start]);
@@ -10,14 +21,19 @@
 	align-items: center;
 	margin: 5px;
 }
-
-.main { 
-	display: grid;
+.chessboard { 
+	/* grid */
+	/* background-color: red; */
+	/* justify-self: center; */
+	/* align-self: center; */
+	grid-row-start: 1;
+	grid-row-end: 3;
+	/* child properties */
+	/* display: grid;
 	grid-template-columns: var(--each) calc(8 * var(--each));
-	grid-template-rows: var(--each) calc(8 * var(--each));
+	grid-template-rows: var(--each) calc(8 * var(--each)); */
 }
-
-.cols { 
+/* .cols { 
 	grid-column: 2 / -1;
 	display: grid;
 	grid-template-columns: repeat(8, var(--each));
@@ -32,19 +48,15 @@
 	align-items: center;
 	text-align: center;
 	font-size: calc(var(--each) / 3);
-}
-
+} */
 .board-cell {
 	border: none;
-	font-size: 50px;
+	font-size: var(--piece);
 	font-family: 'Courier New', Courier, monospace;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	
-
 	overflow: hidden;	/*fix bug where overflowing text bleeds into other squares*/ 
-
 	/* prevents copying pieces */
 	-webkit-user-select: none;
 	-webkit-touch-callout: none;
@@ -52,26 +64,20 @@
 	-ms-user-select: none;
 	user-select: none; 
 }
+
+/* squares */
 .black {
 	background-color: #d18b47;
-	/* color: white; */
-	height: 60px;
-	width: 60px;
-	/* grid-row: row-start; */
-	/* justify-self: center; */
-	/* font-size: 50px; */
-	/* font-size: 10em; */
-	/* grid-row: inherit; */
+	height: var(--each);
+	width: var(--each);
 }
 .white {
 	background-color: #ffce9e;
-	/* color: black; */
-	/* font-size: 50px; */
-	height: 60px;
-	width: 60px;
-	/* grid-column: inherit; */
+	height: var(--each);
+	width: var(--each);
 }
 
+/* random shit */
 #loc-state {
 	background-color: cadetblue;
 	border-radius: 1px;
@@ -81,31 +87,32 @@
 	padding: 5px;
 	margin: 5px;
 }
-
 .add {
   height: 25px;
   width: 25px;
   background-color: #bbb;
   border-radius: 50%;
-  /* display: flex; */
 }
 
+/* board square colors */
 .white.active {
 	background-color:#ffec8c;
 }
 .black.active {
 	background-color: #e6d355;
 }
+
 .black.kill {
 	background-color: #ED6C51;
 }
-
 .white.kill {
 	background-color: #FF8773;
 }
+
 .selected {
 	background-color: #89D16B;
 }
+
 .black.check {
 	background-color: purple;
 }
@@ -127,15 +134,13 @@
 	background-color: #e6d355;
 }
 
+/* pawn promotion */
 .promo {
 	font-size: 4em;
 }
-
 .promotion_popup {
-/* Popup box BEGIN */
     background:rgba(0,0,0,.4);
     cursor:pointer;
-    /* display:none; */
     height:100%;
     position:fixed;
     text-align:center;
@@ -160,4 +165,37 @@
     position: relative;
     border-radius: 8px;
     padding: 15px 5%;
+}
+
+/* main view */
+.main-view {
+	display: grid;
+	grid-template-columns: 20em auto 1fr;
+	grid-template-rows: 9em 1fr;
+	column-gap: 2em;
+	row-gap: 2em;
+	height: max-content;
+}
+.left-sidebar{
+	background-color: rgba(37,36,32);
+	color: rgb(171, 169, 170);
+	border-radius: 5px;
+	grid-row-start: 2;
+	grid-row-end: 3;
+}
+.now-playing{
+	background-color: rgba(37,36,32);
+	color: rgb(171, 169, 170);
+	border-radius: 5px;
+	grid-column-start: 1;
+	grid-column-end: 2;
+	grid-row-start: 1;
+	grid-row-end: 2;
+}
+.right-sidebar {
+	background-color: rgba(37,36,32);
+	color: rgb(171, 169, 170);
+	border-radius: 5px;
+	grid-row-start: 1;
+	grid-row-end: 3;
 }

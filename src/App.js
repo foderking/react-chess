@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import Checkmate from './Checkmate'
+import Checkmate from './Components/Checkmate'
+import LeftSidebar from './Components/LeftSidebar'
+import NowPlaying from './Components/NowPlaying'
+import RightSidebar from './Components/RightSidebar'
 import { Board } from './constants'
 import Promotion from './Promotion'
 import {
@@ -40,8 +43,8 @@ const App = () =>
 		}
     return hash.hasOwnProperty(val)
 	}
-	// useEffect(()=> {
-	// }, [location, player, board])
+
+	const stats = {location, player, isCheck, kills, last_piece, last_location, clicked_piece}
 	
 	useEffect(()=> {
 		if (player && getPiece(white_k, board).can_kill) setCheck("white")
@@ -324,7 +327,7 @@ const App = () =>
 	const rows = '87654321'.split('')
 
 	return (
-		<div className='container'>
+		<div className='contain'>
 				<h1>Chess App</h1>
 				{ 
 					promotion &&
@@ -334,76 +337,89 @@ const App = () =>
 					isCheckmate &&
 					<Checkmate king={ player ? "white" : "black" }/>
 				}
+				<div className='main-view'>
+					<LeftSidebar />
+					<NowPlaying />
+					<div className='chessboard'>
+						{/* <div className='cols'>
+							{
+								cols.map(each =>
+									<div key={each}>
+										{each}
+									</div>	
+								)
+							}
+						</div>
 
-				<div className='main'>
-					<div className='cols'>
-						{
-							cols.map(each =>
-								<div key={each}>
-									{each}
-								</div>	
-							)
-						}
+						<div className='rows'>
+							{
+								rows.map(each =>
+									<div key={each}>
+										{each}
+									</div>	
+								)
+							}
+						</div>
+						*/}
+						<div className='board' >
+							{
+								board.map(each =>
+									<div
+										key={each.position}
+										id={each.position}
+										onClick={handleClick}
+										className={
+											`text-center board-cell row-${ each.position[0] } ${ each.color }
+											col-${ each.position[1] } ${ each.position === location ? "selected" : "" }
+											${ (location && each.can_kill) && (validDuringCheck(each) && each.can_kill.includes(location)) ? 'kill'   : '' }
+											${ (location && each.can_move) && (validDuringCheck(each) && each.can_move.includes(location)) ? "active" : '' }
+											${ isCheck==="white" && each.position===white_k || isCheck==="black" && each.position===black_k ? "check" : "" }
+											${ (location ) && castle_positions.contains([location, each.position]) ? "castle" : ""}
+											${ validPassant(each, "left") || validPassant(each, "right") ? "en-passant" : ""}`
+										}
+									>
+										{ each.piece.name }
+									</div>
+								)
+							}
+						</div>
 					</div>
 
-					<div className='rows'>
-						{
-							rows.map(each =>
-								<div key={each}>
-									{each}
-								</div>	
-							)
-						}
-					</div>
-
-					<div className='board' >
-						{
-							board.map(each =>
-								<div
-									key={each.position}
-									id={each.position}
-									onClick={handleClick}
-									className={
-										`text-center board-cell row-${ each.position[0] } ${ each.color }
-										col-${ each.position[1] } ${ each.position === location ? "selected" : "" }
-										${ (location && each.can_kill) && (validDuringCheck(each) && each.can_kill.includes(location)) ? 'kill'   : '' }
-										${ (location && each.can_move) && (validDuringCheck(each) && each.can_move.includes(location)) ? "active" : '' }
-										${ isCheck==="white" && each.position===white_k || isCheck==="black" && each.position===black_k ? "check" : "" }
-										${ (location ) && castle_positions.contains([location, each.position]) ? "castle" : ""}
-										${ validPassant(each, "left") || validPassant(each, "right") ? "en-passant" : ""}`
-									}
-								>
-									{ each.piece.name }
-								</div>
-							)
-						}
-					</div>
+					<RightSidebar />
 				</div>
 
-				<span id='loc-state'>{ location ? location : "..." }</span>
-				<div>
-						active player: { player ? "white" : "black" }
-				</div>
-				<div>
-						check : { isCheck ? isCheck : "" }
-				</div>
-				<div>
-					kills :
-					{
-						kills.length
-						? kills.map(
-							each => <span key={generateRandomString(5)}>{each}</span>
-						)
-						: "..."
-					}
-				</div>
-				<div>
-					last: { last_piece ? last_piece : ""}
-				</div>
-				<div>
-					last location: { last_location ? last_location : ""}
-				</div>
-				{ clicked_piece ? clicked_piece : ".."}
+				<Stats {...stats} />
+		</div>
+	)
+}
+
+function Stats({location, player, isCheck, kills, last_piece, last_location, clicked_piece}) {
+	return (
+		<div className="stats">
+			<span id='loc-state'>{ location ? location : "..." }</span>
+			<div>
+					active player: { player ? "white" : "black" }
+			</div>
+			<div>
+					check : { isCheck ? isCheck : "" }
+			</div>
+			<div>
+				kills :
+				{
+					kills.length
+					? kills.map(
+						each => <span key={generateRandomString(5)}>{each}</span>
+					)
+					: "..."
+				}
+			</div>
+			<div>
+				last: { last_piece ? last_piece : ""}
+			</div>
+			<div>
+				last location: { last_location ? last_location : ""}
+			</div>
+			{ clicked_piece ? clicked_piece : ".."}
 		</div>
 	)
 }
