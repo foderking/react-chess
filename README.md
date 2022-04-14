@@ -67,6 +67,13 @@ To run tests:
 yarn test
 ```
 
+## TODO
+
+- Fix UI
+- Add multiplayer support
+- Integrate with chess engine
+
+
 ## Credits
 
 + [yarn](https://classic.yarnpkg.com/en/)
