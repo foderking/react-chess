@@ -45,7 +45,7 @@ const App = () =>
     return hash.hasOwnProperty(val)
 	}
 
-	const stats = {location, player, isCheck, kills, last_piece, last_location, clicked_piece}
+	const chess_board = {board, location, castle_positions, handleClick, isCheck, validDuringCheck, validPassant}
 	
 	useEffect(()=> {
 		if (player && getPiece(white_k, board).can_kill) setCheck("white")
@@ -329,8 +329,8 @@ const App = () =>
 
 	return (
 		<div className='contain'>
-				{/* <h1>Chess App</h1> */}
 				<Navbar />
+
 				{ 
 					promotion &&
 					<Promotion family={promoted_family} handlePromotion={finishPromotion} />
@@ -339,60 +339,21 @@ const App = () =>
 					isCheckmate &&
 					<Checkmate king={ player ? "white" : "black" }/>
 				}
+
 				<div className='main-view'>
 					<LeftSidebar />
 					<NowPlaying />
+
 					<div className='chessboard'>
-					<div className='rand'>
-
-						<div className='board' >
-							{
-								board.map(each =>
-									<div
-										key={each.position}
-										id={each.position}
-										onClick={handleClick}
-										className={
-											`text-center board-cell row-${ each.position[0] } ${ each.color }
-											col-${ each.position[1] } ${ each.position === location ? "selected" : "" }
-											${ (location && each.can_kill) && (validDuringCheck(each) && each.can_kill.includes(location)) ? 'kill'   : '' }
-											${ (location && each.can_move) && (validDuringCheck(each) && each.can_move.includes(location)) ? "active" : '' }
-											${ isCheck==="white" && each.position===white_k || isCheck==="black" && each.position===black_k ? "check" : "" }
-											${ (location ) && castle_positions.contains([location, each.position]) ? "castle" : ""}
-											${ validPassant(each, "left") || validPassant(each, "right") ? "en-passant" : ""}`
-										}
-									>
-										{ each.piece.name }
-									</div>
-								)
-							}
-						</div>
-
-						<div class="ranks coords">
-							<div className="b coord">1</div>
-							<div className="w coord">2</div>
-							<div className="b coord">3</div>
-							<div className="w coord">4</div>
-							<div className="b coord">5</div>
-							<div className="w coord">6</div>
-							<div className="b coord">7</div>
-							<div className="w coord">8</div>
-						</div>
-						<div class="files coords">
-							<div className="w coord">a</div>
-							<div className="b coord">b</div>
-							<div className="w coord">c</div>
-							<div className="b coord">d</div>
-							<div className="w coord">e</div>
-							<div className="b coord">f</div>
-							<div className="w coord">g</div>
-							<div className="b coord">h</div>
+						<div className='rand'>
+							<Chessboard {...chess_board} />
+							<Ranks />
+							<Files />
 						</div>
 					</div>
-					</div>
+
 					<RightSidebar />
 				</div>
-
 				{/* <Stats {...stats} /> */}
 		</div>
 	)
@@ -425,6 +386,63 @@ function Stats({location, player, isCheck, kills, last_piece, last_location, cli
 				last location: { last_location ? last_location : ""}
 			</div>
 			{ clicked_piece ? clicked_piece : ".."}
+		</div>
+	)
+}
+
+function Chessboard({board, location, castle_positions, handleClick, isCheck, validDuringCheck, validPassant}) {
+	return (
+		<div className='board' >
+			{
+				board.map(each =>
+					<div
+						key={each.position}
+						id={each.position}
+						onClick={handleClick}
+						className={
+							`text-center board-cell row-${ each.position[0] } ${ each.color }
+							col-${ each.position[1] } ${ each.position === location ? "selected" : "" }
+							${ (location && each.can_kill) && (validDuringCheck(each) && each.can_kill.includes(location)) ? 'kill'   : '' }
+							${ (location && each.can_move) && (validDuringCheck(each) && each.can_move.includes(location)) ? "active" : '' }
+							${ isCheck==="white" && each.position===white_k || isCheck==="black" && each.position===black_k ? "check" : "" }
+							${ (location ) && castle_positions.contains([location, each.position]) ? "castle" : ""}
+							${ validPassant(each, "left") || validPassant(each, "right") ? "en-passant" : ""}`
+						}
+					>
+						{ each.piece.name }
+					</div>
+				)
+			}
+		</div>
+	)
+}
+
+function Ranks () {
+	return (
+		<div class="ranks coords">
+			<div className="b coord">1</div>
+			<div className="w coord">2</div>
+			<div className="b coord">3</div>
+			<div className="w coord">4</div>
+			<div className="b coord">5</div>
+			<div className="w coord">6</div>
+			<div className="b coord">7</div>
+			<div className="w coord">8</div>
+		</div>
+	)
+}
+
+function Files () {
+	return (
+		<div class="files coords">
+			<div className="w coord">a</div>
+			<div className="b coord">b</div>
+			<div className="w coord">c</div>
+			<div className="b coord">d</div>
+			<div className="w coord">e</div>
+			<div className="b coord">f</div>
+			<div className="w coord">g</div>
+			<div className="b coord">h</div>
 		</div>
 	)
 }

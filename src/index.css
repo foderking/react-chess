@@ -71,17 +71,8 @@ div .coord {
 	margin: 5px;
 }
 .chessboard { 
-	/* position: absolute; */
-	/* grid */
-	/* background-color: red; */
-	/* justify-self: center; */
-	/* align-self: center; */
 	grid-row-start: 1;
 	grid-row-end: 3;
-	/* child properties */
-	/* display: grid;
-	grid-template-columns: var(--each) calc(8 * var(--each));
-	grid-template-rows: var(--each) calc(8 * var(--each)); */
 }
 
 .rand {
@@ -117,7 +108,7 @@ div .coord {
 }
 
 /* random shit */
-#loc-state {
+/* #loc-state {
 	background-color: cadetblue;
 	border-radius: 1px;
 	min-height: 60px;
@@ -131,7 +122,7 @@ div .coord {
   width: 25px;
   background-color: #bbb;
   border-radius: 50%;
-}
+} */
 
 /* board square colors */
 .white.active {
