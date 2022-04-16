@@ -1,8 +1,8 @@
 {
-  "short_name": "Empty",
-  "name": "Empty Project",
+  "short_name": "Light Chess",
+  "name": "A lightwieght chess app written in React",
   "icons": [{
-    "src": "icon.png",
+    "src": "chess_logo.png",
     "type": "image/png",
     "sizes": "192x192"
   }],

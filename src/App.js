@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Checkmate from './Components/Checkmate'
 import LeftSidebar from './Components/LeftSidebar'
+import Navbar from './Components/Navbar'
 import NowPlaying from './Components/NowPlaying'
 import RightSidebar from './Components/RightSidebar'
 import { Board } from './constants'
@@ -328,7 +329,8 @@ const App = () =>
 
 	return (
 		<div className='contain'>
-				<h1>Chess App</h1>
+				{/* <h1>Chess App</h1> */}
+				<Navbar />
 				{ 
 					promotion &&
 					<Promotion family={promoted_family} handlePromotion={finishPromotion} />
@@ -341,26 +343,8 @@ const App = () =>
 					<LeftSidebar />
 					<NowPlaying />
 					<div className='chessboard'>
-						{/* <div className='cols'>
-							{
-								cols.map(each =>
-									<div key={each}>
-										{each}
-									</div>	
-								)
-							}
-						</div>
+					<div className='rand'>
 
-						<div className='rows'>
-							{
-								rows.map(each =>
-									<div key={each}>
-										{each}
-									</div>	
-								)
-							}
-						</div>
-						*/}
 						<div className='board' >
 							{
 								board.map(each =>
@@ -383,12 +367,33 @@ const App = () =>
 								)
 							}
 						</div>
-					</div>
 
+						<div class="ranks coords">
+							<div className="b coord">1</div>
+							<div className="w coord">2</div>
+							<div className="b coord">3</div>
+							<div className="w coord">4</div>
+							<div className="b coord">5</div>
+							<div className="w coord">6</div>
+							<div className="b coord">7</div>
+							<div className="w coord">8</div>
+						</div>
+						<div class="files coords">
+							<div className="w coord">a</div>
+							<div className="b coord">b</div>
+							<div className="w coord">c</div>
+							<div className="b coord">d</div>
+							<div className="w coord">e</div>
+							<div className="b coord">f</div>
+							<div className="w coord">g</div>
+							<div className="b coord">h</div>
+						</div>
+					</div>
+					</div>
 					<RightSidebar />
 				</div>
 
-				<Stats {...stats} />
+				{/* <Stats {...stats} /> */}
 		</div>
 	)
 }
@@ -424,5 +429,4 @@ function Stats({location, player, isCheck, kills, last_piece, last_location, cli
 	)
 }
 
-// console.log([location, ])
 export default App
