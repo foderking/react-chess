@@ -30,33 +30,36 @@ const App = () =>
 	const [promoted_location, setPromoLocation] = useState(null)
 	const [promoted_family, setPromoFamily] = useState(null)
 
+	const [history, setHistory] = useState([/*1,2,3,4,5,1,2,3,4,5,1 ,2,3,4,5,1,5,1 ,2,3,4,5,5,1 ,2,3,4,5,5,1 ,2,3,4,5 ,2,3,4,5*/])
+
 
 	generateMoveForBoard(board, white_k, black_k, isCheck) // generate moves
 	checkCastle(board)
 	const castle_positions = checkCastle(board)
 	console.log(board, castle_positions)
 
-	// i have to write this fucking shit because of javascript stupidity
-	Array.prototype.contains = function(val){
-  let hash = {};
-    for (let i=0; i<this.length; i++) {
-			hash[this[i]] = i 
-		}
-    return hash.hasOwnProperty(val)
-	}
+	const chess_board = {board, location, castle_positions, handleClick, isCheck, validDuringCheck, validPassant, white_k, black_k}
 
-	const chess_board = {board, location, castle_positions, handleClick, isCheck, validDuringCheck, validPassant}
+	// i have to write this fucking shit because of javascript stupidity
+	useEffect(() => {
+		Array.prototype.contains = function(val){
+		let hash = {};
+			for (let i=0; i<this.length; i++) {
+				hash[this[i]] = i 
+			}
+			return hash.hasOwnProperty(val)
+		}
+	}, [])
 	
+	// hook for when a player is on check
 	useEffect(()=> {
 		if (player && getPiece(white_k, board).can_kill) setCheck("white")
 		if (!player && getPiece(black_k, board).can_kill) setCheck("black")
 	}, [board])
 
-// hook for checkmating
-			// console.log(board.filter(each => each.check[0] || each.check[1]))
+	// hook for checkmating
 	useEffect(() => {
 		if (isCheck) {
-			// console.log(board.filter(each => each.check[0] || each.check[1]))
 			if (board.filter(each => each.check[0] || each.check[1]).length===0) setCheckmate(true)
 		}
 	}, [isCheck])
@@ -96,6 +99,8 @@ const App = () =>
 
 			setLast(clicked_piece) // stores the last moved piece
 			setLastLocation(piece_location) // stores location of last moved piece
+			setHistory(["1g","8g"].includes(piece_location) ? history.concat("O-O") : history.concat("O-O-O")) // add castling location to history O-O for king side castling, O-O-O for queen side castling
+
 			setLocation(null)
 			setPiece(null)
 
@@ -120,24 +125,19 @@ const App = () =>
 
 			setLast(clicked_piece) // stores the last moved piece
 			setLastLocation(piece_location) // stores location of last moved piece
+			setHistory(history.concat(getHistory(clicked_piece,location,piece_location,isCheck,"en-passant"))) // add last move to history
+
 			setLocation(null)
 			setPiece(null)
 
 			setPlayer(!player)
 			setCheck(null)
 		}
-		/*
-		function enPassant(target, clicked_piece) {
-			let new_board
-			new_board=  movePiece(location , board)
-		}
-		*/
 		// change moves if another valid piece is clicked
 		else if (family==="white" && player || family==="black" && !player) { 
 			setLocation(piece_location)
 			setPiece(piece_name)
 		}
-		// {checkEnPassant(last_piece, last_location, piece_location, board)}
 		// killing a piece
 		else if (pieceKill) {
 			let [new_board, killed] = killPiece(location, piece_location, board) 
@@ -147,6 +147,8 @@ const App = () =>
 
 			setLast(clicked_piece) // stores the last moved piece
 			setLastLocation(piece_location) // stores location of last moved piece
+			setHistory(history.concat(getHistory(clicked_piece,location,piece_location,isCheck,"kill"))) // add last move to history
+
 			setLocation(null)
 			setPiece(null)
 
@@ -160,13 +162,15 @@ const App = () =>
 			if (checkPromotion(clicked_piece, piece_location)) startPromotion(player, piece_location) // opens promotion popup if there is a promotion
 
 			setLast(clicked_piece) // stores the last moved piece
-			setLastLocation(piece_location) // stores location of last moved piece
+			setLastLocation(piece_location) // stores location of last moved piece (required for en passant)
+			setHistory(history.concat(getHistory(clicked_piece,location,piece_location,isCheck,"move"))) // add last move to history
 			setLocation(null)
 			setPiece(null)
 
 			setPlayer(!player)
 			setCheck(null)
 		}
+
 		// an empty or invalid piece is clicked
 		else {
 			setLocation(null)
@@ -324,6 +328,25 @@ const App = () =>
 		setPromoLocation(false)
 	}
 
+		function getHistory(clicked_piece, clicked_location, piece_location, check, type){
+			let ans
+			switch (type){
+				case "kill":
+					if (getType(clicked_piece)==="pawn") ans = clicked_location[1] + "x" + piece_location[1]+piece_location[0]
+					else ans = clicked_piece+"x"+piece_location[1]+piece_location[0]
+					break
+				case "move":
+					if (getType(clicked_piece)==="pawn") ans = piece_location[1]+piece_location[0]
+					else ans = clicked_piece+piece_location[1]+piece_location[0]
+					break
+				case "en-passant":
+					ans = clicked_location[1] + "x" + piece_location[1]+piece_location[0] + " e.p"
+					break
+				default: throw "getHistory error"
+			}
+			return ans// + (check ? "+" : "")
+		}
+
 	const cols = 'abcdefgh'.split('')
 	const rows = '87654321'.split('')
 
@@ -352,7 +375,7 @@ const App = () =>
 						</div>
 					</div>
 
-					<RightSidebar />
+					<RightSidebar history={history} />
 				</div>
 				{/* <Stats {...stats} /> */}
 		</div>
@@ -390,7 +413,7 @@ function Stats({location, player, isCheck, kills, last_piece, last_location, cli
 	)
 }
 
-function Chessboard({board, location, castle_positions, handleClick, isCheck, validDuringCheck, validPassant}) {
+function Chessboard({board, location, castle_positions, handleClick, isCheck, validDuringCheck, validPassant, white_k, black_k}) {
 	return (
 		<div className='board' >
 			{
@@ -405,7 +428,7 @@ function Chessboard({board, location, castle_positions, handleClick, isCheck, va
 							${ (location && each.can_kill) && (validDuringCheck(each) && each.can_kill.includes(location)) ? 'kill'   : '' }
 							${ (location && each.can_move) && (validDuringCheck(each) && each.can_move.includes(location)) ? "active" : '' }
 							${ isCheck==="white" && each.position===white_k || isCheck==="black" && each.position===black_k ? "check" : "" }
-							${ (location ) && castle_positions.contains([location, each.position]) ? "castle" : ""}
+							${ (location && !isCheck) && castle_positions.contains([location, each.position]) ? "castle" : ""}
 							${ validPassant(each, "left") || validPassant(each, "right") ? "en-passant" : ""}`
 						}
 					>
@@ -419,7 +442,7 @@ function Chessboard({board, location, castle_positions, handleClick, isCheck, va
 
 function Ranks () {
 	return (
-		<div class="ranks coords">
+		<div className="ranks coords">
 			<div className="b coord">1</div>
 			<div className="w coord">2</div>
 			<div className="b coord">3</div>
@@ -434,7 +457,7 @@ function Ranks () {
 
 function Files () {
 	return (
-		<div class="files coords">
+		<div className="files coords">
 			<div className="w coord">a</div>
 			<div className="b coord">b</div>
 			<div className="w coord">c</div>
