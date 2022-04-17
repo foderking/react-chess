@@ -69,9 +69,15 @@ yarn test
 
 ## TODO
 
-- Fix UI
-- Add multiplayer support
-- Integrate with chess engine
++ Fix UI
+
++ Responsive
+
++ Add multiplayer support
+
++ Ability to create accounts, chat etc.
+
++ Integrate with chess engine
 
 
 ## Credits

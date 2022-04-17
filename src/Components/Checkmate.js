@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function Checkmate({ king })
+export default function Checkmate({ king, okay })
 {
 	return (
 		<div className="promotion_popup">
@@ -8,7 +8,7 @@ export default function Checkmate({ king })
 			<div>
 				<h1>Checkmate {king}!!!</h1>
 				You've been checkmated motherfucker!.
-				<button href="/" >Play again</button>
+				<button onClick={okay} >Okay</button>
 			</div>
 		</div>
 	)

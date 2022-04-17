@@ -360,7 +360,7 @@ const App = () =>
 				}
 				{
 					isCheckmate &&
-					<Checkmate king={ player ? "white" : "black" }/>
+					<Checkmate king={ player ? "white" : "black" } okay={() => setCheckmate(false)}/>
 				}
 
 				<div className='main-view'>
