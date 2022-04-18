@@ -15,6 +15,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 + Lightwieght
 + No external dependencies. All functionality is written purely in React.
++ Move generation and validation
++ Dark theme UI
 
 ### Prerequisites
 
@@ -69,16 +71,15 @@ yarn test
 
 ## TODO
 
-+ Fix UI
++ [x] Fix UI
 
-+ Responsive
++ [ ] Responsive
 
-+ Add multiplayer support
++ [ ] Add multiplayer support
 
-+ Ability to create accounts, chat etc.
++ [ ] Ability to create accounts, chat etc.
 
-+ Integrate with chess engine
-
++ [ ] Integrate with chess engine
 
 ## Credits
 
