@@ -24,7 +24,7 @@ export default function RightSidebar({history}){
 								<div className='move'><span>{each}</span></div>
 								:
 								<>
-									<div className='index'>{parseInt(i/2)+1}</div>
+									<div className='index'>{parseInt((i/2).toString())+1}</div>
 									<div className='move'><span>{each}</span></div>
 								</>
 							}
@@ -32,7 +32,7 @@ export default function RightSidebar({history}){
 						)
 					}
 				</div>
-				<div class="status">White resigned • Black is victorious</div>
+				<div className="status">White resigned • Black is victorious</div>
 
 			</div>
 		</div>

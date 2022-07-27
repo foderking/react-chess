@@ -1,6 +1,6 @@
-const {
+import {
 	white_pieces, black_pieces, rows, cols, white_bishop, white_knight, white_rook, white_pawn, white_king, white_queen, black_king, black_queen, black_bishop, black_knight, black_rook, black_pawn, null_piece
-} = require("./constants")
+} from "./constants"
 
 class PawnPromotion extends Error {
 	constructor(message) {
@@ -318,7 +318,7 @@ function movePiece(source_location, target_location, board) {
 	return new_board
 }
 
-function killPiece(source_location, target_location, board, isCheck) {
+function killPiece(source_location, target_location, board) {
 	let new_board = cloneBoard(board)
 	let [rowa, cola] = getIndex(source_location)
 	let [rowb, colb] = getIndex(target_location)
@@ -428,6 +428,7 @@ function generateMoveForBoard(board, white_k, black_k, check) {
 	
 	// (only for pawns that are not king) goes through each position in the board and looks for positions of pieces that can kill it or move to it
 	for (let square of board) {
+		let isValid
 		if (!moves.length) break
 		k = search(square.position, moves)
 		
@@ -795,7 +796,7 @@ function pawnCapture (location, board, color) {
 	return [ans, friends]
 }
 
-module.exports = {
+export {
 	getIndex,
 	kingCapture,
 	knightCapture,
@@ -806,7 +807,6 @@ module.exports = {
 	generateRandomString,
 	generateMoveForBoard,
 	getPieceColor,
-	getIndex,
 	calculateIndex,
 	movePiece,
 	killPiece,

@@ -619,7 +619,7 @@ const Pieces = [
 	b_king
 ]
 
-module.exports = {
+export {
 	Board,
 	Pieces,
 	white_pieces,

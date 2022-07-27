@@ -5,11 +5,26 @@ import Navbar from './Components/Navbar'
 import NowPlaying from './Components/NowPlaying'
 import RightSidebar from './Components/RightSidebar'
 import { Board } from './constants'
+import { BoardState } from './engine/board'
 import Promotion from './Promotion'
 import {
 	calculateIndex, checkPromotion, generateMoveForBoard, generateRandomString,
 	getIndex, getKings, getPiece, getPieceColor, getPieceFromPosition, getType, killPiece, movePiece, promotePawn
 } from './Utility'
+
+// i have to write this fucking shit because of javascript stupidity
+declare global {
+	interface Array<T> {
+		contains(val: T): boolean
+	}
+}
+Array.prototype.contains = function(val) {
+	let hash = {};
+	for (let i=0; i<this.length; i++) {
+		hash[this[i]] = i 
+	}
+	return hash.hasOwnProperty(val)
+}
 
 const App = () =>
 {
@@ -32,24 +47,15 @@ const App = () =>
 
 	const [history, setHistory] = useState([/*1,2,3,4,5,1,2,3,4,5,1 ,2,3,4,5,1,5,1 ,2,3,4,5,5,1 ,2,3,4,5,5,1 ,2,3,4,5 ,2,3,4,5*/])
 
+	let b  = new BoardState()
+	console.log(b.board)
 
 	generateMoveForBoard(board, white_k, black_k, isCheck) // generate moves
 	checkCastle(board)
-	const castle_positions = checkCastle(board)
+	const castle_positions: Array<Array<string>> = checkCastle(board)
 	console.log(board, castle_positions)
 
 	const chess_board = {board, location, castle_positions, handleClick, isCheck, validDuringCheck, validPassant, white_k, black_k}
-
-	// i have to write this fucking shit because of javascript stupidity
-	useEffect(() => {
-		Array.prototype.contains = function(val){
-		let hash = {};
-			for (let i=0; i<this.length; i++) {
-				hash[this[i]] = i 
-			}
-			return hash.hasOwnProperty(val)
-		}
-	}, [])
 	
 	// hook for when a player is on check
 	useEffect(()=> {
