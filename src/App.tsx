@@ -51,9 +51,11 @@ const App = () => {
   const [history, setHistory] = useState([/*1,2,3,4,5,1,2,3,4,5,1 ,2,3,4,5,1,5,1 ,2,3,4,5,5,1 ,2,3,4,5,5,1 ,2,3,4,5 ,2,3,4,5*/])
 
 
-  const [boardState, setBoardState] = useState(new BoardState())
+  const [boardState, setBoardState]       = useState<BoardState>(new BoardState())
+  const [tmpBoardState, setTmpBoardState] = useState<BoardState>()
   const [canKill , setCanKill] = useState<MoveMapping>(defaultMoveMapping())
   const [canMove , setCanMove] = useState<MoveMapping>(defaultMoveMapping())
+  const [clickOn , setClickOn] = useState<boolean>(false)
 
 
   generateMoveForBoard(board, white_k, black_k, isCheck) // generate moves
@@ -371,16 +373,26 @@ const App = () => {
   const rows = '87654321'.split('')
 
   function handleSquareClick(e, position: string) {
-    let move = Object.assign({}, canMove)
-    let kill = Object.assign({}, canKill)
     e.preventDefault()
     let pos = parsePosition(position[0], position[1])
-    for (let each of boardState._moveList[pos]) {
-      if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
-      if (each.capturedPiece!==AllPieces.NULL) kill[each.to] = true
+
+    if (!clickOn) {
+      let move = Object.assign({}, canMove)
+      let kill = Object.assign({}, canKill)
+      for (let each of boardState._moveList[pos]) {
+        if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
+        if (each.capturedPiece!==AllPieces.NULL) kill[each.to] = true
+      }
+      setCanKill(kill)
+      setCanMove(move)
+      setClickOn(true)
     }
-    setCanKill(kill)
-    setCanMove(move)
+    else {
+      if (canKill[pos] || canMove[pos]) console.log(`piece at ${position} has been killed`)
+      setClickOn(false)
+      setCanKill(defaultMoveMapping())
+      setCanMove(defaultMoveMapping())
+    }
   }
 
   return (
