@@ -1,9 +1,12 @@
-import { black_promotions, white_promotions } from "./constants";
 import React from 'react'
-import { generateRandomString } from "./Utility";
+import {
+white_rook, white_bishop, white_knight, white_queen,
+black_rook, black_bishop, black_knight, black_queen, generateRandomString } from "../engine/util"
 
 export default function Promotion({ family, handlePromotion })
 {
+  const white_promotions = [white_rook, white_bishop, white_knight, white_queen]
+  const black_promotions = [black_rook, black_bishop, black_knight, black_queen]
 	return (
 		<div className="promotion_popup">
 			<span className="helper"></span>

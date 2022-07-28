@@ -111,7 +111,7 @@ export function serializeBoardPosition(): string[] {
 export function getSquareColor(col: string, row: string): string {
     let final = (color: boolean, dist: number) => dist%2===0 ? color : !color
     let [colIndex, rowIndex] = validatePosition(col, row)
-    let start = final(false, rowIndex)
+    let start = final(true, rowIndex)
     return serializeFamily(Number(final(start, colIndex)))
 }
 
@@ -123,9 +123,9 @@ export function serializeFamily(fam: Family): string {
     }
 }
 
+export const white_king='♔', white_queen='♕', white_rook='♖', white_bishop='♗', white_knight='♘', white_pawn='♙'
+export const black_king='♚', black_queen='♛', black_rook='♜', black_bishop='♝', black_knight='♞', black_pawn='♟'
 export function serializePiece(piece: AllPieces): string {
-    const white_king='♔', white_queen='♕', white_rook='♖', white_bishop='♗', white_knight='♘', white_pawn='♙'
-    const black_king='♚', black_queen='♛', black_rook='♜', black_bishop='♝', black_knight='♞', black_pawn='♟'
     switch (piece) {
         case AllPieces.WhitePawn  : return white_pawn
         case AllPieces.WhiteKnight: return white_knight
@@ -191,4 +191,15 @@ export function getPiece(piece: AllPieces): MainPieces {
             throw new Error("Invalid Piece given");
             
     }
+}
+
+export function generateRandomString(N=10) {
+	// Returns an alphanumeric string of N characters
+	let result           = '';
+	const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	const charactersLength = characters.length;
+	for ( var i = 0; i < N; i++ ) {
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	}
+ return result;
 }

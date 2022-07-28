@@ -3,10 +3,8 @@ import Checkmate from './Components/Checkmate'
 import LeftSidebar from './Components/LeftSidebar'
 import Navbar from './Components/Navbar'
 import NowPlaying from './Components/NowPlaying'
-import Promotion from './Promotion'
+import Promotion from './Components/Promotion'
 import RightSidebar from './Components/RightSidebar'
-import { Board } from "./constants"
-import { promotePawn } from './Utility'
 import { BoardState } from './engine/board'
 import { 
   AllPieces, BoardPosition, defaultMoveMapping, getSquareColor, MoveMapping, parsePosition, serializeBoardPosition, serializePiece
@@ -31,7 +29,6 @@ Array.prototype.contains = function (val) {
 
 const App = () => {
   const [isCheckmate, setCheckmate] = useState(null)
-  const [board, setBoard] = useState(Board) // represents the whole chess board
   const [player, setPlayer] = useState(true) // white is to play if player is `true` else, its black
   const [promotion, doPromotion] = useState(false) // controls whether the promotion popup shows
   const [promoted_location, setPromoLocation] = useState(null)
@@ -56,10 +53,7 @@ const App = () => {
     console.log(defaultMoveMapping())
   }, [])
 
-
-
  function finishPromotion(piece) {
-    promotePawn(promoted_location, piece, board)
     doPromotion(false)
     setPromoFamily(false)
     setPromoLocation(false)
@@ -79,12 +73,14 @@ const App = () => {
       setCanKill(kill)
       setCanMove(move)
       setClickOn(true)
+      setSelect(pos)
     }
     else {
       if (canKill[pos] || canMove[pos]) console.log(`piece at ${position} has been killed`)
       setClickOn(false)
       setCanKill(defaultMoveMapping())
       setCanMove(defaultMoveMapping())
+      setSelect(null)
     }
   }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { generateRandomString } from '../Utility';
+import { generateRandomString } from '../engine/util';
 
 function Stats({ location, player, isCheck, kills, last_piece, last_location, clicked_piece }) {
   return (
