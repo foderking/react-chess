@@ -1,3 +1,5 @@
+import { Move } from "./movegen"
+
 /** All possible pieces in a board (including `NULL_PIECE` representing no piece) */
 export enum AllPieces {
     WhitePawn,
@@ -49,6 +51,11 @@ export enum BoardPosition {
     A8=0x70, B8, C8, D8, E8, F8, G8, H8, NULL
 }
 
+/** Pieces a pawn can be promoted to */
+export enum Promotable {
+    Rook, Knight, Bishop, Queen
+}
+
 type MailBox<T> = [
     T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,
     T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,
@@ -61,7 +68,17 @@ type MailBox<T> = [
 ]
 export type MailBox88 = MailBox<AllPieces>
 
+export type MoveDictionary = Record<BoardPosition, Move[]>
 
+export type MoveMapping = Record<BoardPosition, boolean>
+
+export function defaultMoveMapping(): MoveMapping {
+    let dict = {}
+    for (let pos of serializeBoardPosition()) {
+        dict[parsePosition(pos[0], pos[1])] = false
+    }
+    return dict as MoveMapping
+}
 /** Checks if a position is col-row form is valid
  * if it isn't raises an error, else returns thier indices
  */
@@ -76,7 +93,7 @@ function validatePosition(col: string, row: string): [number, number] {
 
 /** Given a string in form "colrow" returns it's Position */
 export function parsePosition(col: string, row: string): BoardPosition {
-    let [colIndex, rowIndex] = validatePosition(col, row)
+    let [colIndex, rowIndex] = validatePosition(col.toLowerCase(), row.toLowerCase())
     rowIndex = 7-rowIndex // little endian rank-file mapping 
     return (rowIndex << 4) + colIndex
 }
@@ -102,8 +119,6 @@ export function serializeFamily(fam: Family): string {
     }
 }
 
-
-
 export function serializePiece(piece: AllPieces): string {
     const white_king='♔', white_queen='♕', white_rook='♖', white_bishop='♗', white_knight='♘', white_pawn='♙'
     const black_king='♚', black_queen='♛', black_rook='♜', black_bishop='♝', black_knight='♞', black_pawn='♟'
@@ -122,7 +137,27 @@ export function serializePiece(piece: AllPieces): string {
         case AllPieces.BlackKing  : return black_king
         case AllPieces.NULL       : return ""
         default:
-            console.log(piece)
+            throw new Error("Invalid piece given");
+    }
+}
+
+export function getPieceColor(piece: AllPieces): Family {
+    switch (piece) {
+        case AllPieces.WhitePawn  :
+        case AllPieces.WhiteKnight:
+        case AllPieces.WhiteBishop:
+        case AllPieces.WhiteRook  :
+        case AllPieces.WhiteQueen :
+        case AllPieces.WhiteKing  :
+            return Family.White
+        case AllPieces.BlackPawn  :
+        case AllPieces.BlackKnight:
+        case AllPieces.BlackBishop:
+        case AllPieces.BlackRook  :
+        case AllPieces.BlackQueen :
+        case AllPieces.BlackKing  :
+            return Family.Black
+        default:
             throw new Error("Invalid piece given");
     }
 }

@@ -6,7 +6,8 @@ import NowPlaying from './Components/NowPlaying'
 import RightSidebar from './Components/RightSidebar'
 import { Board } from "./constants"
 import { BoardState } from './engine/board'
-import { BoardPosition, getSquareColor, parsePosition, serializeBoardPosition, serializePiece } from './engine/util'
+import { Move } from './engine/movegen'
+import { AllPieces, BoardPosition, defaultMoveMapping, getSquareColor, MoveDictionary, MoveMapping, parsePosition, serializeBoardPosition, serializePiece } from './engine/util'
 import Promotion from './Promotion'
 import {
   calculateIndex, checkPromotion, generateMoveForBoard, generateRandomString,
@@ -26,6 +27,8 @@ Array.prototype.contains = function (val) {
   }
   return hash.hasOwnProperty(val)
 }
+
+
 
 const App = () => {
   const [isCheck, setCheck] = useState(null) // sets when a king is in check; 3 possible value `null`, position of pieces checking white and black king
@@ -48,7 +51,9 @@ const App = () => {
   const [history, setHistory] = useState([/*1,2,3,4,5,1,2,3,4,5,1 ,2,3,4,5,1,5,1 ,2,3,4,5,5,1 ,2,3,4,5,5,1 ,2,3,4,5 ,2,3,4,5*/])
 
 
-  const [boardState, setBoardState] = useState(null)
+  const [boardState, setBoardState] = useState(new BoardState())
+  const [canKill , setCanKill] = useState<MoveMapping>(defaultMoveMapping())
+  const [canMove , setCanMove] = useState<MoveMapping>(defaultMoveMapping())
 
 
   generateMoveForBoard(board, white_k, black_k, isCheck) // generate moves
@@ -59,9 +64,11 @@ const App = () => {
   const chess_board = { board, location, castle_positions, handleClick, isCheck, validDuringCheck, validPassant, white_k, black_k }
 
   useEffect(() => {
-    setBoardState(new BoardState())
+    //setBoardState(new BoardState())
     console.log(boardState)
     console.log(serializeBoardPosition())
+    //setmoveList(boardState.generateMoves())
+    console.log(defaultMoveMapping())
   }, [])
 
   // hook for when a player is on check
@@ -363,6 +370,19 @@ const App = () => {
   const cols = 'abcdefgh'.split('')
   const rows = '87654321'.split('')
 
+  function handleSquareClick(e, position: string) {
+    let move = Object.assign({}, canMove)
+    let kill = Object.assign({}, canKill)
+    e.preventDefault()
+    let pos = parsePosition(position[0], position[1])
+    for (let each of boardState._moveList[pos]) {
+      if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
+      if (each.capturedPiece!==AllPieces.NULL) kill[each.to] = true
+    }
+    setCanKill(kill)
+    setCanMove(move)
+  }
+
   return (
     <div className='contain'>
       <Navbar />
@@ -385,7 +405,11 @@ const App = () => {
             {/* <Chessboard {...chess_board} /> */}
             {
               boardState &&
-              <CBoard board_state={boardState} />
+              <CBoard
+                board_state={boardState}
+                canKill    ={canKill}
+                canMove    ={canMove}
+                handleClick={handleSquareClick} />
             }
             <Ranks />
             <Files />
@@ -432,8 +456,11 @@ function Stats({ location, player, isCheck, kills, last_piece, last_location, cl
 
 interface CBoardProps {
   board_state: BoardState
+  canKill    : MoveMapping
+  canMove    : MoveMapping
+  handleClick: (e, pos: string) => void
 }
-const CBoard = ({ board_state }: CBoardProps) => {
+const CBoard = ({ board_state, canKill, canMove, handleClick }: CBoardProps) => {
   return (
     <div className='board' >
       {
@@ -443,9 +470,14 @@ const CBoard = ({ board_state }: CBoardProps) => {
             <div
               key={each}
               id={each}
-              className={`text-center board-cell col-${each[1]} row-${each[0]} ${getSquareColor(each[0], each[1])}`}
+              className={`text-center board-cell col-${each[1]} row-${each[0]} ${getSquareColor(each[0], each[1])}
+           							${ canKill[parsePosition(each[0],each[1])] ? 'kill'  : '' }
+           							${ canMove[parsePosition(each[0],each[1])] ? 'active': '' }
+              `}
+              onClick={(e) => handleClick(e, each)}
             >
-              {serializePiece(board_state.board[parsePosition(each[0], each[1])])}
+              {/* {serializePiece(board_state.board[parsePosition(each[0], each[1])])} */}
+              {parsePosition(each[0],each[1])}
 
             </div>
           )

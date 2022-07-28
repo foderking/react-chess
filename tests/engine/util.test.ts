@@ -1,4 +1,4 @@
-import { Family, getSquareColor, serializeBoardPosition } from "../../src/engine/util"
+import { defaultMoveMapping, Family, getSquareColor, serializeBoardPosition } from "../../src/engine/util"
 
 describe("Testing the enums", () => {
     
@@ -19,8 +19,12 @@ describe("Testing the enums", () => {
 describe('Testing helpers', () => { 
 
     test("getSquareColor", () => {
-        expect(getSquareColor("a", "1")).toBe(Family.Black)
-        expect(getSquareColor("h", "3")).toBe(Family.White)
-        expect(getSquareColor("c", "7")).toBe(Family.Black)
+        expect(getSquareColor("a", "1")).toBe("black")
+        expect(getSquareColor("h", "3")).toBe("white")
+        expect(getSquareColor("c", "7")).toBe("black")
+    })
+
+    test("default movemapping", () => {
+        expect(Object.keys(defaultMoveMapping()).length).toBe(64)
     })
  })

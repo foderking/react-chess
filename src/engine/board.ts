@@ -1,4 +1,5 @@
 import assert from "assert"
+import { generateBishopMove } from "./movegen"
 import * as Util from "./util"
 import { AllPieces } from "./util"
 
@@ -20,6 +21,8 @@ export class BoardState {
     public half_move   : number
     /** Number of full moves in the game */
     public full_move   : number
+
+    public _moveList: Util.MoveDictionary
 
     static fen_regex = /^((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8}) ([wb]) (-|K?Q?k?q?) (-|[a-f][1-8]) (\d{1,2}|100) (\d+)$/g
 
@@ -135,6 +138,8 @@ export class BoardState {
         // parse fullmove
         this.full_move = parseInt(_fullmove)
 
+        this._moveList = this.generateMoves()
+
         /*
             this.castling     = Util.CastleType.NoCastling
                                 | Util.CastleType.BKingCastle
@@ -154,4 +159,15 @@ export class BoardState {
         }
         */
     }
+
+    private  generateMoves(): Util.MoveDictionary {
+        let dict = {}
+        for (let pos of Util.serializeBoardPosition()) {
+            let index = Util.parsePosition(pos[0], pos[1])
+            dict[index]  = []
+        }
+        dict[Util.BoardPosition.D5] = generateBishopMove(this, AllPieces.WhiteBishop, Util.BoardPosition.D5)
+        return dict as Util.MoveDictionary
+    }
+
 }
