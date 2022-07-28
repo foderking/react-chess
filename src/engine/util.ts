@@ -16,7 +16,7 @@ export enum AllPieces {
 }
 /** The two type of piece - black and white */
 export enum Family {
-    White, Black
+    Black, White
 }
 /** Unique type of castling
  * ```txt
@@ -62,11 +62,67 @@ type MailBox<T> = [
 export type MailBox88 = MailBox<AllPieces>
 
 
-export function parsePosition(col: string, row: string): BoardPosition {
+/** Checks if a position is col-row form is valid
+ * if it isn't raises an error, else returns thier indices
+ */
+function validatePosition(col: string, row: string): [number, number] {
     const allCols = "abcdefgh", allRows = "12345678"
     let colIndex = allCols.indexOf(col)
     let rowIndex = allRows.indexOf(row)
     if (colIndex===-1 || rowIndex===-1)
         throw new Error("Invalid positon given")
-    return (rowIndex >> 3) + colIndex
+    return [colIndex, rowIndex]
+}
+
+/** Given a string in form "colrow" returns it's Position */
+export function parsePosition(col: string, row: string): BoardPosition {
+    let [colIndex, rowIndex] = validatePosition(col, row)
+    rowIndex = 7-rowIndex // little endian rank-file mapping 
+    return (rowIndex << 4) + colIndex
+}
+
+/** Returns board positions as an array of 64 strings */
+export function serializeBoardPosition(): string[] {
+    return Object.values(BoardPosition).slice(0,64) as string[]
+}
+
+/** Gets color of square at position */
+export function getSquareColor(col: string, row: string): string {
+    let final = (color: boolean, dist: number) => dist%2===0 ? color : !color
+    let [colIndex, rowIndex] = validatePosition(col, row)
+    let start = final(false, rowIndex)
+    return serializeFamily(Number(final(start, colIndex)))
+}
+
+export function serializeFamily(fam: Family): string {
+    switch(fam) {
+        case Family.White: return "white"
+        case Family.Black: return "black"
+        default: throw new Error("Invalid family given");
+    }
+}
+
+
+
+export function serializePiece(piece: AllPieces): string {
+    const white_king='♔', white_queen='♕', white_rook='♖', white_bishop='♗', white_knight='♘', white_pawn='♙'
+    const black_king='♚', black_queen='♛', black_rook='♜', black_bishop='♝', black_knight='♞', black_pawn='♟'
+    switch (piece) {
+        case AllPieces.WhitePawn  : return white_pawn
+        case AllPieces.WhiteKnight: return white_knight
+        case AllPieces.WhiteBishop: return white_bishop
+        case AllPieces.WhiteRook  : return white_rook
+        case AllPieces.WhiteQueen : return white_queen
+        case AllPieces.WhiteKing  : return white_king
+        case AllPieces.BlackPawn  : return black_pawn
+        case AllPieces.BlackKnight: return black_knight
+        case AllPieces.BlackBishop: return black_bishop
+        case AllPieces.BlackRook  : return black_rook
+        case AllPieces.BlackQueen : return black_queen
+        case AllPieces.BlackKing  : return black_king
+        case AllPieces.NULL       : return ""
+        default:
+            console.log(piece)
+            throw new Error("Invalid piece given");
+    }
 }

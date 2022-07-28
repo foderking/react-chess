@@ -9,17 +9,17 @@ const digitRegex = /\d+/
  */
 export class BoardState {
     /** Side to play next */
-    private current_side: Util.Family
+    public current_side: Util.Family
     /** Last 4bits reps the castling rights in the board */
-    private castling    : number
+    public castling    : number
     /** Last enpassant square (NULL_POSITION if none) */
-    private enpassant_sq: Util.BoardPosition
+    public enpassant_sq: Util.BoardPosition
     /** The board where pieces are located*/
-    private board       : Util.MailBox88
+    public board       : Util.MailBox88
     /** Number of halfmoves since last pawn move or capture */
-    private half_move   : number
+    public half_move   : number
     /** Number of full moves in the game */
-    private full_move   : number
+    public full_move   : number
 
     static fen_regex = /^((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8}) ([wb]) (-|K?Q?k?q?) (-|[a-f][1-8]) (\d{1,2}|100) (\d+)$/g
 
@@ -134,18 +134,13 @@ export class BoardState {
         this.half_move = parseInt(_halfmove)
         // parse fullmove
         this.full_move = parseInt(_fullmove)
+
         /*
-        }
-        else {
-            this.half_move    = 0
-            this.full_move    = 0
             this.castling     = Util.CastleType.NoCastling
                                 | Util.CastleType.BKingCastle
                                 | Util.CastleType.BQueenCastle
                                 | Util.CastleType.WKingCastle
                                 | Util.CastleType.WQueenCastle
-            this.current_side = Util.Family.White
-            this.enpassant_sq = Util.BoardPosition.NULL
             this.board = [
                 AllPieces.BlackRook  , AllPieces.BlackKnight, AllPieces.BlackBishop, AllPieces.BlackQueen , AllPieces.BlackKing  , AllPieces.BlackBishop, AllPieces.BlackKnight, AllPieces.BlackRook  , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL ,
                 AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL ,
