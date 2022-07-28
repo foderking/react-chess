@@ -1,5 +1,9 @@
 import { Move } from "./movegen"
 
+export enum MainPieces {
+    Pawn, Rook, Knight, Bishop, Queen, King, NULL
+}
+
 /** All possible pieces in a board (including `NULL_PIECE` representing no piece) */
 export enum AllPieces {
     WhitePawn,
@@ -159,5 +163,32 @@ export function getPieceColor(piece: AllPieces): Family {
             return Family.Black
         default:
             throw new Error("Invalid piece given");
+    }
+}
+
+export function getPiece(piece: AllPieces): MainPieces {
+    switch (piece) {
+        case AllPieces.BlackPawn:
+        case AllPieces.WhitePawn:
+            return MainPieces.Pawn
+        case AllPieces.BlackRook:
+        case AllPieces.WhiteRook:
+            return MainPieces.Rook
+        case AllPieces.BlackKnight:
+        case AllPieces.WhiteKnight:
+            return MainPieces.Knight
+        case AllPieces.BlackBishop:
+        case AllPieces.WhiteBishop:
+            return MainPieces.Bishop
+        case AllPieces.BlackQueen:
+        case AllPieces.WhiteQueen:
+            return MainPieces.Queen
+        case AllPieces.BlackKing:
+        case AllPieces.WhiteKing:
+            return MainPieces.King
+        case AllPieces.NULL: return MainPieces.NULL
+        default:
+            throw new Error("Invalid Piece given");
+            
     }
 }

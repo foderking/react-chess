@@ -1,5 +1,5 @@
 import assert from "assert"
-import { generateBishopMove } from "./movegen"
+import { generateBishopMove, generateMoves } from "./movegen"
 import * as Util from "./util"
 import { AllPieces } from "./util"
 
@@ -138,7 +138,7 @@ export class BoardState {
         // parse fullmove
         this.full_move = parseInt(_fullmove)
 
-        this._moveList = this.generateMoves()
+        this._moveList = this.genMoves()
 
         /*
             this.castling     = Util.CastleType.NoCastling
@@ -160,13 +160,13 @@ export class BoardState {
         */
     }
 
-    private  generateMoves(): Util.MoveDictionary {
+    private  genMoves(): Util.MoveDictionary {
         let dict = {}
         for (let pos of Util.serializeBoardPosition()) {
             let index = Util.parsePosition(pos[0], pos[1])
-            dict[index]  = []
+            let pieceAtIndex = this.board[index]
+            dict[index]  = generateMoves(this, pieceAtIndex, index)
         }
-        dict[Util.BoardPosition.D5] = generateBishopMove(this, AllPieces.WhiteBishop, Util.BoardPosition.D5)
         return dict as Util.MoveDictionary
     }
 
