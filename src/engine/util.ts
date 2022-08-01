@@ -128,9 +128,9 @@ export function serializeFamily(fam: Family): string {
 
 /** Checks if a pawn at `square` can do a promotion */
 export function isPromotable(square: BoardPosition, fam: Family): boolean {
-    // console.log(getRank(square))
-    if (fam===Family.White) return getRank(square)===Ranks.RANK_8
-    else return getRank(square)===Ranks.RANK_1
+    // console.log((square))
+    if (fam===Family.White) return getRank(square)+1===Ranks.RANK_7
+    else return getRank(square)+1===Ranks.RANK_2
 }
 
 export const white_king='♔', white_queen='♕', white_rook='♖', white_bishop='♗', white_knight='♘', white_pawn='♙'
