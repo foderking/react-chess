@@ -205,4 +205,13 @@ export class BoardState {
         return this.board[pos]!==AllPieces.NULL && Util.getPieceColor(this.board[pos])===this.current_side
     }
 
+    /** Checks if a pawn can make a double push */
+    public canDoublePush(square: Util.BoardPosition, family: Util.Family): boolean {
+        if (Util.getPiece(this.board[square])!==Util.MainPieces.Pawn) throw new Error("Piece must be a pawn")
+        if (Util.getPieceColor(this.board[square])!==family) throw new Error("Invalid color given")
+
+        if (family===Util.Family.Black) return Util.getRank(square)===Util.Ranks.RANK_7
+        else return Util.getRank(square)===Util.Ranks.RANK_2
+    }
+
 }

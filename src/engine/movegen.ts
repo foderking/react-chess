@@ -17,8 +17,6 @@ export function generateMoves(board: BoardState, piece: AllPieces, square: Board
     const queen_ray  = [1,-1,16,-16, 17,15,-17,-15]
     const knight_ray = [33,31,-33,-31,18,-18,14,-14]
     const king_ray   = [1,-1,16,-16,15,-15,17,-17]
-    const wpawn_ray   = [16]
-    const bpawn_ray   = [-16]
     switch (getPiece(piece)) {
         case MainPieces.Rook:
             return genSlidingMoves(board, piece, square, rook_ray)
@@ -32,13 +30,51 @@ export function generateMoves(board: BoardState, piece: AllPieces, square: Board
         case MainPieces.King:
             return genNonSlidingMoves(board, piece, square, king_ray)
         case MainPieces.Pawn:
-            // TODO
             if (getPieceColor(piece)===Family.White)
-                return genNonSlidingMoves(board, piece, square, wpawn_ray)
-            return genNonSlidingMoves(board, piece, square, bpawn_ray)
+                return genPawnMoves(board, piece, square, 16, [15,17])
+            return genPawnMoves(board, piece, square, -16, [-15,-17])
         default:
             return []
     }
+}
+
+export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardPosition, move_ray: number, kill_ray: [number, number]): Move[] {
+    let result: Move[] = []
+    let max_push = 1 + Number(board.canDoublePush(square, getPieceColor(board.board[square])))
+    // generate normal moves
+    let i = 0
+    for (let position=square+move_ray; !(position & 0x88) ; position += move_ray) {
+        if (i===max_push) break
+        if (board.board[position]===AllPieces.NULL) {
+            result.push({
+                to: position,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: AllPieces.NULL
+            })
+            i++
+            continue
+        }
+        else break; // any piece can block pawn move gen
+    }
+    // generate pawn normal attacks
+    let pos = square+kill_ray[0]
+    if (!(pos & 0x88) && board.board[pos]!==AllPieces.NULL && getPieceColor(board.board[pos])!==getPieceColor(piece) )
+        result.push({
+            to: pos,
+            from: square,
+            movingPiece: piece,
+            capturedPiece: board.board[pos]
+        })
+    pos = square+kill_ray[1]
+    if (!(pos & 0x88) && board.board[pos]!==AllPieces.NULL && getPieceColor(board.board[pos])!==getPieceColor(piece) )
+        result.push({
+            to: pos,
+            from: square,
+            movingPiece: piece,
+            capturedPiece: board.board[pos]
+        })
+    return result
 }
 
 export function genSlidingMoves(board: BoardState, piece: AllPieces, square: BoardPosition, rays: number[]): Move[] {

@@ -55,6 +55,14 @@ export enum BoardPosition {
     A8=0x70, B8, C8, D8, E8, F8, G8, H8, NULL
 }
 
+export enum Ranks {
+    RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8
+}
+
+export enum Files {
+    FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H
+}
+
 /** Pieces a pawn can be promoted to */
 export enum Promotable {
     Rook, Knight, Bishop, Queen
@@ -191,6 +199,14 @@ export function getPiece(piece: AllPieces): MainPieces {
             throw new Error("Invalid Piece given");
             
     }
+}
+
+export function getRank(square: BoardPosition): Ranks {
+    return square >> 4
+}
+
+export function getFile(square: BoardPosition): Files {
+    return square & 7
 }
 
 export function generateRandomString(N=10) {
