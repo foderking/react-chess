@@ -170,4 +170,9 @@ export class BoardState {
         return dict as Util.MoveDictionary
     }
 
+    /** Checks if a piece at a position is able to make a move */
+    public isValidPiece(pos: Util.BoardPosition) {
+        return this.board[pos]!==AllPieces.NULL && Util.getPieceColor(this.board[pos])===this.current_side
+    }
+
 }

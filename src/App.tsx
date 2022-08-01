@@ -9,23 +9,7 @@ import { BoardState } from './engine/board'
 import { 
   AllPieces, BoardPosition, defaultMoveMapping, getSquareColor, MoveMapping, parsePosition, serializeBoardPosition, serializePiece
 } from './engine/util'
-
-// i have to do this fucking shit because of javascript stupidity
-declare global {
-  interface Array<T> {
-    contains(val: T): boolean
-  }
-}
-
-Array.prototype.contains = function (val) {
-  let hash = {};
-  for (let i = 0; i < this.length; i++) {
-    hash[this[i]] = i
-  }
-  return hash.hasOwnProperty(val)
-}
-
-
+import { Ranks, Files } from './Components/Coords'
 
 const App = () => {
   const [isCheckmate, setCheckmate] = useState(null)
@@ -35,15 +19,15 @@ const App = () => {
   const [promoted_family, setPromoFamily] = useState(null)
   const [history, setHistory] = useState([/*1,2,3,4,5,1,2,3,4,5,1 ,2,3,4,5,1,5,1 ,2,3,4,5,5,1 ,2,3,4,5,5,1 ,2,3,4,5 ,2,3,4,5*/])
 
-
   const [boardState, setBoardState] = useState<BoardState>(new BoardState())
   const [canKill , setCanKill] = useState<MoveMapping>(defaultMoveMapping())
   const [canMove , setCanMove] = useState<MoveMapping>(defaultMoveMapping())
   const [clickOn , setClickOn] = useState<boolean>(false)
   const [selected, setSelect ] = useState<BoardPosition>(null)
   const [isCheckd, setCheckd ] = useState<BoardPosition>(null)
+  const [whiteIsMain, setMain] = useState<boolean>(true)
 
-
+  const _defaultMoveMap = defaultMoveMapping()
 
   useEffect(() => {
     //setBoardState(new BoardState())
@@ -62,10 +46,25 @@ const App = () => {
   function handleSquareClick<T>(e: React.MouseEvent<T>, position: string) {
     e.preventDefault()
     let pos = parsePosition(position[0], position[1])
+    /* The move picking works as thus:
+       clickOn determines if a square has beeen clicked (moves for a piece at that square if the piece is valid)
+       By default, clickOn, is off
 
-    if (!clickOn) {
-      let move = Object.assign({}, canMove)
-      let kill = Object.assign({}, canKill)
+       - if clickOn is off and a square is clicked
+          - if there is a piece in the square, and the piece is part of the family to move...
+            then moves for that square are shown, and clickOn is set to on
+          - else clickOn remains off
+       - if clickOn is On and a square is clicked
+          - if the square is a valid target location for the move, the move is made, and clickOn is set back to off
+          - if the square is not a valid target location, but is part of the family to move, then.. 
+            moves are generated for that square with the previous moves discard, and clickOn still remains on
+          - if the square is not a valid target location, and not a valid piece to move, then ... 
+            the previously generated moves are discarded, and clickOn is reset to off
+    */
+    // if clickOn is off and a valid square is clicked
+    if (!clickOn && boardState.isValidPiece(pos)) {
+      let move = Object.assign({}, _defaultMoveMap)
+      let kill = Object.assign({}, _defaultMoveMap)
       for (let each of boardState._moveList[pos]) {
         if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
         if (each.capturedPiece!==AllPieces.NULL) kill[each.to] = true
@@ -75,11 +74,31 @@ const App = () => {
       setClickOn(true)
       setSelect(pos)
     }
-    else {
-      if (canKill[pos] || canMove[pos]) console.log(`piece at ${position} has been killed`)
+    // if a valid target location for current move is clicked
+    else if (clickOn && (canKill[pos] || canMove[pos])){
+      console.log(`piece at ${position} has been killed`)
       setClickOn(false)
       setCanKill(defaultMoveMapping())
       setCanMove(defaultMoveMapping())
+      setSelect(null)
+    }
+    // if another valid square is clicked
+    else if (clickOn && boardState.isValidPiece(pos) && pos!==selected){
+      let move = Object.assign({}, _defaultMoveMap)
+      let kill = Object.assign({}, _defaultMoveMap)
+      for (let each of boardState._moveList[pos]) {
+        if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
+        if (each.capturedPiece!==AllPieces.NULL) kill[each.to] = true
+      }
+      setCanKill(kill)
+      setCanMove(move)
+      setSelect(pos)
+    }
+    // an invalid target location
+    else {
+      setClickOn(false)
+      setCanKill(_defaultMoveMap)
+      setCanMove(_defaultMoveMap)
       setSelect(null)
     }
   }
@@ -112,15 +131,18 @@ const App = () => {
                 canMove    ={canMove}
                 isCheckd   ={isCheckd}
                 selected   ={selected}
+                whiteMain  ={whiteIsMain}
                 handleClick={handleSquareClick} />
             }
-            <Ranks />
-            <Files />
+            <Ranks mainSide={whiteIsMain}/>
+            <Files mainSide={whiteIsMain}/>
           </div>
         </div>
 
         <RightSidebar history={history} />
       </div>
+      <button onClick={(e) => {e.preventDefault(); setMain(!whiteIsMain)}}>Switch</button>
+
     </div>
     </React.StrictMode>
   )
@@ -132,14 +154,18 @@ interface CBoardProps {
   canMove    : MoveMapping
   selected   : BoardPosition
   isCheckd   : BoardPosition
+  whiteMain  : boolean
   handleClick: <T>(e: React.MouseEvent<T>, pos: string) => void
 }
 
-const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, handleClick }: CBoardProps) => {
+const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, whiteMain,handleClick }: CBoardProps) => {
   return (
     <div className='board' >
       {
         serializeBoardPosition()
+          .map(each =>  [(whiteMain ? 8-parseInt(each[1]) : each[1]).toString(), each])
+          .sort()
+          .map(each => each[1])
           .map(each => each.toLowerCase())
           .map(each =>
             <div
@@ -160,38 +186,6 @@ const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, handleClick
             </div>
           )
       }
-    </div>
-  )
-}
-
-// 							${ (location && !isCheck) && castle_positions.contains([location, each.position]) ? "castle" : ""}
-// 							${ validPassant(each, "left") || validPassant(each, "right") ? "en-passant" : ""}`
-function Ranks() {
-  return (
-    <div className="ranks coords">
-      <div className="b coord">1</div>
-      <div className="w coord">2</div>
-      <div className="b coord">3</div>
-      <div className="w coord">4</div>
-      <div className="b coord">5</div>
-      <div className="w coord">6</div>
-      <div className="b coord">7</div>
-      <div className="w coord">8</div>
-    </div>
-  )
-}
-
-function Files() {
-  return (
-    <div className="files coords">
-      <div className="w coord">a</div>
-      <div className="b coord">b</div>
-      <div className="w coord">c</div>
-      <div className="b coord">d</div>
-      <div className="w coord">e</div>
-      <div className="b coord">f</div>
-      <div className="w coord">g</div>
-      <div className="b coord">h</div>
     </div>
   )
 }

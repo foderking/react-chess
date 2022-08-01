@@ -98,7 +98,7 @@ function validatePosition(col: string, row: string): [number, number] {
 /** Given a string in form "colrow" returns it's Position */
 export function parsePosition(col: string, row: string): BoardPosition {
     let [colIndex, rowIndex] = validatePosition(col.toLowerCase(), row.toLowerCase())
-    rowIndex = 7-rowIndex // little endian rank-file mapping 
+    // rowIndex = 7-rowIndex // little endian rank-file mapping 
     return (rowIndex << 4) + colIndex
 }
 
