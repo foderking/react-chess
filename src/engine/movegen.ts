@@ -1,12 +1,12 @@
 import { BoardState } from "./board";
-import { AllPieces, BoardPosition, Family, getPiece, getPieceColor, MainPieces, Promotable } from "./util";
+import { AllPieces, BoardPosition, Family, getPiece, getPieceColor, isPromotable, MainPieces, Ranks } from "./util";
 
 export interface Move {
     to: BoardPosition
     from: BoardPosition
     movingPiece: AllPieces
     capturedPiece: AllPieces
-    promotion?: Promotable
+    promotion?: boolean
     enPassant?: BoardPosition
     castling? : number
 }
@@ -41,17 +41,27 @@ export function generateMoves(board: BoardState, piece: AllPieces, square: Board
 export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardPosition, move_ray: number, kill_ray: [number, number]): Move[] {
     let result: Move[] = []
     let max_push = 1 + Number(board.canDoublePush(square, getPieceColor(board.board[square])))
+    let piece_color = getPieceColor(piece)
     // generate normal moves
     let i = 0
     for (let position=square+move_ray; !(position & 0x88) ; position += move_ray) {
         if (i===max_push) break
         if (board.board[position]===AllPieces.NULL) {
-            result.push({
-                to: position,
-                from: square,
-                movingPiece: piece,
-                capturedPiece: AllPieces.NULL
-            })
+            if (isPromotable(square, piece_color))
+                result.push({
+                    to: position,
+                    from: square,
+                    movingPiece: piece,
+                    capturedPiece: AllPieces.NULL,
+                    promotion: true
+                })
+            else
+                result.push({
+                    to: position,
+                    from: square,
+                    movingPiece: piece,
+                    capturedPiece: AllPieces.NULL
+                })
             i++
             continue
         }
@@ -59,21 +69,41 @@ export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardP
     }
     // generate pawn normal attacks
     let pos = square+kill_ray[0]
-    if (!(pos & 0x88) && board.board[pos]!==AllPieces.NULL && getPieceColor(board.board[pos])!==getPieceColor(piece) )
-        result.push({
-            to: pos,
-            from: square,
-            movingPiece: piece,
-            capturedPiece: board.board[pos]
-        })
+    if (!(pos & 0x88) && board.board[pos]!==AllPieces.NULL && getPieceColor(board.board[pos])!==piece_color) {
+        if (isPromotable(square, piece_color))
+            result.push({
+                to: pos,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: board.board[pos],
+                promotion : true
+            })
+        else
+            result.push({
+                to: pos,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: board.board[pos]
+            })
+    }
     pos = square+kill_ray[1]
-    if (!(pos & 0x88) && board.board[pos]!==AllPieces.NULL && getPieceColor(board.board[pos])!==getPieceColor(piece) )
-        result.push({
-            to: pos,
-            from: square,
-            movingPiece: piece,
-            capturedPiece: board.board[pos]
-        })
+    if (!(pos & 0x88) && board.board[pos]!==AllPieces.NULL && getPieceColor(board.board[pos])!==piece_color) {
+        if (isPromotable(square, piece_color))
+            result.push({
+                to: pos,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: board.board[pos],
+                promotion: true,
+            })
+        else
+            result.push({
+                to: pos,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: board.board[pos]
+            })
+    }
     return result
 }
 

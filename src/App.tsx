@@ -7,19 +7,20 @@ import Promotion from './Components/Promotion'
 import RightSidebar from './Components/RightSidebar'
 import { BoardState } from './engine/board'
 import { 
-  AllPieces, BoardPosition, defaultMoveMapping, getSquareColor, MoveMapping, parsePosition, serializeBoardPosition, serializePiece
+  AllPieces, BoardPosition, defaultMoveMapping, deserializePiece, Family, getSquareColor, MoveMapping, parsePosition, serializeBoardPosition, serializePiece
 } from './engine/util'
 import { Ranks, Files } from './Components/Coords'
 
 const App = () => {
   const [isCheckmate, setCheckmate] = useState(null)
   const [player, setPlayer] = useState(true) // white is to play if player is `true` else, its black
-  const [promotion, doPromotion] = useState(false) // controls whether the promotion popup shows
-  const [promoted_location, setPromoLocation] = useState(null)
-  const [promoted_family, setPromoFamily] = useState(null)
+
+  const [promoted_family, setPromoFamily] = useState<Family>(null)
+  const [promoted_loc   , setPromoLocation] = useState<BoardPosition>(null)
+  const [isPromotion, setPromotion] = useState<boolean>(false) // controls whether the promotion popup shows
   const [history, setHistory] = useState([/*1,2,3,4,5,1,2,3,4,5,1 ,2,3,4,5,1,5,1 ,2,3,4,5,5,1 ,2,3,4,5,5,1 ,2,3,4,5 ,2,3,4,5*/])
 
-  const [boardState, setBoardState] = useState<BoardState>(new BoardState(/**"5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"*/))
+  const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
   const [canKill , setCanKill] = useState<MoveMapping>(defaultMoveMapping())
   const [canMove , setCanMove] = useState<MoveMapping>(defaultMoveMapping())
   const [clickOn , setClickOn] = useState<boolean>(false)
@@ -37,10 +38,18 @@ const App = () => {
     console.log(defaultMoveMapping())
   }, [])
 
- function finishPromotion(piece) {
-    doPromotion(false)
-    setPromoFamily(false)
-    setPromoLocation(false)
+ function finishPawnPromotion(piece: string) {
+    boardState.board[promoted_loc] = deserializePiece(piece)
+    setPromotion(false)
+    setPromoFamily(null)
+    setPromoLocation(null)
+    console.log(piece, deserializePiece(piece))
+  }
+
+  function startPawnPromotion (family: Family, location: BoardPosition) {
+    setPromotion(true)
+    setPromoFamily(family)
+    setPromoLocation(location)
   }
 
   function handleSquareClick<T>(e: React.MouseEvent<T>, position: string) {
@@ -76,9 +85,8 @@ const App = () => {
     }
     // if a valid target location for current move is clicked
     else if (clickOn && (canKill[pos] || canMove[pos])){
-      console.log(`piece at ${position} has been killed`)
       let moveToMake = boardState._moveList[selected].find(each => each.to===pos)
-      setBoardState(boardState.make_move(moveToMake))
+      setBoardState(boardState.make_move(moveToMake, startPawnPromotion))
       setClickOn(false)
       setCanKill(_defaultMoveMap)
       setCanMove(_defaultMoveMap)
@@ -111,8 +119,8 @@ const App = () => {
       <Navbar />
 
       {
-        promotion &&
-        <Promotion family={promoted_family} handlePromotion={finishPromotion} />
+        isPromotion &&
+        <Promotion family={promoted_family} finishPromotion={finishPawnPromotion} />
       }
       {
         isCheckmate &&

@@ -180,8 +180,8 @@ export class BoardState {
     }
 
     /** Returns a new board with the specified move made on it */
-    public make_move(move: Move): BoardState {
-        if (move.castling || move.enPassant || move.promotion) throw new Error("Not implemented");
+    public make_move(move: Move, startPromo: (fam: Util.Family, loc: Util.BoardPosition) => void): BoardState {
+        if (move.castling || move.enPassant) throw new Error("Not implemented");
         if (move.movingPiece!==this.board[move.from]) {console.log(move); throw new Error("Corrupted move")}
 
         let new_board = new BoardState()
@@ -197,6 +197,7 @@ export class BoardState {
         new_board._moveList    = new_board.genMoves()
         new_board.castling     = this.castling //TODO
         new_board.enpassant_sq = this.enpassant_sq //TODO
+        if (move.promotion) startPromo(this.current_side, move.to)
         return new_board
     }
 

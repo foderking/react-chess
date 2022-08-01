@@ -56,16 +56,11 @@ export enum BoardPosition {
 }
 
 export enum Ranks {
-    RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8
+    RANK_1=1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8
 }
 
 export enum Files {
     FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H
-}
-
-/** Pieces a pawn can be promoted to */
-export enum Promotable {
-    Rook, Knight, Bishop, Queen
 }
 
 type MailBox<T> = [
@@ -131,8 +126,16 @@ export function serializeFamily(fam: Family): string {
     }
 }
 
+/** Checks if a pawn at `square` can do a promotion */
+export function isPromotable(square: BoardPosition, fam: Family): boolean {
+    // console.log(getRank(square))
+    if (fam===Family.White) return getRank(square)===Ranks.RANK_8
+    else return getRank(square)===Ranks.RANK_1
+}
+
 export const white_king='♔', white_queen='♕', white_rook='♖', white_bishop='♗', white_knight='♘', white_pawn='♙'
 export const black_king='♚', black_queen='♛', black_rook='♜', black_bishop='♝', black_knight='♞', black_pawn='♟'
+
 export function serializePiece(piece: AllPieces): string {
     switch (piece) {
         case AllPieces.WhitePawn  : return white_pawn
@@ -148,6 +151,26 @@ export function serializePiece(piece: AllPieces): string {
         case AllPieces.BlackQueen : return black_queen
         case AllPieces.BlackKing  : return black_king
         case AllPieces.NULL       : return ""
+        default:
+            throw new Error("Invalid piece given");
+    }
+}
+
+export function deserializePiece(piece: string): AllPieces {
+    switch (piece) {
+        case white_pawn  : return AllPieces.WhitePawn
+        case white_knight: return AllPieces.WhiteKnight
+        case white_bishop: return AllPieces.WhiteBishop
+        case white_rook  : return AllPieces.WhiteRook
+        case white_queen : return AllPieces.WhiteQueen
+        case white_king  : return AllPieces.WhiteKing
+        case black_pawn  : return AllPieces.BlackPawn
+        case black_knight: return AllPieces.BlackKnight
+        case black_bishop: return AllPieces.BlackBishop
+        case black_rook  : return AllPieces.BlackRook
+        case black_queen : return AllPieces.BlackQueen
+        case black_king  : return AllPieces.BlackKing
+        case "": return AllPieces.NULL
         default:
             throw new Error("Invalid piece given");
     }
