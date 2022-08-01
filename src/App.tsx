@@ -19,7 +19,7 @@ const App = () => {
   const [promoted_family, setPromoFamily] = useState(null)
   const [history, setHistory] = useState([/*1,2,3,4,5,1,2,3,4,5,1 ,2,3,4,5,1,5,1 ,2,3,4,5,5,1 ,2,3,4,5,5,1 ,2,3,4,5 ,2,3,4,5*/])
 
-  const [boardState, setBoardState] = useState<BoardState>(new BoardState())
+  const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
   const [canKill , setCanKill] = useState<MoveMapping>(defaultMoveMapping())
   const [canMove , setCanMove] = useState<MoveMapping>(defaultMoveMapping())
   const [clickOn , setClickOn] = useState<boolean>(false)
@@ -77,9 +77,11 @@ const App = () => {
     // if a valid target location for current move is clicked
     else if (clickOn && (canKill[pos] || canMove[pos])){
       console.log(`piece at ${position} has been killed`)
+      let moveToMake = boardState._moveList[selected].find(each => each.to===pos)
+      setBoardState(boardState.make_move(moveToMake))
       setClickOn(false)
-      setCanKill(defaultMoveMapping())
-      setCanMove(defaultMoveMapping())
+      setCanKill(_defaultMoveMap)
+      setCanMove(_defaultMoveMap)
       setSelect(null)
     }
     // if another valid square is clicked

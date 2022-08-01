@@ -7,6 +7,7 @@ export interface Move {
     movingPiece: AllPieces
     capturedPiece: AllPieces
     promotion?: Promotable
+    enPassant?: BoardPosition
     castling? : number
 }
 
@@ -16,8 +17,8 @@ export function generateMoves(board: BoardState, piece: AllPieces, square: Board
     const queen_ray  = [1,-1,16,-16, 17,15,-17,-15]
     const knight_ray = [33,31,-33,-31,18,-18,14,-14]
     const king_ray   = [1,-1,16,-16,15,-15,17,-17]
-    const wpawn_ray   = [16,15,17]
-    const bpawn_ray   = [-16,-15,-17]
+    const wpawn_ray   = [16]
+    const bpawn_ray   = [-16]
     switch (getPiece(piece)) {
         case MainPieces.Rook:
             return genSlidingMoves(board, piece, square, rook_ray)
@@ -31,17 +32,13 @@ export function generateMoves(board: BoardState, piece: AllPieces, square: Board
         case MainPieces.King:
             return genNonSlidingMoves(board, piece, square, king_ray)
         case MainPieces.Pawn:
+            // TODO
             if (getPieceColor(piece)===Family.White)
                 return genNonSlidingMoves(board, piece, square, wpawn_ray)
             return genNonSlidingMoves(board, piece, square, bpawn_ray)
         default:
             return []
     }
-}
-
-export function generateBishopMove(board: BoardState, piece: AllPieces, square: BoardPosition): Move[] {
-    const rays = [17,15,-17,-15]
-    return genSlidingMoves(board, piece, square, rays)
 }
 
 export function genSlidingMoves(board: BoardState, piece: AllPieces, square: BoardPosition, rays: number[]): Move[] {
@@ -96,7 +93,7 @@ export function genNonSlidingMoves(board: BoardState, piece: AllPieces, square: 
                 capturedPiece: board.board[position]
             })
         }
-        else continue
+        else continue // non sliding attacks are not blocked by pieces
     }
     return result
 }

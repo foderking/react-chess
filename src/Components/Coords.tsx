@@ -15,7 +15,7 @@ export function Ranks({mainSide}: CoordProps) {
         ["1","2","3","4","5","6","7","8"]
           .map(each => {
             main = !main
-            return <div className={`${main ? "w" : "b"} coord`}>{each}</div>
+            return <div key={each} className={`${main ? "w" : "b"} coord`}>{each}</div>
           }
           , main)
       }
@@ -30,7 +30,7 @@ export function Files({mainSide}: CoordProps) {
         ["a","b","c","d","e","f","g","h"]
           .map(each => {
             main = !main
-            return <div className={`${main ? "w" : "b"} coord`}>{each}</div>
+            return <div key={each} className={`${main ? "w" : "b"} coord`}>{each}</div>
           }
           , main)
       }

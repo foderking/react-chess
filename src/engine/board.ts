@@ -1,5 +1,5 @@
 import assert from "assert"
-import { generateBishopMove, generateMoves } from "./movegen"
+import { generateMoves, Move } from "./movegen"
 import * as Util from "./util"
 import { AllPieces } from "./util"
 
@@ -23,6 +23,7 @@ export class BoardState {
     public full_move   : number
 
     public _moveList: Util.MoveDictionary
+    public _killed  : Array<string>
 
     static fen_regex = /^((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8}) ([wb]) (-|K?Q?k?q?) (-|[a-f][1-8]) (\d{1,2}|100) (\d+)$/g
 
@@ -139,6 +140,7 @@ export class BoardState {
         this.full_move = parseInt(_fullmove)
 
         this._moveList = this.genMoves()
+        this._killed   = []
 
         /*
             this.castling     = Util.CastleType.NoCastling
@@ -168,6 +170,34 @@ export class BoardState {
             dict[index]  = generateMoves(this, pieceAtIndex, index)
         }
         return dict as Util.MoveDictionary
+    }
+
+    /** Determines if a given move can reset the halfmove clock
+     *  only captures and pawn moves can do that
+     */
+    private canResetHalfMove(move: Move): boolean {
+        return move.capturedPiece!==AllPieces.NULL || Util.getPiece(move.movingPiece)===Util.MainPieces.Pawn
+    }
+
+    /** Returns a new board with the specified move made on it */
+    public make_move(move: Move): BoardState {
+        if (move.castling || move.enPassant || move.promotion) throw new Error("Not implemented");
+        if (move.movingPiece!==this.board[move.from]) {console.log(move); throw new Error("Corrupted move")}
+
+        let new_board = new BoardState()
+        new_board.board  = this.board.concat() as Util.MailBox88
+        new_board._killed   = this._killed
+        if (move.capturedPiece!==AllPieces.NULL) new_board._killed.push(Util.serializePiece(move.capturedPiece))
+        new_board.board[move.to]   = move.movingPiece
+        new_board.board[move.from] = AllPieces.NULL
+
+        new_board.current_side = Util.getOppositeFamily(this.current_side)
+        new_board.full_move    = this.full_move + Number(this.current_side===Util.Family.Black)
+        new_board.half_move    = this.canResetHalfMove(move) ? 0 : (this.half_move + 1)
+        new_board._moveList    = new_board.genMoves()
+        new_board.castling     = this.castling //TODO
+        new_board.enpassant_sq = this.enpassant_sq //TODO
+        return new_board
     }
 
     /** Checks if a piece at a position is able to make a move */

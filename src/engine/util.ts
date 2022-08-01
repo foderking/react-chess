@@ -203,3 +203,8 @@ export function generateRandomString(N=10) {
 	}
  return result;
 }
+
+export function getOppositeFamily(fam: Family): Family{
+    if (fam===Family.Black) return Family.White
+    else return Family.Black
+}
