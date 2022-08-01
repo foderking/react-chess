@@ -13,14 +13,14 @@ import { Ranks, Files } from './Components/Coords'
 
 const App = () => {
   const [isCheckmate, setCheckmate] = useState(null)
-  const [player, setPlayer] = useState(true) // white is to play if player is `true` else, its black
 
-  const [promoted_family, setPromoFamily] = useState<Family>(null)
-  const [promoted_loc   , setPromoLocation] = useState<BoardPosition>(null)
-  const [isPromotion, setPromotion] = useState<boolean>(false) // controls whether the promotion popup shows
   const [history, setHistory] = useState([/*1,2,3,4,5,1,2,3,4,5,1 ,2,3,4,5,1,5,1 ,2,3,4,5,5,1 ,2,3,4,5,5,1 ,2,3,4,5 ,2,3,4,5*/])
 
+  const [promoted_loc   , setPromoLocation] = useState<BoardPosition>(null)
+  const [promoted_family, setPromoFamily  ] = useState<Family>(null)
+  const [isPromotion    , setPromotion    ] = useState<boolean>(false)
   const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
+  // const [boardState, setBoardState] = useState<BoardState>(new BoardState())
   const [canKill , setCanKill] = useState<MoveMapping>(defaultMoveMapping())
   const [canMove , setCanMove] = useState<MoveMapping>(defaultMoveMapping())
   const [clickOn , setClickOn] = useState<boolean>(false)
@@ -33,12 +33,12 @@ const App = () => {
   useEffect(() => {
     //setBoardState(new BoardState())
     console.log(boardState)
-    console.log(serializeBoardPosition())
+    // console.log(serializeBoardPosition())
     //setmoveList(boardState.generateMoves())
-    console.log(defaultMoveMapping())
-  }, [])
+    // console.log(defaultMoveMapping())
+  }, [boardState])
 
- function finishPawnPromotion(piece: string) {
+  function finishPawnPromotion(piece: string) {
     boardState.board[promoted_loc] = deserializePiece(piece)
     setPromotion(false)
     setPromoFamily(null)
@@ -124,7 +124,7 @@ const App = () => {
       }
       {
         isCheckmate &&
-        <Checkmate king={player ? "white" : "black"} okay={() => setCheckmate(false)} />
+        <Checkmate king={whiteIsMain ? "white" : "black"} okay={() => setCheckmate(false)} />
       }
 
       <div className='main-view'>
@@ -142,7 +142,8 @@ const App = () => {
                 isCheckd   ={isCheckd}
                 selected   ={selected}
                 whiteMain  ={whiteIsMain}
-                handleClick={handleSquareClick} />
+                handleClick={handleSquareClick} 
+              />
             }
             <Ranks mainSide={whiteIsMain}/>
             <Files mainSide={whiteIsMain}/>
@@ -152,7 +153,9 @@ const App = () => {
         <RightSidebar history={history} />
       </div>
       <button onClick={(e) => {e.preventDefault(); setMain(!whiteIsMain)}}>Switch</button>
-
+      {
+        boardState._killed.map(each => <span style={{fontFamily: "monospace", background: "white"} }>{each}</span>)
+      }
     </div>
     </React.StrictMode>
   )
@@ -169,13 +172,14 @@ interface CBoardProps {
 }
 
 const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, whiteMain,handleClick }: CBoardProps) => {
+  const wMapping = serializeBoardPosition()
+                    .map(each =>  [(8-parseInt(each[1])).toString(), each])
+                    .sort()
+                    .map(each => each[1])
   return (
     <div className='board' >
       {
-        serializeBoardPosition()
-          .map(each =>  [(whiteMain ? 8-parseInt(each[1]) : each[1]).toString(), each])
-          .sort()
-          .map(each => each[1])
+        (whiteMain ? wMapping : wMapping.reverse())
           .map(each => each.toLowerCase())
           .map(each =>
             <div

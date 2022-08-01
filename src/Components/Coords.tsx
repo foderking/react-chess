@@ -8,11 +8,12 @@ interface CoordProps {
 }
 
 export function Ranks({mainSide}: CoordProps) {
-  let main = !mainSide
+  let arr  = ["1","2","3","4","5","6","7","8"]
+  let main = false
   return (
     <div className="ranks coords">
       {
-        ["1","2","3","4","5","6","7","8"]
+        (mainSide ? arr : arr.reverse())
           .map(each => {
             main = !main
             return <div key={each} className={`${main ? "w" : "b"} coord`}>{each}</div>
@@ -23,11 +24,12 @@ export function Ranks({mainSide}: CoordProps) {
   );
 }
 export function Files({mainSide}: CoordProps) {
-  let main = mainSide
+  let arr = ["a","b","c","d","e","f","g","h"]
+  let main = true
   return (
     <div className="files coords">
       {
-        ["a","b","c","d","e","f","g","h"]
+        (mainSide ? arr : arr.reverse())
           .map(each => {
             main = !main
             return <div key={each} className={`${main ? "w" : "b"} coord`}>{each}</div>
