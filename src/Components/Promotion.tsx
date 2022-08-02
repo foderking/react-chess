@@ -8,7 +8,7 @@ interface PromotionProp {
   finishPromotion: (each: string) => void
 }
 
-export default function Promotion({ family, finishPromotion }: PromotionProp)
+export default function Promotion({ family, finishPromotion }: PromotionProp): JSX.Element
 {
   const white_promotions = [white_rook, white_bishop, white_knight, white_queen]
   const black_promotions = [black_rook, black_bishop, black_knight, black_queen]

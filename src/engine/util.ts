@@ -1,5 +1,8 @@
 import { Move } from "./movegen"
 
+export const ranks = ["1", "2", "3", "4", "5", "6", "7", "8"]
+export const files = ["a", "b", "c", "d", "e", "f", "g", "h"]
+
 export enum MainPieces {
     Pawn, Rook, Knight, Bishop, Queen, King, NULL
 }
@@ -79,13 +82,26 @@ export type MoveDictionary = Record<BoardPosition, Move[]>
 
 export type MoveMapping = Record<BoardPosition, boolean>
 
+export type MDict<T> = {
+    [index in BoardPosition]?: T
+}
 export function defaultMoveMapping(): MoveMapping {
-    let dict = {}
+    let dict: MDict<boolean> = {}
     for (let pos of serializeBoardPosition()) {
         dict[parsePosition(pos[0], pos[1])] = false
     }
     return dict as MoveMapping
 }
+
+/** Gets the string rep of a board position
+ * eg `BoardPosition.D5` => "d5"
+ */
+export function getPositionNotation(pos: BoardPosition): string {
+    let rank = getRank(pos)
+    let file = getFile(pos)
+    return files[file].concat(ranks[rank])
+}
+
 /** Checks if a position is col-row form is valid
  * if it isn't raises an error, else returns thier indices
  */
@@ -101,20 +117,21 @@ function validatePosition(col: string, row: string): [number, number] {
 /** Given a string in form "colrow" returns it's Position */
 export function parsePosition(col: string, row: string): BoardPosition {
     let [colIndex, rowIndex] = validatePosition(col.toLowerCase(), row.toLowerCase())
-    // rowIndex = 7-rowIndex // little endian rank-file mapping 
     return (rowIndex << 4) + colIndex
 }
 
 /** Returns board positions as an array of 64 strings */
 export function serializeBoardPosition(): string[] {
-    return Object.values(BoardPosition).slice(0,64) as string[]
+    return (Object.values(BoardPosition)
+            .slice(0,64) as string[])
+            .map(each => each.toLowerCase())
 }
 
 /** Gets color of square at position */
 export function getSquareColor(col: string, row: string): string {
     let final = (color: boolean, dist: number) => dist%2===0 ? color : !color
     let [colIndex, rowIndex] = validatePosition(col, row)
-    let start = final(true, rowIndex)
+    let start = final(false, rowIndex)
     return serializeFamily(Number(final(start, colIndex)))
 }
 

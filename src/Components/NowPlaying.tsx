@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function NowPlaying() {
+export default function NowPlaying(): JSX.Element {
 	return (
 		<div className="now-playing text-center">
 			<h3>

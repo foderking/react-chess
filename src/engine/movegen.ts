@@ -1,5 +1,5 @@
 import { BoardState } from "./board";
-import { AllPieces, BoardPosition, Family, getPiece, getPieceColor, isPromotable, MainPieces, Ranks } from "./util";
+import { AllPieces, BoardPosition, Family, getPiece, getPieceColor, getPositionNotation, isPromotable, MainPieces, Ranks } from "./util";
 
 export interface Move {
     to: BoardPosition
@@ -9,6 +9,18 @@ export interface Move {
     promotion?: boolean
     enPassant?: BoardPosition
     castling? : number
+}
+
+export function getMoveNotation(move: Move): string {
+    if (move.castling || move.enPassant || move.promotion) throw new Error("not implemented");
+    const pieceNames = " RNBQK"
+    let captureField = move.capturedPiece===AllPieces.NULL ? "" : "x"
+    let toField      = getPositionNotation(move.to)
+    let pieceField   = move.capturedPiece!==AllPieces.NULL && getPiece(move.movingPiece)===MainPieces.Pawn
+                        ? getPositionNotation(move.from)[0]
+                        : pieceNames[getPiece(move.movingPiece)]
+
+    return (pieceField + captureField + toField).trimStart()
 }
 
 export function generateMoves(board: BoardState, piece: AllPieces, square: BoardPosition): Move[] {

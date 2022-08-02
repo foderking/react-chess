@@ -10,22 +10,21 @@ import {
   AllPieces, BoardPosition, defaultMoveMapping, deserializePiece, Family, getSquareColor, MoveMapping, parsePosition, serializeBoardPosition, serializePiece
 } from './engine/util'
 import { Ranks, Files } from './Components/Coords'
+import { Stats } from './Components/Stats'
 
 const App = () => {
-  const [isCheckmate, setCheckmate] = useState(null)
+  const [isCheckmate, setCheckmate] = useState<boolean>(false)
 
-  const [history, setHistory] = useState([/*1,2,3,4,5,1,2,3,4,5,1 ,2,3,4,5,1,5,1 ,2,3,4,5,5,1 ,2,3,4,5,5,1 ,2,3,4,5 ,2,3,4,5*/])
-
-  const [promoted_loc   , setPromoLocation] = useState<BoardPosition>(null)
-  const [promoted_family, setPromoFamily  ] = useState<Family>(null)
+  const [promoted_loc   , setPromoLocation] = useState<BoardPosition>()
+  const [promoted_family, setPromoFamily  ] = useState<Family>()
   const [isPromotion    , setPromotion    ] = useState<boolean>(false)
   const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
   // const [boardState, setBoardState] = useState<BoardState>(new BoardState())
   const [canKill , setCanKill] = useState<MoveMapping>(defaultMoveMapping())
   const [canMove , setCanMove] = useState<MoveMapping>(defaultMoveMapping())
   const [clickOn , setClickOn] = useState<boolean>(false)
-  const [selected, setSelect ] = useState<BoardPosition>(null)
-  const [isCheckd, setCheckd ] = useState<BoardPosition>(null)
+  const [selected, setSelect ] = useState<BoardPosition | null>(null)
+  const [isCheckd, setCheckd ] = useState<BoardPosition | null>(null)
   const [whiteIsMain, setMain] = useState<boolean>(true)
 
   const _defaultMoveMap = defaultMoveMapping()
@@ -39,10 +38,12 @@ const App = () => {
   }, [boardState])
 
   function finishPawnPromotion(piece: string) {
+    if (!promoted_loc) throw new Error("promoted location not set for some reason");
+    
     boardState.board[promoted_loc] = deserializePiece(piece)
     setPromotion(false)
-    setPromoFamily(null)
-    setPromoLocation(null)
+    // setPromoFamily(null)
+    // setPromoLocation(null)
     console.log(piece, deserializePiece(piece))
   }
 
@@ -70,6 +71,7 @@ const App = () => {
           - if the square is not a valid target location, and not a valid piece to move, then ... 
             the previously generated moves are discarded, and clickOn is reset to off
     */
+
     // if clickOn is off and a valid square is clicked
     if (!clickOn && boardState.isValidPiece(pos)) {
       let move = Object.assign({}, _defaultMoveMap)
@@ -85,7 +87,9 @@ const App = () => {
     }
     // if a valid target location for current move is clicked
     else if (clickOn && (canKill[pos] || canMove[pos])){
+      if (!selected) throw new Error("selected not set for some reason");
       let moveToMake = boardState._moveList[selected].find(each => each.to===pos)
+      if (!moveToMake) throw new Error("movetoMake not found for some reason");
       setBoardState(boardState.make_move(moveToMake, startPawnPromotion))
       setClickOn(false)
       setCanKill(_defaultMoveMap)
@@ -120,7 +124,7 @@ const App = () => {
 
       {
         isPromotion &&
-        <Promotion family={promoted_family} finishPromotion={finishPawnPromotion} />
+        <Promotion family={promoted_family as Family} finishPromotion={finishPawnPromotion} />
       }
       {
         isCheckmate &&
@@ -150,12 +154,13 @@ const App = () => {
           </div>
         </div>
 
-        <RightSidebar history={history} />
+        <RightSidebar history={boardState._pastMoves} />
       </div>
-      <button onClick={(e) => {e.preventDefault(); setMain(!whiteIsMain)}}>Switch</button>
-      {
-        boardState._killed.map(each => <span style={{fontFamily: "monospace", background: "white"} }>{each}</span>)
-      }
+      <Stats
+        board_state={boardState}
+        check_pos = {isCheckd}
+        click={(e) => {e.preventDefault(); setMain(!whiteIsMain)}}
+      />
     </div>
     </React.StrictMode>
   )
@@ -165,8 +170,8 @@ interface CBoardProps {
   board_state: BoardState
   canKill    : MoveMapping
   canMove    : MoveMapping
-  selected   : BoardPosition
-  isCheckd   : BoardPosition
+  selected   : BoardPosition | null
+  isCheckd   : BoardPosition | null
   whiteMain  : boolean
   handleClick: <T>(e: React.MouseEvent<T>, pos: string) => void
 }
@@ -189,8 +194,8 @@ const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, whiteMain,h
                         ${getSquareColor(each[0], each[1])}
            							${ canKill[parsePosition(each[0],each[1])]   ? 'kill'    : '' }
            							${ canMove[parsePosition(each[0],each[1])]   ? 'active'  : '' }
-                        ${ selected===parsePosition(each[0],each[1]) ? "selected": "" }
-                        ${ isCheckd===parsePosition(each[0],each[1]) ? "check"   : "" }
+                        ${ selected && selected===parsePosition(each[0],each[1]) ? "selected": "" }
+                        ${ isCheckd && isCheckd===parsePosition(each[0],each[1]) ? "check"   : "" }
               `}
               onClick={(e) => handleClick(e, each)}
             >

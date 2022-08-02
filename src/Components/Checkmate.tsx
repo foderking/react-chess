@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function Checkmate({ king, okay })
+export default function Checkmate({ king, okay }): JSX.Element
 {
 	return (
 		<div className="promotion_popup">

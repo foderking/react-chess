@@ -1,7 +1,7 @@
  import React from 'react'
 
 
-export default function Navbar() {
+export default function Navbar(): JSX.Element {
 	return(
 		<nav id='nav' className="navbar navbar-expand-lg navbar-dark ">
 			<button className="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
@@ -28,11 +28,6 @@ export default function Navbar() {
 						<a className="nav-link" href="#!">Disabled</a>
 					</li>
 				</ul>
-				{/* <span classNameName='float-right'>
-					<form className="form-inline my-2 my-lg-0">
-						<input className="form-control mr-sm-2" type="text" placeholder="Search" />
-					</form>
-				</span> */}
 			</div>
 		</nav>
 	)

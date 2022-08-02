@@ -5,6 +5,8 @@ import { AllPieces } from "./util"
 
 export const defaultFenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 const digitRegex = /\d+/
+
+
 /**
  * Represent the board state
  */
@@ -22,13 +24,14 @@ export class BoardState {
     /** Number of full moves in the game */
     public full_move   : number
 
-    public _moveList: Util.MoveDictionary
-    public _killed  : Array<string>
+    public _moveList : Util.MoveDictionary
+    public _killed   : Array<string>
+    public _pastMoves: Array<Move>
 
     static fen_regex = /^((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8}) ([wb]) (-|K?Q?k?q?) (-|[a-f][1-8]) (\d{1,2}|100) (\d+)$/g
 
-    private parsePiece(_board: string) {
-        this.board = new Array<AllPieces>(128) as Util.MailBox88
+    private parsePiece(_board: string): Util.MailBox88 {
+        let board = new Array<AllPieces>(128) as Util.MailBox88
         let next = 0x10
         let current_pos = Util.BoardPosition.A1
         for (let row of _board.split("/").reverse()) {
@@ -38,7 +41,7 @@ export class BoardState {
                     let num = parseInt(pos)
                     for (let i=0; i<num; i++ ) {
                         //console.log(current_pos.toString(2).padStart(8, "0"))
-                        this.board[current_pos++] = AllPieces.NULL
+                        board[current_pos++] = AllPieces.NULL
                         check++
                     }
                     continue
@@ -46,29 +49,29 @@ export class BoardState {
                 //console.log(current_pos.toString(2).padStart(8, "0"))
                 switch (pos) {
                     case 'p':
-                        this.board[current_pos++] = AllPieces.BlackPawn  ; break;
+                        board[current_pos++] = AllPieces.BlackPawn  ; break;
                     case 'r':
-                        this.board[current_pos++] = AllPieces.BlackRook  ; break;
+                        board[current_pos++] = AllPieces.BlackRook  ; break;
                     case 'b':
-                        this.board[current_pos++] = AllPieces.BlackBishop; break;
+                        board[current_pos++] = AllPieces.BlackBishop; break;
                     case 'n':
-                        this.board[current_pos++] = AllPieces.BlackKnight; break;
+                        board[current_pos++] = AllPieces.BlackKnight; break;
                     case 'q':
-                        this.board[current_pos++] = AllPieces.BlackQueen ; break;
+                        board[current_pos++] = AllPieces.BlackQueen ; break;
                     case 'k':
-                        this.board[current_pos++] = AllPieces.BlackKing  ; break;
+                        board[current_pos++] = AllPieces.BlackKing  ; break;
                     case 'P':
-                        this.board[current_pos++] = AllPieces.WhitePawn  ; break;
+                        board[current_pos++] = AllPieces.WhitePawn  ; break;
                     case 'R':
-                        this.board[current_pos++] = AllPieces.WhiteRook  ; break;
+                        board[current_pos++] = AllPieces.WhiteRook  ; break;
                     case 'B':
-                        this.board[current_pos++] = AllPieces.WhiteBishop; break;
+                        board[current_pos++] = AllPieces.WhiteBishop; break;
                     case 'N':
-                        this.board[current_pos++] = AllPieces.WhiteKnight; break;
+                        board[current_pos++] = AllPieces.WhiteKnight; break;
                     case 'Q':
-                        this.board[current_pos++] = AllPieces.WhiteQueen ; break;
+                        board[current_pos++] = AllPieces.WhiteQueen ; break;
                     case 'K':
-                        this.board[current_pos++] = AllPieces.WhiteKing  ; break;
+                        board[current_pos++] = AllPieces.WhiteKing  ; break;
                     default:
                         throw new Error("Invalid board");
                 }
@@ -78,42 +81,42 @@ export class BoardState {
             current_pos = next
             next += 16 // skips the dummy board
         }
+        return board
     }
 
-    private parseSideToMove(_side2move: string) {
+    private parseSideToMove(_side2move: string): Util.Family {
         switch(_side2move) {
             case "w":
-                this.current_side = Util.Family.White
-                break;
+                return Util.Family.White
             case "b":
-                this.current_side = Util.Family.Black
-                break
+                return Util.Family.Black
             default:
                 throw new Error("Invalid fen string");
         }
     }
 
-    private parseCastling(_castling: string) {
-        this.castling = Util.CastleType.NoCastling
+    private parseCastling(_castling: string): Util.CastleType {
+        let castling = Util.CastleType.NoCastling
         if (_castling !== "-")
             for (let ch of _castling) {
                 switch (ch) {
                     case 'K':
-                        this.castling |= Util.CastleType.WKingCastle
+                        castling |= Util.CastleType.WKingCastle
                         break;
                     case 'Q':
-                        this.castling |= Util.CastleType.WQueenCastle
+                        castling |= Util.CastleType.WQueenCastle
                         break;
                     case 'q':
-                        this.castling |= Util.CastleType.BQueenCastle
+                        castling |= Util.CastleType.BQueenCastle
                         break;
                     case 'k':
-                        this.castling |= Util.CastleType.BKingCastle
+                        castling |= Util.CastleType.BKingCastle
                         break;
                     default:
                         throw new Error("Invalid fen string");
                 }
             }
+        return castling
     }
 
     constructor(fen_string = defaultFenString) {
@@ -126,11 +129,11 @@ export class BoardState {
         let _fullmove: string  = match[6]
 
         // parse pieces
-        this.parsePiece(_board)
+        this.board  = this.parsePiece(_board)
         // parse side to move
-        this.parseSideToMove(_side2move)
+        this.current_side = this.parseSideToMove(_side2move)
         // parse castling
-        this.parseCastling(_castling)
+        this.castling = this.parseCastling(_castling)
         // parse enpassant square
         if (_enpassant==="-") this.enpassant_sq = Util.BoardPosition.NULL
         else this.enpassant_sq = Util.parsePosition(_enpassant[0], _enpassant[1])
@@ -141,6 +144,7 @@ export class BoardState {
 
         this._moveList = this.genMoves()
         this._killed   = []
+        this._pastMoves= []
 
         /*
             this.castling     = Util.CastleType.NoCastling
@@ -163,7 +167,7 @@ export class BoardState {
     }
 
     private  genMoves(): Util.MoveDictionary {
-        let dict = {}
+        let dict: Util.MDict<Move[]> = {}
         for (let pos of Util.serializeBoardPosition()) {
             let index = Util.parsePosition(pos[0], pos[1])
             let pieceAtIndex = this.board[index]
@@ -194,6 +198,7 @@ export class BoardState {
         new_board.current_side = Util.getOppositeFamily(this.current_side)
         new_board.full_move    = this.full_move + Number(this.current_side===Util.Family.Black)
         new_board.half_move    = this.canResetHalfMove(move) ? 0 : (this.half_move + 1)
+        new_board._pastMoves   = this._pastMoves.concat(move)//move)
         new_board._moveList    = new_board.genMoves()
         new_board.castling     = this.castling //TODO
         new_board.enpassant_sq = this.enpassant_sq //TODO

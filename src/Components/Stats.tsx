@@ -1,31 +1,30 @@
 import React from 'react';
-import { generateRandomString } from '../engine/util';
+import { BoardState } from '../engine/board';
+import { BoardPosition, generateRandomString, serializeFamily } from '../engine/util';
 
-function Stats({ location, player, isCheck, kills, last_piece, last_location, clicked_piece }) {
+interface StatProps {
+  board_state: BoardState
+  check_pos  : BoardPosition | null
+  click: (e: React.MouseEvent<HTMLButtonElement,MouseEvent>) => void
+}
+
+export function Stats({ board_state, check_pos, click  }: StatProps): JSX.Element {
   return (
-    <div className="stats">
-      <span id='loc-state'>{location ? location : "..."}</span>
+    <div className="stats" style={{fontFamily: "monospace", color: "white"} }>
+      {/* <span id='loc-state'>{location ? location : "..."}</span> */}
       <div>
-        active player: {player ? "white" : "black"}
+        active player: {serializeFamily(board_state.current_side)}
       </div>
       <div>
-        check : {isCheck ? isCheck : ""}
+        check : {check_pos}
       </div>
       <div>
         kills :
-        {kills.length
-          ? kills.map(
-            each => <span key={generateRandomString(5)}>{each}</span>
-          )
-          : "..."}
+      {
+        board_state._killed.map(each => <span key={generateRandomString()}>{each}</span>)
+      }
       </div>
-      <div>
-        last: {last_piece ? last_piece : ""}
-      </div>
-      <div>
-        last location: {last_location ? last_location : ""}
-      </div>
-      {clicked_piece ? clicked_piece : ".."}
+      <button onClick={click}>Switch</button>
     </div>
   );
 }
