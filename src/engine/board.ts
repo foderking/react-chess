@@ -23,30 +23,31 @@ export class BoardState {
     public half_move   : number
     /** Number of full moves in the game */
     public full_move   : number
-
+    /** Dictionary of all valid moves in the board indexed by the location of the piece making them */
     public _moveList : Util.MoveDictionary
+    /** All the pieces that have been killed during the game */
     public _killed   : Array<string>
+    /** An array of past moves made */
     public _pastMoves: Array<Move>
 
     static fen_regex = /^((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8}) ([wb]) (-|K?Q?k?q?) (-|[a-f][1-8]) (\d{1,2}|100) (\d+)$/g
 
-    private parsePiece(_board: string): Util.MailBox88 {
+    private static parsePiece(_board: string): Util.MailBox88 {
         let board = new Array<AllPieces>(128) as Util.MailBox88
-        let next = 0x10
+        let next_pos = 0x10
         let current_pos = Util.BoardPosition.A1
+
         for (let row of _board.split("/").reverse()) {
             let check = 0 // checks that theres exactlly 8 positions in each row
             for (let pos of row) {
                 if (pos.match(digitRegex)) {
                     let num = parseInt(pos)
-                    for (let i=0; i<num; i++ ) {
-                        //console.log(current_pos.toString(2).padStart(8, "0"))
+                    for (let i=0; i<num; i++ )
                         board[current_pos++] = AllPieces.NULL
-                        check++
-                    }
+                    check += num
                     continue
                 }
-                //console.log(current_pos.toString(2).padStart(8, "0"))
+                
                 switch (pos) {
                     case 'p':
                         board[current_pos++] = AllPieces.BlackPawn  ; break;
@@ -73,29 +74,29 @@ export class BoardState {
                     case 'K':
                         board[current_pos++] = AllPieces.WhiteKing  ; break;
                     default:
-                        throw new Error("Invalid board");
+                        throw new Util.NotExpectedError()
                 }
                 check++
             }
-            assert(check===8, "Invalid Piece")
-            current_pos = next
-            next += 16 // skips the dummy board
+            Util.checkCondition(check===8)
+            current_pos = next_pos
+            next_pos += 16 // skips the dummy board
         }
         return board
     }
 
-    private parseSideToMove(_side2move: string): Util.Family {
+    private static parseSideToMove(_side2move: string): Util.Family {
         switch(_side2move) {
             case "w":
                 return Util.Family.White
             case "b":
                 return Util.Family.Black
             default:
-                throw new Error("Invalid fen string");
+                throw new Util.NotExpectedError()
         }
     }
 
-    private parseCastling(_castling: string): Util.CastleType {
+    private static parseCastling(_castling: string): Util.CastleType {
         let castling = Util.CastleType.NoCastling
         if (_castling !== "-")
             for (let ch of _castling) {
@@ -113,7 +114,7 @@ export class BoardState {
                         castling |= Util.CastleType.BKingCastle
                         break;
                     default:
-                        throw new Error("Invalid fen string");
+                        throw new Util.NotExpectedError()
                 }
             }
         return castling
@@ -129,14 +130,16 @@ export class BoardState {
         let _fullmove: string  = match[6]
 
         // parse pieces
-        this.board  = this.parsePiece(_board)
+        this.board        = BoardState.parsePiece(_board)
         // parse side to move
-        this.current_side = this.parseSideToMove(_side2move)
+        this.current_side = BoardState.parseSideToMove(_side2move)
         // parse castling
-        this.castling = this.parseCastling(_castling)
+        this.castling     = BoardState.parseCastling(_castling)
         // parse enpassant square
-        if (_enpassant==="-") this.enpassant_sq = Util.BoardPosition.NULL
-        else this.enpassant_sq = Util.parsePosition(_enpassant[0], _enpassant[1])
+        if (_enpassant==="-")
+            this.enpassant_sq = Util.BoardPosition.NULL
+        else
+            this.enpassant_sq = Util.parsePosition(_enpassant[0], _enpassant[1])
         // parse halfmove
         this.half_move = parseInt(_halfmove)
         // parse fullmove
@@ -145,25 +148,6 @@ export class BoardState {
         this._moveList = this.genMoves()
         this._killed   = []
         this._pastMoves= []
-
-        /*
-            this.castling     = Util.CastleType.NoCastling
-                                | Util.CastleType.BKingCastle
-                                | Util.CastleType.BQueenCastle
-                                | Util.CastleType.WKingCastle
-                                | Util.CastleType.WQueenCastle
-            this.board = [
-                AllPieces.BlackRook  , AllPieces.BlackKnight, AllPieces.BlackBishop, AllPieces.BlackQueen , AllPieces.BlackKing  , AllPieces.BlackBishop, AllPieces.BlackKnight, AllPieces.BlackRook  , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL ,
-                AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.BlackPawn  , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL ,
-                AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL ,
-                AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL ,
-                AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL ,
-                AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL       , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL ,
-                AllPieces.WhitePawn  , AllPieces.WhitePawn  , AllPieces.WhitePawn  , AllPieces.WhitePawn  , AllPieces.WhitePawn  , AllPieces.WhitePawn  , AllPieces.WhitePawn  , AllPieces.WhitePawn  , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL ,
-                AllPieces.WhiteRook  , AllPieces.WhiteKnight, AllPieces.WhiteBishop, AllPieces.WhiteQueen , AllPieces.WhiteKing  , AllPieces.WhiteBishop, AllPieces.WhiteKnight, AllPieces.WhiteRook  , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL , AllPieces.NULL ,
-            ]
-        }
-        */
     }
 
     private  genMoves(): Util.MoveDictionary {
@@ -213,7 +197,7 @@ export class BoardState {
     }
 
     private getNewKilledPieces(move: Move): string[] {
-        let killed      = this._killed
+        let killed      = this._killed.concat()
         if (move.capturedPiece!==AllPieces.NULL) killed.push(Util.serializePiece(move.capturedPiece))
         return killed
     }

@@ -7,7 +7,7 @@ import Promotion from './Components/Promotion'
 import RightSidebar from './Components/RightSidebar'
 import { BoardState } from './engine/board'
 import { 
-  AllPieces, BoardDictionary, BoardPosition, checkCondition, ConditionNotSatisfiedError, deserializePiece, Family, getPromotionTypes, getSquareColor, NotExpectedError, parsePosition, serializeBoardPosition, serializePiece
+  AllPieces, BoardDictionary, BoardPosition, ConditionNotSatisfiedError, deserializePiece, Family, getPromotionTypes, getSquareColor, NotExpectedError, parsePosition, serializeBoardPosition, serializePiece
 } from './engine/util'
 import { Ranks, Files } from './Components/Coords'
 import { Stats } from './Components/Stats'
@@ -23,6 +23,7 @@ const App = () => {
 
   // const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
   const [boardState, setBoardState] = useState<BoardState>(new BoardState()) /** The current state of the board */
+  const [boardHist , setBoardHist ] = useState<Array<BoardState>>([])        /** Stack of past board states */
 
   // determines which states are visible in UI
   const [canPromote,setPromote] = useState<BoardDictionary<boolean>>({}) /** Indicates a square on the board is the target of a promotion move */
@@ -53,6 +54,7 @@ const App = () => {
     setCanKill({})
     setCanMove({})
     setPromote({})
+    setBoardHist(boardHist.concat(boardState))
     setBoardState(boardState.make_move(moveToMake))
     setClickOn(false)
     setSelect(null)
@@ -106,6 +108,7 @@ const App = () => {
       setCanMove({})
       setPromote({})
 
+      setBoardHist(boardHist.concat(boardState))
       setBoardState(boardState.make_move(moveToMake))
       setClickOn(false)
       setSelect(null)
@@ -166,13 +169,13 @@ const App = () => {
             {
               boardState &&
               <CBoard
-                board_state={ boardState }
-                canKill    ={ canKill }
-                canMove    ={ canMove }
-                isCheckd   ={ isCheckd }
-                selected   ={ selected }
+                board_state={ boardState  }
+                canKill    ={ canKill     }
+                canMove    ={ canMove     }
+                isCheckd   ={ isCheckd    }
+                selected   ={ selected    }
                 whiteMain  ={ whiteIsMain }
-                canPromote ={ canPromote }
+                canPromote ={ canPromote  }
                 handleClick={ handleSquareClick }
               />
             }
@@ -219,7 +222,7 @@ const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, whiteMain, 
               key={each}
               id={each}
               className= {`text-center board-cell col-${each[1]} row-${each[0]}
-                        ${getSquareColor(each[0], each[1])}
+                        ${ getSquareColor(each[0], each[1]) }
            							${ canKill[parsePosition(each[0],each[1])]   ? 'kill'     : '' }
            							${ canMove[parsePosition(each[0],each[1])]   ? 'move'     : '' }
            							${ canPromote[parsePosition(each[0],each[1])]? 'promotion': '' }
@@ -228,7 +231,7 @@ const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, whiteMain, 
               `}
               onClick={(e) => handleClick(e, each)}
             >
-              {serializePiece(board_state.board[parsePosition(each[0], each[1])])}
+              { serializePiece(board_state.board[parsePosition(each[0], each[1])]) }
               {/* {parsePosition(each[0],each[1])} */}
 
             </div>

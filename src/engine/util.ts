@@ -330,7 +330,7 @@ export class ConditionNotSatisfiedError extends Error {
 
 /** Throws an error when something shouldn't happen */
 export class NotExpectedError extends Error {
-    constructor(msg="This wasn't expected") {
+    constructor(msg="An unexpected scenerio occured") {
         super(msg)
     }
 }
