@@ -1,26 +1,35 @@
 import { BoardState } from "./board";
-import { AllPieces, BoardPosition, Family, getPiece, getPieceColor, getPositionNotation, isPromotable, MainPieces, Ranks } from "./util";
+import { AllPieces, BoardPosition, checkCondition, Family, getPiece, getPieceColor, getPositionNotation, isPromotable, MainPieces, NotExpectedError, PromotionTypes, Ranks } from "./util";
 
 export interface Move {
     to: BoardPosition
     from: BoardPosition
     movingPiece: AllPieces
     capturedPiece: AllPieces
-    promotion?: boolean
+    promotion?: PromotionTypes
     enPassant?: BoardPosition
     castling? : number
 }
 
 export function getMoveNotation(move: Move): string {
-    if (move.castling || move.enPassant || move.promotion) throw new Error("not implemented");
+    const promoNames = "RNBQ"
     const pieceNames = " RNBQK"
+    let promoField: string
+
+    if (move.castling || move.enPassant) throw new NotExpectedError()
+
+    if (move.promotion!==undefined) {
+        checkCondition(getPiece(move.movingPiece)===MainPieces.Pawn)
+        promoField = "=" + promoNames[move.promotion]
+    } else promoField = ""
+
     let captureField = move.capturedPiece===AllPieces.NULL ? "" : "x"
     let toField      = getPositionNotation(move.to)
     let pieceField   = move.capturedPiece!==AllPieces.NULL && getPiece(move.movingPiece)===MainPieces.Pawn
                         ? getPositionNotation(move.from)[0]
                         : pieceNames[getPiece(move.movingPiece)]
 
-    return (pieceField + captureField + toField).trimStart()
+    return (pieceField + captureField + toField + promoField).trimStart()
 }
 
 export function generateMoves(board: BoardState, piece: AllPieces, square: BoardPosition): Move[] {
@@ -52,21 +61,44 @@ export function generateMoves(board: BoardState, piece: AllPieces, square: Board
 
 export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardPosition, move_ray: number, kill_ray: [number, number]): Move[] {
     let result: Move[] = []
-    let max_push = 1 + Number(board.canDoublePush(square, getPieceColor(board.board[square])))
+    let max_push = 1 + Number(board.canDoublePush(square))
     let piece_color = getPieceColor(piece)
     // generate normal moves
     let i = 0
     for (let position=square+move_ray; !(position & 0x88) ; position += move_ray) {
         if (i===max_push) break
         if (board.board[position]===AllPieces.NULL) {
-            if (isPromotable(square, piece_color))
+            if (isPromotable(square, piece_color)) {
+                // all different promotion type are also generated
                 result.push({
                     to: position,
                     from: square,
                     movingPiece: piece,
                     capturedPiece: AllPieces.NULL,
-                    promotion: true
+                    promotion: PromotionTypes.Queen
                 })
+                result.push({
+                    to: position,
+                    from: square,
+                    movingPiece: piece,
+                    capturedPiece: AllPieces.NULL,
+                    promotion: PromotionTypes.Rook
+                })
+                result.push({
+                    to: position,
+                    from: square,
+                    movingPiece: piece,
+                    capturedPiece: AllPieces.NULL,
+                    promotion: PromotionTypes.Knight
+                })
+                result.push({
+                    to: position,
+                    from: square,
+                    movingPiece: piece,
+                    capturedPiece: AllPieces.NULL,
+                    promotion: PromotionTypes.Bishop
+                })
+            }
             else
                 result.push({
                     to: position,
@@ -82,14 +114,36 @@ export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardP
     // generate pawn normal attacks
     let pos = square+kill_ray[0]
     if (!(pos & 0x88) && board.board[pos]!==AllPieces.NULL && getPieceColor(board.board[pos])!==piece_color) {
-        if (isPromotable(square, piece_color))
+        if (isPromotable(square, piece_color)) {
             result.push({
                 to: pos,
                 from: square,
                 movingPiece: piece,
                 capturedPiece: board.board[pos],
-                promotion : true
+                promotion : PromotionTypes.Queen
             })
+            result.push({
+                to: pos,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: board.board[pos],
+                promotion : PromotionTypes.Knight
+            })
+            result.push({
+                to: pos,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: board.board[pos],
+                promotion : PromotionTypes.Bishop
+            })
+            result.push({
+                to: pos,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: board.board[pos],
+                promotion : PromotionTypes.Rook
+            })
+        }
         else
             result.push({
                 to: pos,
@@ -100,14 +154,36 @@ export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardP
     }
     pos = square+kill_ray[1]
     if (!(pos & 0x88) && board.board[pos]!==AllPieces.NULL && getPieceColor(board.board[pos])!==piece_color) {
-        if (isPromotable(square, piece_color))
+        if (isPromotable(square, piece_color)) {
             result.push({
                 to: pos,
                 from: square,
                 movingPiece: piece,
                 capturedPiece: board.board[pos],
-                promotion: true,
+                promotion : PromotionTypes.Queen
             })
+            result.push({
+                to: pos,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: board.board[pos],
+                promotion : PromotionTypes.Knight
+            })
+            result.push({
+                to: pos,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: board.board[pos],
+                promotion : PromotionTypes.Bishop
+            })
+            result.push({
+                to: pos,
+                from: square,
+                movingPiece: piece,
+                capturedPiece: board.board[pos],
+                promotion : PromotionTypes.Rook
+            })
+        }
         else
             result.push({
                 to: pos,

@@ -167,7 +167,7 @@ export class BoardState {
     }
 
     private  genMoves(): Util.MoveDictionary {
-        let dict: Util.MDict<Move[]> = {}
+        let dict: Util.BoardDictionary<Move[]> = {}
         for (let pos of Util.serializeBoardPosition()) {
             let index = Util.parsePosition(pos[0], pos[1])
             let pieceAtIndex = this.board[index]
@@ -183,26 +183,67 @@ export class BoardState {
         return move.capturedPiece!==AllPieces.NULL || Util.getPiece(move.movingPiece)===Util.MainPieces.Pawn
     }
 
+    private getNewBoard(move: Move): Util.MailBox88 {
+        let new_board  =this.board.concat() as Util.MailBox88
+        new_board[move.to]   = move.movingPiece
+        new_board[move.from] = AllPieces.NULL
+
+        if (move.promotion !== undefined) {
+            Util.checkCondition(Util.getPiece(new_board[move.to])===Util.MainPieces.Pawn)
+            Util.checkCondition(Util.getPieceColor(new_board[move.to])===this.current_side)
+
+            switch (move.promotion) {
+                case Util.PromotionTypes.Queen:
+                    new_board[move.to] = Util.getAllPiece(Util.MainPieces.Queen, this.current_side)
+                    break;
+                case Util.PromotionTypes.Knight:
+                    new_board[move.to] = Util.getAllPiece(Util.MainPieces.Knight, this.current_side)
+                    break;
+                case Util.PromotionTypes.Bishop:
+                    new_board[move.to] = Util.getAllPiece(Util.MainPieces.Bishop, this.current_side)
+                    break;
+                case Util.PromotionTypes.Rook:
+                    new_board[move.to] = Util.getAllPiece(Util.MainPieces.Rook, this.current_side)
+                    break;
+                default:
+                    throw new Util.NotExpectedError()
+            }
+        }
+        return new_board
+    }
+
+    private getNewKilledPieces(move: Move): string[] {
+        let killed      = this._killed
+        if (move.capturedPiece!==AllPieces.NULL) killed.push(Util.serializePiece(move.capturedPiece))
+        return killed
+    }
+
+    private getNewFullMove(): number {
+        return this.full_move + Number(this.current_side===Util.Family.Black)
+    }
+
+    private getNewHalfMove(move: Move): number {
+        return this.canResetHalfMove(move) ? 0 : (this.half_move + 1)
+    }
+
     /** Returns a new board with the specified move made on it */
-    public make_move(move: Move, startPromo: (fam: Util.Family, loc: Util.BoardPosition) => void): BoardState {
+    public make_move(move: Move): BoardState {
         if (move.castling || move.enPassant) throw new Error("Not implemented");
         if (move.movingPiece!==this.board[move.from]) {console.log(move); throw new Error("Corrupted move")}
 
         let new_board = new BoardState()
-        new_board.board  = this.board.concat() as Util.MailBox88
-        new_board._killed   = this._killed
-        if (move.capturedPiece!==AllPieces.NULL) new_board._killed.push(Util.serializePiece(move.capturedPiece))
-        new_board.board[move.to]   = move.movingPiece
-        new_board.board[move.from] = AllPieces.NULL
 
-        new_board.current_side = Util.getOppositeFamily(this.current_side)
-        new_board.full_move    = this.full_move + Number(this.current_side===Util.Family.Black)
-        new_board.half_move    = this.canResetHalfMove(move) ? 0 : (this.half_move + 1)
-        new_board._pastMoves   = this._pastMoves.concat(move)//move)
-        new_board._moveList    = new_board.genMoves()
         new_board.castling     = this.castling //TODO
         new_board.enpassant_sq = this.enpassant_sq //TODO
-        if (move.promotion) startPromo(this.current_side, move.to)
+        new_board.full_move    = this.getNewFullMove()
+        new_board.board        = this.getNewBoard(move)
+        new_board._killed      = this.getNewKilledPieces(move)
+        new_board.current_side = Util.getOppositeFamily(this.current_side)
+        new_board.half_move    = this.getNewHalfMove(move)
+        new_board._pastMoves   = this._pastMoves.concat(move)
+
+        new_board._moveList    = new_board.genMoves()
+
         return new_board
     }
 
@@ -211,12 +252,11 @@ export class BoardState {
         return this.board[pos]!==AllPieces.NULL && Util.getPieceColor(this.board[pos])===this.current_side
     }
 
-    /** Checks if a pawn can make a double push */
-    public canDoublePush(square: Util.BoardPosition, family: Util.Family): boolean {
-        if (Util.getPiece(this.board[square])!==Util.MainPieces.Pawn) throw new Error("Piece must be a pawn")
-        if (Util.getPieceColor(this.board[square])!==family) throw new Error("Invalid color given")
+    /** Checks if a pawn at `square` can make a double push */
+    public canDoublePush(square: Util.BoardPosition): boolean {
+        Util.checkCondition(Util.getPiece(this.board[square])===Util.MainPieces.Pawn)
 
-        if (family===Util.Family.Black) return Util.getRank(square)===Util.Ranks.RANK_7
+        if (Util.getPieceColor(this.board[square])===Util.Family.Black) return Util.getRank(square)===Util.Ranks.RANK_7
         else return Util.getRank(square)===Util.Ranks.RANK_2
     }
 

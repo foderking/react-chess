@@ -7,6 +7,10 @@ export enum MainPieces {
     Pawn, Rook, Knight, Bishop, Queen, King, NULL
 }
 
+export enum PromotionTypes {
+    Rook, Knight, Bishop, Queen
+}
+
 /** All possible pieces in a board (including `NULL_PIECE` representing no piece) */
 export enum AllPieces {
     WhitePawn,
@@ -59,7 +63,7 @@ export enum BoardPosition {
 }
 
 export enum Ranks {
-    RANK_1=1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8
+    RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8
 }
 
 export enum Files {
@@ -82,11 +86,11 @@ export type MoveDictionary = Record<BoardPosition, Move[]>
 
 export type MoveMapping = Record<BoardPosition, boolean>
 
-export type MDict<T> = {
+export type BoardDictionary<T> = {
     [index in BoardPosition]?: T
 }
 export function defaultMoveMapping(): MoveMapping {
-    let dict: MDict<boolean> = {}
+    let dict: BoardDictionary<boolean> = {}
     for (let pos of serializeBoardPosition()) {
         dict[parsePosition(pos[0], pos[1])] = false
     }
@@ -146,8 +150,8 @@ export function serializeFamily(fam: Family): string {
 /** Checks if a pawn at `square` can do a promotion */
 export function isPromotable(square: BoardPosition, fam: Family): boolean {
     // console.log((square))
-    if (fam===Family.White) return getRank(square)+1===Ranks.RANK_7
-    else return getRank(square)+1===Ranks.RANK_2
+    if (fam===Family.White) return getRank(square)===Ranks.RANK_7
+    else return getRank(square)===Ranks.RANK_2
 }
 
 export const white_king='♔', white_queen='♕', white_rook='♖', white_bishop='♗', white_knight='♘', white_pawn='♙'
@@ -241,6 +245,43 @@ export function getPiece(piece: AllPieces): MainPieces {
     }
 }
 
+export function getAllPiece(piece: MainPieces, fam: Family): AllPieces {
+    if (fam===Family.White)
+        switch(piece) {
+            case MainPieces.Pawn  :
+                return AllPieces.WhitePawn
+            case MainPieces.Knight:
+                return AllPieces.WhiteKnight
+            case MainPieces.Bishop:
+                return AllPieces.WhiteBishop
+            case MainPieces.Rook  :
+                return AllPieces.WhiteRook
+            case MainPieces.Queen :
+                return AllPieces.WhiteQueen
+            case MainPieces.King  :
+                return AllPieces.WhiteKing
+
+            default: throw new NotExpectedError()
+        }
+    else
+        switch(piece) {
+            case MainPieces.Pawn  :
+                return AllPieces.BlackPawn
+            case MainPieces.Knight:
+                return AllPieces.BlackKnight
+            case MainPieces.Bishop:
+                return AllPieces.BlackBishop
+            case MainPieces.Rook  :
+                return AllPieces.BlackRook
+            case MainPieces.Queen :
+                return AllPieces.BlackQueen
+            case MainPieces.King  :
+                return AllPieces.BlackKing
+            
+            default: throw new NotExpectedError()
+        }
+}
+
 export function getRank(square: BoardPosition): Ranks {
     return square >> 4
 }
@@ -263,4 +304,32 @@ export function generateRandomString(N=10) {
 export function getOppositeFamily(fam: Family): Family{
     if (fam===Family.Black) return Family.White
     else return Family.Black
+}
+
+export function getPromotionTypes(piece: AllPieces): PromotionTypes {
+    switch(getPiece(piece)) {
+        case MainPieces.Queen : return PromotionTypes.Queen
+        case MainPieces.Rook  : return PromotionTypes.Rook 
+        case MainPieces.Knight: return PromotionTypes.Knight
+        case MainPieces.Bishop: return PromotionTypes.Bishop
+        default: throw new NotExpectedError("Piece must be a valid promotion type!")
+    }
+}
+
+export function checkCondition(condition: boolean, msg?: string) {
+    if (!condition) throw new ConditionNotSatisfiedError(msg)
+}
+
+/** An exception raised when a function call expects a condition to be satisfied, but it's not */
+export class ConditionNotSatisfiedError extends Error {
+    constructor(msg="A prerequisite condition was not satisfied") {
+        super(msg)
+    }
+}
+
+/** Throws an error when something shouldn't happen */
+export class NotExpectedError extends Error {
+    constructor(msg="This wasn't expected") {
+        super(msg)
+    }
 }

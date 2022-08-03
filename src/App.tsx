@@ -7,7 +7,7 @@ import Promotion from './Components/Promotion'
 import RightSidebar from './Components/RightSidebar'
 import { BoardState } from './engine/board'
 import { 
-  AllPieces, BoardPosition, defaultMoveMapping, deserializePiece, Family, getSquareColor, MoveMapping, parsePosition, serializeBoardPosition, serializePiece
+  AllPieces, BoardDictionary, BoardPosition, checkCondition, ConditionNotSatisfiedError, defaultMoveMapping, deserializePiece, Family, getPromotionTypes, getSquareColor, MoveMapping, NotExpectedError, parsePosition, serializeBoardPosition, serializePiece
 } from './engine/util'
 import { Ranks, Files } from './Components/Coords'
 import { Stats } from './Components/Stats'
@@ -18,8 +18,9 @@ const App = () => {
   const [promoted_loc   , setPromoLocation] = useState<BoardPosition>()
   const [promoted_family, setPromoFamily  ] = useState<Family>()
   const [isPromotion    , setPromotion    ] = useState<boolean>(false)
-  const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
-  // const [boardState, setBoardState] = useState<BoardState>(new BoardState())
+  // const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
+  const [boardState, setBoardState] = useState<BoardState>(new BoardState())
+  const [canPromote, setPromote] = useState<BoardDictionary<boolean>>(defaultMoveMapping())
   const [canKill , setCanKill] = useState<MoveMapping>(defaultMoveMapping())
   const [canMove , setCanMove] = useState<MoveMapping>(defaultMoveMapping())
   const [clickOn , setClickOn] = useState<boolean>(false)
@@ -38,12 +39,25 @@ const App = () => {
   }, [boardState])
 
   function finishPawnPromotion(piece: string) {
-    if (!promoted_loc) throw new Error("promoted location not set for some reason");
-    
-    boardState.board[promoted_loc] = deserializePiece(piece)
-    setPromotion(false)
+    let promoted_to = getPromotionTypes(deserializePiece(piece))
+
+    if (promoted_loc===undefined || selected===null) throw new ConditionNotSatisfiedError()
+    let moveToMake = boardState._moveList[selected].find(each => each.to===promoted_loc && each.promotion===promoted_to)
+    if (moveToMake===undefined) throw new ConditionNotSatisfiedError()
+
+
     // setPromoFamily(null)
     // setPromoLocation(null)
+    setPromotion(false)
+
+    setCanKill(_defaultMoveMap)
+    setCanMove(_defaultMoveMap)
+    setPromote({})
+
+    setBoardState(boardState.make_move(moveToMake))
+    setClickOn(false)
+    setSelect(null)
+
     console.log(piece, deserializePiece(piece))
   }
 
@@ -76,43 +90,62 @@ const App = () => {
     if (!clickOn && boardState.isValidPiece(pos)) {
       let move = Object.assign({}, _defaultMoveMap)
       let kill = Object.assign({}, _defaultMoveMap)
+      let promo: BoardDictionary<boolean> = {}
       for (let each of boardState._moveList[pos]) {
-        if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
-        if (each.capturedPiece!==AllPieces.NULL) kill[each.to] = true
+        if (each.promotion !== undefined) promo[each.to] = true
+        else if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
+        else kill[each.to] = true
       }
       setCanKill(kill)
       setCanMove(move)
+      setPromote(promo)
+
       setClickOn(true)
       setSelect(pos)
     }
     // if a valid target location for current move is clicked
     else if (clickOn && (canKill[pos] || canMove[pos])){
-      if (!selected) throw new Error("selected not set for some reason");
+      if (selected===null)   throw new NotExpectedError()
       let moveToMake = boardState._moveList[selected].find(each => each.to===pos)
-      if (!moveToMake) throw new Error("movetoMake not found for some reason");
-      setBoardState(boardState.make_move(moveToMake, startPawnPromotion))
-      setClickOn(false)
+      if (moveToMake===undefined) throw new NotExpectedError()
+
       setCanKill(_defaultMoveMap)
       setCanMove(_defaultMoveMap)
+      setPromote({})
+
+      setBoardState(boardState.make_move(moveToMake))
+      setClickOn(false)
       setSelect(null)
+    }
+    else if (clickOn && (canPromote[pos])){
+      // start pawn promotion
+      setPromotion(true)
+      setPromoFamily(boardState.current_side)
+      setPromoLocation(pos)
     }
     // if another valid square is clicked
     else if (clickOn && boardState.isValidPiece(pos) && pos!==selected){
       let move = Object.assign({}, _defaultMoveMap)
       let kill = Object.assign({}, _defaultMoveMap)
+      let promo: BoardDictionary<boolean> = {}
       for (let each of boardState._moveList[pos]) {
-        if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
-        if (each.capturedPiece!==AllPieces.NULL) kill[each.to] = true
+        if (each.promotion !== undefined) promo[each.to] = true
+        else if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
+        else kill[each.to] = true
       }
       setCanKill(kill)
       setCanMove(move)
+      setPromote(promo)
+
       setSelect(pos)
     }
     // an invalid target location
     else {
-      setClickOn(false)
       setCanKill(_defaultMoveMap)
       setCanMove(_defaultMoveMap)
+      setPromote({})
+
+      setClickOn(false)
       setSelect(null)
     }
   }
@@ -140,17 +173,18 @@ const App = () => {
             {
               boardState &&
               <CBoard
-                board_state={boardState}
-                canKill    ={canKill}
-                canMove    ={canMove}
-                isCheckd   ={isCheckd}
-                selected   ={selected}
-                whiteMain  ={whiteIsMain}
-                handleClick={handleSquareClick} 
+                board_state={ boardState }
+                canKill    ={ canKill }
+                canMove    ={ canMove }
+                isCheckd   ={ isCheckd }
+                selected   ={ selected }
+                whiteMain  ={ whiteIsMain }
+                canPromote ={ canPromote }
+                handleClick={ handleSquareClick }
               />
             }
-            <Ranks mainSide={whiteIsMain}/>
-            <Files mainSide={whiteIsMain}/>
+            <Ranks mainSide={ whiteIsMain }/>
+            <Files mainSide={ whiteIsMain }/>
           </div>
         </div>
 
@@ -172,11 +206,12 @@ interface CBoardProps {
   canMove    : MoveMapping
   selected   : BoardPosition | null
   isCheckd   : BoardPosition | null
+  canPromote : BoardDictionary<boolean>
   whiteMain  : boolean
   handleClick: <T>(e: React.MouseEvent<T>, pos: string) => void
 }
 
-const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, whiteMain,handleClick }: CBoardProps) => {
+const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, whiteMain, canPromote, handleClick }: CBoardProps) => {
   const wMapping = serializeBoardPosition()
                     .map(each =>  [(8-parseInt(each[1])).toString(), each])
                     .sort()
@@ -192,8 +227,9 @@ const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, whiteMain,h
               id={each}
               className= {`text-center board-cell col-${each[1]} row-${each[0]}
                         ${getSquareColor(each[0], each[1])}
-           							${ canKill[parsePosition(each[0],each[1])]   ? 'kill'    : '' }
-           							${ canMove[parsePosition(each[0],each[1])]   ? 'active'  : '' }
+           							${ canKill[parsePosition(each[0],each[1])]   ? 'kill'     : '' }
+           							${ canMove[parsePosition(each[0],each[1])]   ? 'move'     : '' }
+           							${ canPromote[parsePosition(each[0],each[1])]? 'promotion': '' }
                         ${ selected && selected===parsePosition(each[0],each[1]) ? "selected": "" }
                         ${ isCheckd && isCheckd===parsePosition(each[0],each[1]) ? "check"   : "" }
               `}

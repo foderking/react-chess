@@ -210,10 +210,10 @@ div .coord {
 }
 
 /* board square colors */
-.white.active {
+.white.move {
 	background-color:#ffec8c;
 }
-.black.active {
+.black.move {
 	background-color: #e6d355;
 }
 
@@ -228,10 +228,10 @@ div .coord {
 	background-color: #89D16B;
 }
 
-.black.check {
-	background-color: purple;
+.black.check , .black.promotion{
+	background-color: #b439b4;
 }
-.white.check {
+.white.check , .white.promotion{
 	background-color: #a865c8;
 }
 
@@ -242,7 +242,7 @@ div .coord {
 	background-color: #e6d355;
 }
 
-.white.en-passant {
+.white.en-passant{
 	background-color:#ffec8c;
 }
 .black.en-passant {
