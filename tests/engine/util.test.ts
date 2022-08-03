@@ -1,4 +1,4 @@
-import { AllPieces, BoardPosition, defaultMoveMapping, Family, getPositionNotation, getSquareColor, serializeBoardPosition } from "../../src/engine/util"
+import { AllPieces, BoardPosition, Family, getPositionNotation, getSquareColor, serializeBoardPosition } from "../../src/engine/util"
 
 describe("Testing the enums", () => {
     
@@ -24,9 +24,6 @@ describe('Testing helpers', () => {
         expect(getSquareColor("c", "7")).toBe("black")
     })
 
-    test("default movemapping", () => {
-        expect(Object.keys(defaultMoveMapping()).length).toBe(64)
-    })
 
     test('test get position rep', () => {
         expect(getPositionNotation(BoardPosition.D5)).toBe("d5")
