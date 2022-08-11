@@ -76,37 +76,8 @@ export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardP
     for (let position=square+move_ray; !(position & 0x88) ; position += move_ray) {
         if (i===max_push) break
         if (board.board[position]===AllPieces.NULL) {
-            if (isPromotable(square, piece_color)) {
-                // all different promotion type are also generated
-                result.push({
-                    to: position,
-                    from: square,
-                    movingPiece: piece,
-                    capturedPiece: AllPieces.NULL,
-                    promotion: PromotionTypes.Queen
-                })
-                result.push({
-                    to: position,
-                    from: square,
-                    movingPiece: piece,
-                    capturedPiece: AllPieces.NULL,
-                    promotion: PromotionTypes.Rook
-                })
-                result.push({
-                    to: position,
-                    from: square,
-                    movingPiece: piece,
-                    capturedPiece: AllPieces.NULL,
-                    promotion: PromotionTypes.Knight
-                })
-                result.push({
-                    to: position,
-                    from: square,
-                    movingPiece: piece,
-                    capturedPiece: AllPieces.NULL,
-                    promotion: PromotionTypes.Bishop
-                })
-            }
+            // all different promotion type are also generated
+            if (isPromotable(square, piece_color)) genPromotions(position, AllPieces.NULL);
             else
                 result.push({
                     to: position,
@@ -123,36 +94,7 @@ export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardP
     // generate pawn normal attacks
     let pos = square+kill_ray[0]
     if (!(pos & 0x88) && board.board[pos]!==AllPieces.NULL && getPieceColor(board.board[pos])!==piece_color) {
-        if (isPromotable(square, piece_color)) {
-            result.push({
-                to: pos,
-                from: square,
-                movingPiece: piece,
-                capturedPiece: board.board[pos],
-                promotion : PromotionTypes.Queen
-            })
-            result.push({
-                to: pos,
-                from: square,
-                movingPiece: piece,
-                capturedPiece: board.board[pos],
-                promotion : PromotionTypes.Knight
-            })
-            result.push({
-                to: pos,
-                from: square,
-                movingPiece: piece,
-                capturedPiece: board.board[pos],
-                promotion : PromotionTypes.Bishop
-            })
-            result.push({
-                to: pos,
-                from: square,
-                movingPiece: piece,
-                capturedPiece: board.board[pos],
-                promotion : PromotionTypes.Rook
-            })
-        }
+        if (isPromotable(square, piece_color)) genPromotions(pos, board.board[pos]);
         else
             result.push({
                 to: pos,
@@ -163,36 +105,7 @@ export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardP
     }
     pos = square+kill_ray[1]
     if (!(pos & 0x88) && board.board[pos]!==AllPieces.NULL && getPieceColor(board.board[pos])!==piece_color) {
-        if (isPromotable(square, piece_color)) {
-            result.push({
-                to: pos,
-                from: square,
-                movingPiece: piece,
-                capturedPiece: board.board[pos],
-                promotion : PromotionTypes.Queen
-            })
-            result.push({
-                to: pos,
-                from: square,
-                movingPiece: piece,
-                capturedPiece: board.board[pos],
-                promotion : PromotionTypes.Knight
-            })
-            result.push({
-                to: pos,
-                from: square,
-                movingPiece: piece,
-                capturedPiece: board.board[pos],
-                promotion : PromotionTypes.Bishop
-            })
-            result.push({
-                to: pos,
-                from: square,
-                movingPiece: piece,
-                capturedPiece: board.board[pos],
-                promotion : PromotionTypes.Rook
-            })
-        }
+        if (isPromotable(square, piece_color)) genPromotions(pos, board.board[pos]);
         else
             result.push({
                 to: pos,
@@ -202,6 +115,37 @@ export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardP
             })
     }
     return result
+
+    function genPromotions(position: number, captured: AllPieces) {
+        result.push({
+            to: position,
+            from: square,
+            movingPiece: piece,
+            capturedPiece: captured,
+            promotion: PromotionTypes.Queen
+        });
+        result.push({
+            to: position,
+            from: square,
+            movingPiece: piece,
+            capturedPiece: captured,
+            promotion: PromotionTypes.Rook
+        });
+        result.push({
+            to: position,
+            from: square,
+            movingPiece: piece,
+            capturedPiece: captured,
+            promotion: PromotionTypes.Knight
+        });
+        result.push({
+            to: position,
+            from: square,
+            movingPiece: piece,
+            capturedPiece: captured,
+            promotion: PromotionTypes.Bishop
+        });
+    }
 }
 
 export function genSlidingMoves(board: BoardState, piece: AllPieces, square: BoardPosition, rays: number[]): Move[] {

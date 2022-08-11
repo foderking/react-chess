@@ -21,8 +21,8 @@ const App = () => {
   // used to finish a promotion
   const [promoted_loc    , setPromoLocation] = useState<BoardPosition>()/** Location of the piece afte promotion */
 
-  // const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
-  const [boardState, setBoardState] = useState<BoardState>(new BoardState()) /** The current state of the board */
+  const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
+  // const [boardState, setBoardState] = useState<BoardState>(new BoardState()) /** The current state of the board */
   const [boardHist , setBoardHist ] = useState<Array<BoardState>>([])        /** Stack of past board states */
 
   // determines which states are visible in UI
