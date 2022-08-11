@@ -90,13 +90,6 @@ export type MoveDictionary = Record<BoardPosition, Move[]>
 export type BoardDictionary<T> = {
     [index in BoardPosition]?: T
 }
-// export function defaultMoveMapping(): MoveMapping {
-//     let dict: BoardDictionary<boolean> = {}
-//     for (let pos of serializeBoardPosition()) {
-//         dict[parsePosition(pos[0], pos[1])] = false
-//     }
-//     return dict as MoveMapping
-// }
 
 /** Gets the string rep of a board position
  * eg `BoardPosition.D5` => "d5"

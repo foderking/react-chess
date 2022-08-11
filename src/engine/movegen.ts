@@ -1,5 +1,5 @@
 import { BoardState } from "./board";
-import { AllPieces, BoardPosition, checkCondition, Family, getPiece, getPieceColor, getPositionNotation, isPromotable, MainPieces, NotExpectedError, PromotionTypes, Ranks } from "./util";
+import { AllPieces, BoardPosition, checkCondition, Family, getAllPiece, getOppositeFamily, getPiece, getPieceColor, getPositionNotation, isPromotable, MainPieces, NotExpectedError, PromotionTypes, Ranks } from "./util";
 
 export interface Move {
     to: BoardPosition
@@ -9,6 +9,8 @@ export interface Move {
     promotion?: PromotionTypes
     enPassant?: BoardPosition
     castling? : number
+    /** Indicates whether the move is a pawn double push */
+    doublePPush?: boolean
 }
 
 export function getMoveNotation(move: Move): string {
@@ -63,6 +65,12 @@ export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardP
     let result: Move[] = []
     let max_push = 1 + Number(board.canDoublePush(square))
     let piece_color = getPieceColor(piece)
+    // generate en passant
+    if (board.enpassant_sq!==BoardPosition.NULL ) {
+        // there must be a pawn in en passant square
+        checkCondition(board.board[board.enpassant_sq]===getAllPiece(MainPieces.Pawn, getOppositeFamily(board.current_side)))
+        console.log("enpassant", board.board[board.enpassant_sq])
+    }
     // generate normal moves
     let i = 0
     for (let position=square+move_ray; !(position & 0x88) ; position += move_ray) {
@@ -104,7 +112,8 @@ export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardP
                     to: position,
                     from: square,
                     movingPiece: piece,
-                    capturedPiece: AllPieces.NULL
+                    capturedPiece: AllPieces.NULL,
+                    doublePPush: i===1
                 })
             i++
             continue

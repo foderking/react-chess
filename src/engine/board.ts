@@ -171,7 +171,7 @@ export class BoardState {
         let new_board  =this.board.concat() as Util.MailBox88
         new_board[move.to]   = move.movingPiece
         new_board[move.from] = AllPieces.NULL
-
+        // pawn promotion
         if (move.promotion !== undefined) {
             Util.checkCondition(Util.getPiece(new_board[move.to])===Util.MainPieces.Pawn)
             Util.checkCondition(Util.getPieceColor(new_board[move.to])===this.current_side)
@@ -218,7 +218,7 @@ export class BoardState {
         let new_board = new BoardState()
 
         new_board.castling     = this.castling //TODO
-        new_board.enpassant_sq = this.enpassant_sq //TODO
+        new_board.enpassant_sq = move.doublePPush ? move.to : Util.BoardPosition.NULL
         new_board.full_move    = this.getNewFullMove()
         new_board.board        = this.getNewBoard(move)
         new_board._killed      = this.getNewKilledPieces(move)

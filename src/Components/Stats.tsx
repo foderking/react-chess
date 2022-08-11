@@ -1,6 +1,6 @@
 import React from 'react';
 import { BoardState } from '../engine/board';
-import { BoardPosition, generateRandomString, serializeFamily } from '../engine/util';
+import { BoardPosition, generateRandomString, serializeBoardPosition, serializeFamily } from '../engine/util';
 
 interface StatProps {
   board_state: BoardState
@@ -17,6 +17,9 @@ export function Stats({ board_state, check_pos, click  }: StatProps): JSX.Elemen
       </div>
       <div>
         check : {check_pos}
+      </div>
+      <div>
+        en passant: {board_state.enpassant_sq}
       </div>
       <div>
         kills :
