@@ -228,10 +228,10 @@ div .coord {
 	background-color: #89D16B;
 }
 
-.black.check , .black.promotion{
+.black.check , .black.promotion, .black.en-passant{
 	background-color: #b439b4;
 }
-.white.check , .white.promotion{
+.white.check , .white.promotion, .white.en-passant{
 	background-color: #a865c8;
 }
 
@@ -239,13 +239,6 @@ div .coord {
 	background-color:#ffec8c;
 }
 .black.castle {
-	background-color: #e6d355;
-}
-
-.white.en-passant{
-	background-color:#ffec8c;
-}
-.black.en-passant {
 	background-color: #e6d355;
 }
 

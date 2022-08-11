@@ -1,12 +1,23 @@
 import { BoardState } from "./board";
 import { AllPieces, BoardPosition, checkCondition, Family, getAllPiece, getOppositeFamily, getPiece, getPieceColor, getPositionNotation, isPromotable, MainPieces, NotExpectedError, PromotionTypes, Ranks } from "./util";
 
+/**
+ * An object representing a valid chess move
+ */
 export interface Move {
+    /** Final destination of the piece after move \
+     * (For en passant, final destination would be different from location of pawn being captured)
+     * */
     to: BoardPosition
+    /** Previous location of piece making the move */
     from: BoardPosition
+    /** Type of piece making the move */
     movingPiece: AllPieces
+    /** Type of piece being captured if any (would be NULL for normal moves) */
     capturedPiece: AllPieces
+    /** Type which the pawn should be promoted to during promotion */
     promotion?: PromotionTypes
+    /** Enpassant square - location of the pawn being captured */
     enPassant?: BoardPosition
     castling? : number
     /** Indicates whether the move is a pawn double push */
@@ -16,14 +27,20 @@ export interface Move {
 export function getMoveNotation(move: Move): string {
     const promoNames = "RNBQ"
     const pieceNames = " RNBQK"
-    let promoField: string
+    let promoField = ""
+    let enpassantField = ""
 
-    if (move.castling || move.enPassant) throw new NotExpectedError()
-
+    if (move.castling) throw new NotExpectedError()
+    // promotions and en passant are mutually exclusive, meaning they can't be done at the same time
     if (move.promotion!==undefined) {
         checkCondition(getPiece(move.movingPiece)===MainPieces.Pawn)
-        promoField = "=" + promoNames[move.promotion]
-    } else promoField = ""
+        checkCondition(move.enPassant===undefined)
+        promoField += promoNames[move.promotion]
+    } 
+    if (move.enPassant!==undefined) {
+        checkCondition(move.promotion===undefined)
+        enpassantField = " e.p"
+    }
 
     let captureField = move.capturedPiece===AllPieces.NULL ? "" : "x"
     let toField      = getPositionNotation(move.to)
@@ -31,7 +48,7 @@ export function getMoveNotation(move: Move): string {
                         ? getPositionNotation(move.from)[0]
                         : pieceNames[getPiece(move.movingPiece)]
 
-    return (pieceField + captureField + toField + promoField).trimStart()
+    return (pieceField + captureField + toField + promoField + enpassantField).trimStart()
 }
 
 export function generateMoves(board: BoardState, piece: AllPieces, square: BoardPosition): Move[] {
@@ -66,10 +83,20 @@ export function genPawnMoves(board: BoardState, piece: AllPieces, square: BoardP
     let max_push = 1 + Number(board.canDoublePush(square))
     let piece_color = getPieceColor(piece)
     // generate en passant
-    if (board.enpassant_sq!==BoardPosition.NULL ) {
+    if (board.enpassant_sq!==BoardPosition.NULL && Math.abs(square-board.enpassant_sq)===1) {
+        let target_sq = board.enpassant_sq + (piece_color===Family.White ?  16 : -16 )
         // there must be a pawn in en passant square
         checkCondition(board.board[board.enpassant_sq]===getAllPiece(MainPieces.Pawn, getOppositeFamily(board.current_side)))
-        console.log("enpassant", board.board[board.enpassant_sq])
+        // there must not be any piece in target square
+        checkCondition(board.board[target_sq]===AllPieces.NULL)
+        result.push({
+            // white piece moves directly above en passant square, while black pieces move directly below
+            to: target_sq,
+            from: square,
+            movingPiece: piece,
+            capturedPiece: board.board[board.enpassant_sq],
+            enPassant: board.enpassant_sq
+        })
     }
     // generate normal moves
     let i = 0

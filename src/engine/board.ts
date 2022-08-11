@@ -171,6 +171,12 @@ export class BoardState {
         let new_board  =this.board.concat() as Util.MailBox88
         new_board[move.to]   = move.movingPiece
         new_board[move.from] = AllPieces.NULL
+        // en passant
+        if (move.enPassant!==undefined) {
+            // the piece being captured enpassant must be pawn of opposite color
+            Util.checkCondition(new_board[move.enPassant]===Util.getAllPiece(Util.MainPieces.Pawn, Util.getOppositeFamily(this.current_side)))
+            new_board[move.enPassant] = AllPieces.NULL
+        }
         // pawn promotion
         if (move.promotion !== undefined) {
             Util.checkCondition(Util.getPiece(new_board[move.to])===Util.MainPieces.Pawn)
@@ -212,7 +218,7 @@ export class BoardState {
 
     /** Returns a new board with the specified move made on it */
     public make_move(move: Move): BoardState {
-        if (move.castling || move.enPassant) throw new Error("Not implemented");
+        if (move.castling) throw new Error("Not implemented");
         if (move.movingPiece!==this.board[move.from]) {console.log(move); throw new Error("Corrupted move")}
 
         let new_board = new BoardState()

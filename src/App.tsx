@@ -7,7 +7,7 @@ import Promotion from './Components/Promotion'
 import RightSidebar from './Components/RightSidebar'
 import { BoardState } from './engine/board'
 import { 
-  AllPieces, BoardDictionary, BoardPosition, ConditionNotSatisfiedError, deserializePiece, Family, getPromotionTypes, getSquareColor, NotExpectedError, parsePosition, serializeBoardPosition, serializePiece
+  AllPieces, BoardDictionary, BoardPosition, checkCondition, ConditionNotSatisfiedError, deserializePiece, Family, getPromotionTypes, getSquareColor, NotExpectedError, parsePosition, serializeBoardPosition, serializePiece
 } from './engine/util'
 import { Ranks, Files } from './Components/Coords'
 import { Stats } from './Components/Stats'
@@ -21,14 +21,15 @@ const App = () => {
   // used to finish a promotion
   const [promoted_loc    , setPromoLocation] = useState<BoardPosition>()/** Location of the piece afte promotion */
 
-  const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
-  // const [boardState, setBoardState] = useState<BoardState>(new BoardState()) /** The current state of the board */
+  // const [boardState, setBoardState] = useState<BoardState>(new BoardState("5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"))
+  const [boardState, setBoardState] = useState<BoardState>(new BoardState()) /** The current state of the board */
   const [boardHist , setBoardHist ] = useState<Array<BoardState>>([])        /** Stack of past board states */
 
   // determines which states are visible in UI
   const [canPromote,setPromote] = useState<BoardDictionary<boolean>>({}) /** Indicates a square on the board is the target of a promotion move */
   const [canKill ,  setCanKill] = useState<BoardDictionary<boolean>>({}) /** Indicates a square on the board is the target of a capture move */
   const [canMove ,  setCanMove] = useState<BoardDictionary<boolean>>({}) /** Indicates a square on the board is the target of a non capture move */
+  const [canEnPass,  setEnPass] = useState<BoardDictionary<boolean>>({})
   const [selected,  setSelect ] = useState<BoardPosition | null>(null)   /** Indicates a square on the board is the source of a move */
   
   const [clickOn ,  setClickOn] = useState<boolean>(false) /** Indicates whether the 2-stage move picking has started */
@@ -86,20 +87,23 @@ const App = () => {
       let move : BoardDictionary<boolean> = {}
       let kill : BoardDictionary<boolean> = {}
       let promo: BoardDictionary<boolean> = {}
+      let enpass: BoardDictionary<boolean> = {}
       for (let each of boardState._moveList[pos]) {
         if (each.promotion !== undefined) promo[each.to] = true
+        else if (each.enPassant !== undefined) enpass[each.to] = true
         else if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
         else kill[each.to] = true
       }
       setCanKill(kill)
       setCanMove(move)
       setPromote(promo)
+      setEnPass(enpass)
 
       setClickOn(true)
       setSelect(pos)
     }
     // if a valid target location for current move is clicked
-    else if (clickOn && (canKill[pos] || canMove[pos])){
+    else if (clickOn && (canKill[pos] || canMove[pos] || canEnPass[pos])){
       if (selected===null)   throw new NotExpectedError()
       let moveToMake = boardState._moveList[selected].find(each => each.to===pos)
       if (moveToMake===undefined) throw new NotExpectedError()
@@ -107,6 +111,7 @@ const App = () => {
       setCanKill({})
       setCanMove({})
       setPromote({})
+      setEnPass({})
 
       setBoardHist(boardHist.concat(boardState))
       setBoardState(boardState.make_move(moveToMake))
@@ -124,14 +129,17 @@ const App = () => {
       let move : BoardDictionary<boolean> = {}
       let kill : BoardDictionary<boolean> = {}
       let promo: BoardDictionary<boolean> = {}
+      let enpass: BoardDictionary<boolean> = {}
       for (let each of boardState._moveList[pos]) {
         if (each.promotion !== undefined) promo[each.to] = true
+        else if (each.enPassant !== undefined) enpass[each.to] = true
         else if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
         else kill[each.to] = true
       }
       setCanKill(kill)
       setCanMove(move)
       setPromote(promo)
+      setEnPass(enpass)
 
       setSelect(pos)
     }
@@ -140,6 +148,7 @@ const App = () => {
       setCanKill({})
       setCanMove({})
       setPromote({})
+      setEnPass({})
 
       setClickOn(false)
       setSelect(null)
@@ -173,6 +182,7 @@ const App = () => {
                 canKill    ={ canKill     }
                 canMove    ={ canMove     }
                 isCheckd   ={ isCheckd    }
+                canEnPass  ={ canEnPass   }
                 selected   ={ selected    }
                 whiteMain  ={ whiteIsMain }
                 canPromote ={ canPromote  }
@@ -200,6 +210,7 @@ interface CBoardProps {
   board_state: BoardState
   canKill    : BoardDictionary<boolean>
   canMove    : BoardDictionary<boolean>
+  canEnPass  : BoardDictionary<boolean>
   canPromote : BoardDictionary<boolean>
   selected   : BoardPosition | null
   isCheckd   : BoardPosition | null
@@ -207,7 +218,7 @@ interface CBoardProps {
   handleClick: <T>(e: React.MouseEvent<T>, pos: string) => void
 }
 
-const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, whiteMain, canPromote, handleClick }: CBoardProps) => {
+const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, canEnPass, whiteMain, canPromote, handleClick }: CBoardProps) => {
   const wMapping = serializeBoardPosition()
                     .map(each =>  [(8-parseInt(each[1])).toString(), each])
                     .sort()
@@ -225,6 +236,7 @@ const CBoard = ({ board_state, canKill, canMove, selected, isCheckd, whiteMain, 
                         ${ getSquareColor(each[0], each[1]) }
            							${ canKill[parsePosition(each[0],each[1])]   ? 'kill'     : '' }
            							${ canMove[parsePosition(each[0],each[1])]   ? 'move'     : '' }
+           							${ canEnPass[parsePosition(each[0],each[1])] ? 'en-passant': '' }
            							${ canPromote[parsePosition(each[0],each[1])]? 'promotion': '' }
                         ${ selected && selected===parsePosition(each[0],each[1]) ? "selected": "" }
                         ${ isCheckd && isCheckd===parsePosition(each[0],each[1]) ? "check"   : "" }
