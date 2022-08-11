@@ -84,22 +84,23 @@ const App = () => {
 
     // if clickOn is off and a valid square is clicked
     if (!clickOn && boardState.isValidPiece(pos)) {
-      let move : BoardDictionary<boolean> = {}
-      let kill : BoardDictionary<boolean> = {}
-      let promo: BoardDictionary<boolean> = {}
-      let enpass: BoardDictionary<boolean> = {}
-      for (let each of boardState._moveList[pos]) {
-        if (each.promotion !== undefined) promo[each.to] = true
-        else if (each.enPassant !== undefined) enpass[each.to] = true
-        else if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
-        else kill[each.to] = true
-      }
+      let [ kill, move, promo, enpass ] = updateUIState()
       setCanKill(kill)
       setCanMove(move)
       setPromote(promo)
       setEnPass(enpass)
 
       setClickOn(true)
+      setSelect(pos)
+    }
+    // if another valid square is clicked
+    else if (clickOn && boardState.isValidPiece(pos) && pos!==selected){
+      let [ kill, move, promo, enpass ] = updateUIState()
+      setCanKill(kill)
+      setCanMove(move)
+      setPromote(promo)
+      setEnPass(enpass)
+
       setSelect(pos)
     }
     // if a valid target location for current move is clicked
@@ -119,30 +120,12 @@ const App = () => {
       setSelect(null)
     }
     else if (clickOn && (canPromote[pos])){
-      // start pawn promotion
+      // target location for pawn promotion is clicked
       startPromotion(true)
       setPromoteFamily(boardState.current_side)
       setPromoLocation(pos)
     }
-    // if another valid square is clicked
-    else if (clickOn && boardState.isValidPiece(pos) && pos!==selected){
-      let move : BoardDictionary<boolean> = {}
-      let kill : BoardDictionary<boolean> = {}
-      let promo: BoardDictionary<boolean> = {}
-      let enpass: BoardDictionary<boolean> = {}
-      for (let each of boardState._moveList[pos]) {
-        if (each.promotion !== undefined) promo[each.to] = true
-        else if (each.enPassant !== undefined) enpass[each.to] = true
-        else if (each.capturedPiece===AllPieces.NULL) move[each.to] = true
-        else kill[each.to] = true
-      }
-      setCanKill(kill)
-      setCanMove(move)
-      setPromote(promo)
-      setEnPass(enpass)
 
-      setSelect(pos)
-    }
     // an invalid target location
     else {
       setCanKill({})
@@ -152,6 +135,24 @@ const App = () => {
 
       setClickOn(false)
       setSelect(null)
+    }
+
+    function updateUIState(): [BoardDictionary<boolean>, BoardDictionary<boolean>, BoardDictionary<boolean>, BoardDictionary<boolean>] {
+      let move: BoardDictionary<boolean> = {}
+      let kill: BoardDictionary<boolean> = {}
+      let promo: BoardDictionary<boolean> = {}
+      let enpass: BoardDictionary<boolean> = {}
+      for (let each of boardState._moveList[pos]) {
+        if (each.promotion !== undefined)
+          promo[each.to] = true
+        else if (each.enPassant !== undefined)
+          enpass[each.to] = true
+        else if (each.capturedPiece === AllPieces.NULL)
+          move[each.to] = true
+        else
+          kill[each.to] = true
+      }
+      return [ kill, move, promo, enpass ]
     }
   }
 
